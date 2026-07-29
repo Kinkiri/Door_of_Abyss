@@ -21,6 +21,13 @@ public partial class DamageAction : GameAction
         {
             if (target == null || !target.IsAlive) continue;
 
+            // 伤害计算前触发（被动可在此修改伤害）
+            if (ctx.SourceUnit != null)
+            {
+                EventBus.Instance?.Fire(EventType.OnBeforeDamage,
+                    new Context { TargetUnit = target }, subject: ctx.SourceUnit);
+            }
+
             int dealt = UnitManager.Instance.DamageUnit(target, dmg);
             if (dealt <= 0) continue;
 

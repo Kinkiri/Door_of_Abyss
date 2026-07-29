@@ -29,4 +29,13 @@ public enum EventType
 
     /// <summary>单位行动后（移动/攻击/出牌），subject=行动单位</summary>
     OnUnitAct,
+
+    /// <summary>伤害计算前触发（可在被动中修改伤害），subject=攻击者</summary>
+    OnBeforeDamage,
+
+    /// <summary>单位死亡后（SourceUnit=死者，TargetUnit=击杀者），subject=死者</summary>
+    OnUnitDeath,
+
+    /// <summary>移动后，subject=移动单位</summary>
+    OnMove,
 }

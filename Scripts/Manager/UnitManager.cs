@@ -161,6 +161,10 @@ public partial class UnitManager : Node
     public void DestroyUnit(Unit unit)
     {
         GD.Print($"UnitManager: {unit.UnitData?.UnitName} 死亡");
+
+        // 触发死亡事件（subject=死者）
+        EventBus.Instance?.Fire(EventType.OnUnitDeath, new Context { TargetUnit = unit }, subject: unit);
+
         RemoveUnit(unit);
     }
 
@@ -255,6 +259,35 @@ public partial class UnitManager : Node
 
         unit.UpdateUnit();
         return true;
+    }
+
+    /// <summary>
+    /// 强制传送单位到指定格子，不验证 CanStand/OccupyingUnit，由调用方保证合法性。
+    /// 供 MoveUnitAction 等强制位移使用。
+    /// </summary>
+    public void TeleportUnit(Unit unit, Vector2I targetGridPos)
+    {
+        // 清理旧格子
+        if (MapManager.Instance.TryGetCell(unit.GridPos, out Cell oldCell))
+        {
+            if (oldCell.OccupyingUnit == unit)
+            {
+                oldCell.OccupyingUnit = null;
+                oldCell.CanPass = oldCell.BaseBlock?.CanPass ?? true;
+                oldCell.CanStand = oldCell.BaseBlock?.CanStand ?? true;
+            }
+        }
+
+        // 绑定新格子
+        if (MapManager.Instance.TryGetCell(targetGridPos, out Cell newCell))
+        {
+            unit.GridPos = targetGridPos;
+            newCell.OccupyingUnit = unit;
+            newCell.CanPass = false;
+            newCell.CanStand = false;
+        }
+
+        unit.UpdateUnit();
     }
 
     // ======================================================================

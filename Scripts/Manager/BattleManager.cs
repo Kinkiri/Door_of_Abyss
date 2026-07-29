@@ -132,6 +132,7 @@ public partial class BattleManager : Node2D
         GD.Print($"[Battle] 移动单位至 ({targetPos.X}, {targetPos.Y})，剩余 AP: {unit.ActionPoints}");
 
         EventBus.Instance?.Fire(EventType.OnUnitAct, new Context(), subject: unit);
+        EventBus.Instance?.Fire(EventType.OnMove, new Context(), subject: unit);
 
         if (unit.ActionPoints <= 0)
             SelectionManager.Instance.ClearSelection();
@@ -237,6 +238,7 @@ public partial class BattleManager : Node2D
         unit.UpdateUnit();
         GD.Print($"[Battle][AI] 移动 {unit.UnitData?.UnitName} 至 ({targetPos.X}, {targetPos.Y})");
         EventBus.Instance?.Fire(EventType.OnUnitAct, new Context(), subject: unit);
+        EventBus.Instance?.Fire(EventType.OnMove, new Context(), subject: unit);
     }
 
     /// <summary>AI 攻击单位（跳过阵营检查）</summary>

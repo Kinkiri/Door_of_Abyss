@@ -55,7 +55,10 @@ Scripts/                         ~5000 行 C#
 │   │   ├── ApplyBuffAction.cs   施加 Buff
 │   │   ├── ModifyBuffAction.cs  修改 Buff 回合/叠层
 │   │   ├── BranchAction.cs      分支（条件→Then/Else）
-│   │   └── RepeatAction.cs      循环（值源×次数）
+│   │   ├── RepeatAction.cs      循环（值源×次数）
+│   │   ├── RemoveBuffAction.cs  驱散 Buff
+│   │   ├── MoveUnitAction.cs    强制位移（传送/击退/拉拽）
+│   │   └── SetStatAction.cs     设置属性为精确值
 │   ├── Condition/               条件系统（ECA）
 │   │   ├── Condition.cs         抽象基类：IsMet(Context)
 │   │   ├── CompareCondition.cs  通用比较（两个 ValueSource）
@@ -70,7 +73,11 @@ Scripts/                         ~5000 行 C#
 │   │   ├── UnitStatValue.cs     单位属性
 │   │   ├── BuffInfoValue.cs     Buff 信息
 │   │   ├── RandomValue.cs       随机数
-│   │   └── FormulaValue.cs      公式嵌套（Add/Sub/Mul/Div/Max/Min/Percent）
+│   │   ├── FormulaValue.cs      公式嵌套（Add/Sub/Mul/Div/Max/Min/Percent）
+│   │   ├── RoundCountValue.cs   当前回合数
+│   │   ├── UnitCountValue.cs    场上单位数量
+│   │   ├── DistanceValue.cs     曼哈顿距离
+│   │   └── BattleCostValue.cs   费用
 │   ├── BuffData.cs              Buff 模板
 │   ├── BlockData.cs             地形模板
 │   ├── Card/
@@ -372,7 +379,25 @@ OrCondition
 | `BranchAction` | Condition, ThenActions[], ElseActions[]（可选） | **分支**。条件满足时执行 ThenActions，否则执行 ElseActions。支持多层嵌套 |
 | `RepeatAction` | Times（ValueSource）, MaxIterations=999, Actions[] | **循环**。重复执行子动作 N 次，N 来自值源。MaxIterations 为硬防死循环上限 |
 
-### 3.9 可逆性汇总
+### 3.9 强制位移动作
+
+| 动作 | 字段 | 说明 |
+|---|---|---|
+| `MoveUnitAction` | Mode=Teleport/Push/Pull, Distance | 强制移动单位。Teleport=传送到目标格子，Push=击退，Pull=拉拽。不消耗 AP。曼哈顿方向 |
+
+### 3.10 驱散动作
+
+| 动作 | 字段 | 说明 |
+|---|---|---|
+| `RemoveBuffAction` | BuffID | **无条件移除**指定 Buff。和 ModifyBuffAction(StacksDelta=-N) 不同，不关心层数直接整个移除 |
+
+### 3.11 属性设置动作（不可逆）
+
+| 动作 | 字段 | 说明 |
+|---|---|---|
+| `SetStatAction` | TargetStat, Value / ValueSource | 设置属性为**精确值**（不是加减）。**不可逆**——Resource 实例共享，不支持 Buff 自动还原 |
+
+### 3.12 可逆性汇总
 
 | 可逆 | 动作 |
 |---|---|
@@ -393,6 +418,10 @@ OrCondition
 | `BuffInfoValue` | Unit=Source/Target, BuffID, Info=StackCount/RemainingTurns | 读取单位上 Buff 的叠层数或剩余回合。Buff 不存在时返回 DefaultValue |
 | `RandomValue` | Min, Max | 返回 [Min, Max] 之间的随机整数 |
 | `FormulaValue` | Op, Left, Right | 对两个子值源做运算，**支持任意嵌套** |
+| `RoundCountValue` | — | 当前回合数（从 1 开始计数） |
+| `UnitCountValue` | FilterTeam=All/Player/Enemy, OnlyAlive, IncludeDoor | 场上存活单位数量，可按阵营过滤 |
+| `DistanceValue` | From=Source/Target, To=Source/Target | 两单位之间的**曼哈顿距离**（\|dx\|+\|dy\|） |
+| `BattleCostValue` | Type=Current/Max | 当前费用或最大费用上限（10） |
 
 ### FormulaValue 支持的运算
 
@@ -416,7 +445,10 @@ OrCondition
 | DrawCardAction | ValueSource |
 | ModifyStatAction | ValueSource |
 | ModifyCostAction | ValueSource |
+| ModifyBuffAction | —（TurnsDelta/StacksDelta 是整数，暂不支持值源） |
 | FormulaValue | Left, Right |
+| SetStatAction | ValueSource |
+| MoveUnitAction | —（Distance 是整数） |
 
 **示例：** 造成"目标攻击力 × 2 + 3"点伤害
 ```
@@ -527,6 +559,9 @@ RemoveBuff
 | `OnBuffApplied` | BuffManager | Buff 施加后 |
 | `OnBuffRemoved` | BuffManager | Buff 移除后 |
 | `OnUnitAct` | BattleManager | 单位行动后（移动/攻击/出牌） |
+| `OnBeforeDamage` | DamageAction | **伤害计算前**触发，subject=攻击者。被动可在此修改伤害 |
+| `OnUnitDeath` | UnitManager | 单位死亡后触发，subject=死者。和 OnKill 不同（OnKill 是击杀者视角） |
+| `OnMove` | BattleManager | 移动后触发，subject=移动单位。不含攻击和出牌 |
 
 ### 被动效果示例
 
@@ -720,4 +755,36 @@ Actions = [
     Actions = [DamageAction { Value=1 }]
   }
 ]
+```
+
+### 9.9 亡语——死亡时对击杀者造成 3 伤害（被动 OnUnitDeath）
+
+```
+UnitData PassiveEffects = [EffectData {
+  TriggerEvent = OnUnitDeath
+  Target = EventTarget
+  Actions = [DamageAction { Value=3 }]
+}]
+```
+
+### 9.10 强风术——击退目标 2 格
+
+```
+Shape=SingleUnit, Filter=Enemy, Cost=1
+Actions = [MoveUnitAction { Mode=Push, Distance=2 }]
+```
+
+### 9.11 吸取——造成等于两单位距离的伤害
+
+```
+Actions = [DamageAction {
+  ValueSource = DistanceValue { From=Source, To=Target }
+}]
+```
+
+### 9.12 整齐划一——将全体友方攻击力设为 5
+
+```
+Shape=All, Filter=Ally, Cost=2
+Actions = [SetStatAction { TargetStat=AttackPower, Value=5 }]
 ```
