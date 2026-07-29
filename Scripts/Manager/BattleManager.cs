@@ -220,9 +220,13 @@ public partial class BattleManager : Node2D
         ctx.SourceUnit = SelectionManager.Instance?.SelectedUnit;
         ctx.SourceTeam = BattleManager.Instance.CurrentTeam;
 
-        foreach (var action in card.CardData.Actions)
-            action?.Execute(ctx);
+        // 通过 ActionQueue 逐个执行，支持动画节奏
+        ActionQueue.Instance?.Enqueue(card.CardData.Actions, ctx, new Callable(this, nameof(OnCardPlayActionsDone)));
+    }
 
+    private void OnCardPlayActionsDone()
+    {
+        GD.Print("[Battle] 卡牌动作序列执行完毕");
         CheckVictory();
         if (SelectionManager.Instance?.SelectedUnit != null)
             EventBus.Instance?.Fire(EventType.OnUnitAct, new Context(), subject: SelectionManager.Instance.SelectedUnit);
@@ -231,8 +235,16 @@ public partial class BattleManager : Node2D
     /// <summary>AI 移动单位（跳过阵营检查）</summary>
     public void AIDoMove(Unit unit, Vector2I targetPos)
     {
-        if (unit.ActionPoints <= 0) return;
-        if (!UnitManager.Instance.MoveUnit(unit, targetPos)) return;
+        if (unit.ActionPoints <= 0)
+        {
+            GD.Print($"[Battle][AI] {unit.UnitData?.UnitName} 无AP，跳过移动");
+            return;
+        }
+        if (!UnitManager.Instance.MoveUnit(unit, targetPos))
+        {
+            GD.Print($"[Battle][AI] {unit.UnitData?.UnitName} MoveUnit 失败: {unit.GridPos} → {targetPos}");
+            return;
+        }
 
         unit.ActionPoints--;
         unit.UpdateUnit();
@@ -280,7 +292,16 @@ public partial class BattleManager : Node2D
     {
         BattlePhase next = GetNextPhase(CurrentPhase);
         if (next == CurrentPhase) return false;
-        GD.Print($"[Battle] 阶段推进 → {next}");
+
+        // 跳过没有活动单位的阶段（如无人可行动的 EnemyAction），最多跳 3 次防死循环
+        int skipGuard = 0;
+        while (!CanEnterPhase(next) && skipGuard < 3)
+        {
+            GD.Print($"[Battle] {next} 无法进入（无活动单位），跳过");
+            next = GetNextPhase(next);
+            skipGuard++;
+        }
+
         return EnterPhase(next);
     }
     /// <summary>

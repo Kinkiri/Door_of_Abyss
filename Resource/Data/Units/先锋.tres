@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/UnitData.cs" id="1_eksbm"]
 [ext_resource type="Script" uid="uid://dvi5cm6ic86ev" path="res://Scripts/Data/Actions/ModifyCostAction.cs" id="1_yih4y"]
 [ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_2xiu5"]
-[ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/Units/戈多机器人.tscn" id="3_hg7ye"]
+[ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/单位视图.tscn" id="3_yih4y"]
 
 [sub_resource type="Resource" id="Resource_yhmld"]
 script = ExtResource("1_yih4y")
@@ -13,14 +13,14 @@ metadata/_custom_type_script = "uid://dvi5cm6ic86ev"
 [sub_resource type="Resource" id="Resource_orq3q"]
 script = ExtResource("2_2xiu5")
 Actions = Array[Object]([SubResource("Resource_yhmld")])
+Conditions = null
 metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
 
 [resource]
 script = ExtResource("1_eksbm")
 UnitID = "先锋"
 UnitName = "先锋"
-ActionPoints = 5
 Description = "回合开始加一费"
-UnitPrefab = ExtResource("3_hg7ye")
+UnitPrefab = ExtResource("3_yih4y")
 PassiveEffects = Array[Object]([SubResource("Resource_orq3q")])
 metadata/_custom_type_script = "uid://cthrvfilibvfl"

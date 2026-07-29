@@ -20,6 +20,9 @@ public partial class UnitView : Node2D
     /// <summary>描述面板内的文本</summary>
     [Export] public Label DescriptionLabel { get; set; }
 
+    /// <summary>敌方标志精灵，UnitView 创建时自动判断显示/隐藏</summary>
+    [Export] public ColorRect EnemyIndicator { get; set; }
+
     public override void _Ready()
     {
         if (Unit == null)
@@ -32,11 +35,19 @@ public partial class UnitView : Node2D
         if (UnitData == null)
             UnitData = Unit.UnitData;
 
+        // 敌方标记：只有敌方单位才显示
+        if (EnemyIndicator != null)
+            EnemyIndicator.Visible = Unit.Team == Team.Enemy;
+
+        // 敌方单位名字红色
+        if (NameLabel != null && Unit.Team == Team.Enemy)
+            NameLabel.Modulate = Colors.Red;
+
         if (DescriptionPanel != null)
             DescriptionPanel.Hide();
 
         if (DescriptionLabel != null && UnitData != null)
-            DescriptionLabel.Text = $"{UnitData.Description} " +
+            DescriptionLabel.Text = $"{UnitData.Description} \n" +
                                         $"HP: {UnitData.HealthPoints} " +
                                         $"ATK: {UnitData.AttackPower}\n" +
                                         $"AD: {UnitData.AttackDistance} " +

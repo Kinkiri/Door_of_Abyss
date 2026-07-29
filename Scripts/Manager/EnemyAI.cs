@@ -27,24 +27,28 @@ public partial class EnemyAI : Node
         _actionQueue = new Queue<Unit>();
 
         int totalEnemy = 0;
+        var tempList = new List<Unit>();
         foreach (var u in UnitManager.Instance.ActiveUnits)
         {
             if (u.Team != Team.Enemy) continue;
             totalEnemy++;
-            // 门（水晶）不由 AI 操控移动
             if (u.Type == UnitType.Door) continue;
             if (u.IsAlive && !u.IsDead && u.ActionPoints > 0)
-            {
-                _actionQueue.Enqueue(u);
-                GD.Print($"[EnemyAI] 入队: {u.UnitData?.UnitName} ID={u.ID} 位置={u.GridPos} AP={u.ActionPoints}");
-            }
-            else
-            {
-                GD.Print($"[EnemyAI] 跳过: {u.UnitData?.UnitName} ID={u.ID} 原因={(u.IsAlive ? "" : "死亡")} {(u.IsDead ? "IsDead" : "")} AP={u.ActionPoints}");
-            }
+                tempList.Add(u);
         }
 
-        GD.Print($"[EnemyAI] 敌方总计 {totalEnemy}，可行动 {_actionQueue.Count}");
+        // 按离玩家门距离排序（近的先行动，攻击优先）
+        var playerDoor = UnitManager.Instance?.PlayerDoor;
+        tempList.Sort((a, b) =>
+        {
+            int da = playerDoor != null ? ManhattanDist(a.GridPos, playerDoor.GridPos) : 0;
+            int db = playerDoor != null ? ManhattanDist(b.GridPos, playerDoor.GridPos) : 0;
+            return da.CompareTo(db);
+        });
+
+        _actionQueue = new Queue<Unit>(tempList);
+        GD.Print($"[EnemyAI] 敌方总计 {totalEnemy}，可行动 {_actionQueue.Count}" +
+                 $" {(playerDoor != null ? $"(玩家门在 {playerDoor.GridPos})" : "")}");
 
         if (_actionQueue.Count == 0)
         {
@@ -119,20 +123,26 @@ public partial class EnemyAI : Node
             return true;
         }
 
-        // 2. 无法攻击 → 朝最近玩家移动
+        // 2. 无法攻击 → 沿最短路径朝最近玩家走一步
+        var nearestPlayer = FindNearestPlayer(enemy.GridPos);
+        if (nearestPlayer == null)
+        {
+            GD.Print($"[EnemyAI]   未找到玩家单位");
+            return false;
+        }
+
+        GD.Print($"[EnemyAI]   最近玩家: {nearestPlayer.UnitData?.UnitName} 在 {nearestPlayer.GridPos}");
+
+        // 找所有可达格子，选离目标最近的（不走玩家站着的格，因为 CanStand=false）
         var reachable = PathFinder.GetReachableCells(
             enemy.GridPos, enemy.RemainingStamina, map);
-
-        if (reachable.Count == 0) return false;
-
-        var nearestPlayer = FindNearestPlayer(enemy.GridPos);
-        if (nearestPlayer == null) return false;
 
         Vector2I? bestMove = null;
         int bestDist = int.MaxValue;
         foreach (var pos in reachable)
         {
             if (pos == enemy.GridPos) continue;
+            if (!map.TryGetValue(pos, out Cell c) || c.OccupyingUnit != null) continue;
             int dist = ManhattanDist(pos, nearestPlayer.GridPos);
             if (dist < bestDist)
             {
@@ -141,9 +151,13 @@ public partial class EnemyAI : Node
             }
         }
 
-        if (!bestMove.HasValue) return false;
+        if (!bestMove.HasValue)
+        {
+            GD.Print($"[EnemyAI]   无可达格子（体力={enemy.RemainingStamina}）");
+            return false;
+        }
 
-        GD.Print($"[EnemyAI]   移动到 ({bestMove.Value.X}, {bestMove.Value.Y})");
+        GD.Print($"[EnemyAI]   移动到 ({bestMove.Value.X},{bestMove.Value.Y}) 距离玩家 {bestDist}");
         bm.AIDoMove(enemy, bestMove.Value);
         return true;
     }

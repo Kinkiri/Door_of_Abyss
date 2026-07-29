@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="DoorData" format=3 uid="uid://brrpcr8sgqo3a"]
+
+[ext_resource type="Script" uid="uid://dvi5cm6ic86ev" path="res://Scripts/Data/Actions/ModifyCostAction.cs" id="1_gyfwv"]
+[ext_resource type="Script" uid="uid://d0dw5ofs4ec7f" path="res://Scripts/Data/Units/DoorData.cs" id="1_u8aac"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_ymjnw"]
+[ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/单位视图.tscn" id="3_vgdd0"]
+
+[sub_resource type="Resource" id="Resource_54ojh"]
+script = ExtResource("1_gyfwv")
+Value = 1
+AnimationDuration = 0.0
+metadata/_custom_type_script = "uid://dvi5cm6ic86ev"
+
+[sub_resource type="Resource" id="Resource_vd3qs"]
+script = ExtResource("2_ymjnw")
+Actions = Array[Object]([SubResource("Resource_54ojh")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("1_u8aac")
+UnitID = "默认门"
+UnitName = "默认门"
+AttackPower = 0
+HealthPoints = 6
+AttackDistance = 0
+Type = 5
+Description = "每回合为你额外回复1费"
+UnitPrefab = ExtResource("3_vgdd0")
+PassiveEffects = Array[Object]([SubResource("Resource_vd3qs")])
+metadata/_custom_type_script = "uid://d0dw5ofs4ec7f"

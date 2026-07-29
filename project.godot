@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Door of Abyss"
-run/main_scene="res://Scenes/Game/test.tscn"
+run/main_scene="res://Scenes/Game/Level.tscn"
 config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 boot_splash/show_image=false
 config/icon="res://Resource/Art/icon.svg"

@@ -2,17 +2,45 @@
 
 [ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="1_77k5y"]
 [ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_xov0g"]
-[ext_resource type="Script" uid="uid://b3r23g1bf7ybd" path="res://Scripts/Data/Condition/HPCondition.cs" id="2_6q3wi"]
+[ext_resource type="Script" uid="uid://s84ks60onupf" path="res://Scripts/Data/ValueSource/UnitStatValue.cs" id="2_qxb7e"]
+[ext_resource type="Script" uid="uid://bn4m8splfe3lb" path="res://Scripts/Data/ValueSource/ConstantValue.cs" id="3_43dk7"]
+[ext_resource type="Script" uid="uid://bgqnidmj5bjrn" path="res://Scripts/Data/ValueSource/FormulaValue.cs" id="4_dltph"]
+[ext_resource type="Script" uid="uid://brotjf8m2qpfx" path="res://Scripts/Data/Conditions/CompareCondition.cs" id="5_r1d0c"]
 
 [sub_resource type="Resource" id="Resource_33pkt"]
 script = ExtResource("1_77k5y")
 Value = 99999
 metadata/_custom_type_script = "uid://bcjncmte44un1"
 
-[sub_resource type="Resource" id="Resource_77k5y"]
-script = ExtResource("2_6q3wi")
+[sub_resource type="Resource" id="Resource_elwgw"]
+script = ExtResource("2_qxb7e")
+Stat = 1
+metadata/_custom_type_script = "uid://s84ks60onupf"
+
+[sub_resource type="Resource" id="Resource_xt6sm"]
+script = ExtResource("2_qxb7e")
+Stat = 1
+CurrentHP = false
+metadata/_custom_type_script = "uid://s84ks60onupf"
+
+[sub_resource type="Resource" id="Resource_yrq2j"]
+script = ExtResource("3_43dk7")
 Value = 75
-metadata/_custom_type_script = "uid://b3r23g1bf7ybd"
+metadata/_custom_type_script = "uid://bn4m8splfe3lb"
+
+[sub_resource type="Resource" id="Resource_0vpkl"]
+script = ExtResource("4_dltph")
+Op = 6
+Left = SubResource("Resource_xt6sm")
+Right = SubResource("Resource_yrq2j")
+metadata/_custom_type_script = "uid://bgqnidmj5bjrn"
+
+[sub_resource type="Resource" id="Resource_dltph"]
+script = ExtResource("5_r1d0c")
+Left = SubResource("Resource_elwgw")
+Op = 1
+Right = SubResource("Resource_0vpkl")
+metadata/_custom_type_script = "uid://brotjf8m2qpfx"
 
 [resource]
 script = ExtResource("1_xov0g")
@@ -24,5 +52,5 @@ Shape = 1
 Filter = 1
 Cost = 2
 Actions = Array[Object]([SubResource("Resource_33pkt")])
-Conditions = Array[Object]([SubResource("Resource_77k5y")])
+Conditions = Array[Object]([SubResource("Resource_dltph")])
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

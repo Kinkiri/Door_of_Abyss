@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="BlockData" format=3 uid="uid://bvqo423g7t8fj"]
 
-[ext_resource type="Script" uid="uid://ce0wxis7r8i0b" path="res://Scripts/Data/BlockData.cs" id="1_l5qxf"]
+[ext_resource type="Script" uid="uid://ce0wxis7r8i0b" path="res://Scripts/Data/Map/BlockData.cs" id="1_l5qxf"]
 
 [resource]
 resource_local_to_scene = true

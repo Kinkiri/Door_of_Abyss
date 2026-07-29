@@ -24,6 +24,7 @@ public partial class InitManager : Node
         EnemyAI.Instance?.Init();
         SelectionManager.Instance?.Init();
         BuffManager.Instance?.Init();
+        ActionQueue.Instance?.Init();
 
         // 依赖 SelectionManager 的事件订阅
         BattleManager.Instance?.Init();

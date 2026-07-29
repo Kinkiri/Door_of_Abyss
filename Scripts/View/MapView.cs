@@ -168,6 +168,10 @@ public partial class MapView : Node2D
     {
         if (CardPreviewLayer == null) return;
 
+        // 单位卡：渲染门的部署范围（图集坐标 0,0）
+        if (card.Shape == TargetShape.SingleCell && card.Type == CardType.Unit)
+            RenderDeployRange();
+
         // 根据 Filter 选择不同图集坐标，区分敌友
         var atlas = card.Filter switch
         {
@@ -178,6 +182,29 @@ public partial class MapView : Node2D
 
         foreach (var pos in cells)
             CardPreviewLayer.SetCell(pos, HighlightSourceId, atlas);
+    }
+
+    /// <summary>渲染门周围的部署范围</summary>
+    private void RenderDeployRange()
+    {
+        var door = UnitManager.Instance?.PlayerDoor;
+        if (door == null) return;
+        if (door.UnitData is not DoorData doorData) return;
+        int range = doorData.DeployRange;
+
+        var deployCells = new HashSet<Vector2I>();
+        var map = MapManager.Instance?.Map;
+        if (map == null) return;
+
+        Vector2I doorPos = door.GridPos;
+        for (int dx = -range; dx <= range; dx++)
+            for (int dy = -range; dy <= range; dy++)
+            {
+                if (System.Math.Abs(dx) + System.Math.Abs(dy) > range) continue;
+                var pos = new Vector2I(doorPos.X + dx, doorPos.Y + dy);
+                if (map.ContainsKey(pos))
+                    CardPreviewLayer.SetCell(pos, HighlightSourceId, Vector2I.Zero);
+            }
     }
 
     /// <summary>渲染放门区域</summary>

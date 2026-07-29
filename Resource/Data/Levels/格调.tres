@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://dr5crh4jdw3kf"]
 
-[ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/WaveData.cs" id="1_4qidm"]
+[ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="1_4qidm"]
 [ext_resource type="Resource" path="res://Resource/Data/Maps/格调.tres" id="1_wp8c3"]
-[ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/LevelData.cs" id="1_y0i6a"]
+[ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="1_y0i6a"]
 [ext_resource type="Resource" uid="uid://bn23m0b6t8tvw" path="res://Resource/Data/Units/弓手.tres" id="2_nvsh4"]
 [ext_resource type="Resource" uid="uid://cl8dt7np6l2rg" path="res://Resource/Data/Units/战墙.tres" id="2_wp8c3"]
 [ext_resource type="Resource" uid="uid://besew5ondee15" path="res://Resource/Data/Units/小兵.tres" id="3_cs3pf"]

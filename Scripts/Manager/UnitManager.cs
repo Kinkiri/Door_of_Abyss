@@ -83,11 +83,7 @@ public partial class UnitManager : Node
         // 注册视图映射
         _unitViews[unit] = view;
 
-        // 阵营颜色：敌方单位红色
-        if (team == Team.Enemy)
-        {
-            SetUnitTint(view, new Color(1, 0.3f, 0.3f));
-        }
+        // 敌方标志由 UnitView 的 EnemyIndicator 自己判断显示
 
         MapManager.Instance.BaseMapLayer.AddChild(view);
 
@@ -317,17 +313,4 @@ public partial class UnitManager : Node
         return maxID + 1;
     }
 
-    /// <summary>遍历 UnitView 找 Sprite2D 并着色</summary>
-    private static void SetUnitTint(Node root, Color color)
-    {
-        foreach (Node child in root.GetChildren())
-        {
-            if (child is Sprite2D sprite)
-            {
-                sprite.Modulate = color;
-                return;
-            }
-            SetUnitTint(child, color);
-        }
-    }
 }

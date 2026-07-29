@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://bndowl6u6n8uh" path="res://Scripts/Data/Actions/HealAction.cs" id="1_action"]
 [ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/UnitData.cs" id="1_data"]
 [ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="1_effect"]
-[ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/Units/戈多机器人.tscn" id="1_prefab"]
+[ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/单位视图.tscn" id="1_prefab"]
 
 [sub_resource type="Resource" id="Resource_8nh57"]
 script = ExtResource("1_action")

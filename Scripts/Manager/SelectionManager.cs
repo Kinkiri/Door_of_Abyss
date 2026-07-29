@@ -392,6 +392,9 @@ public partial class SelectionManager : Node2D
             {
                 if (!cell.CanStand || cell.OccupyingUnit != null)
                     return null;
+                // 部署限制：必须在门曼哈顿距离 2 以内
+                if (!IsWithinDeployRange(center))
+                    return null;
             }
             return new HashSet<Vector2I> { center };
         }
@@ -415,6 +418,17 @@ public partial class SelectionManager : Node2D
         }
 
         return cells.Count > 0 ? cells : null;
+    }
+
+    /// <summary>检查格子是否在己方门的部署范围内</summary>
+    private static bool IsWithinDeployRange(Vector2I gridPos)
+    {
+        var door = UnitManager.Instance?.PlayerDoor;
+        if (door == null) return true;
+        int range = (door.UnitData as DoorData)?.DeployRange ?? 2;
+        int dist = System.Math.Abs(gridPos.X - door.GridPos.X) +
+                   System.Math.Abs(gridPos.Y - door.GridPos.Y);
+        return dist <= range;
     }
 
     private static bool IsTargetFilterMatch(TargetFilter filter, Unit target)
