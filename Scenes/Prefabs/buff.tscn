@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://c0jkh2ny483rk"]
+
+[ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="1_6atkh"]
+[ext_resource type="Script" uid="uid://ctfnbacq5o82n" path="res://Scripts/View/BuffView.cs" id="1_ca50s"]
+
+[node name="Buff" type="Node2D" unique_id=317185742 node_paths=PackedStringArray("IconRect", "CountLabel", "DescriptionPanel", "DescriptionLabel")]
+script = ExtResource("1_ca50s")
+IconRect = NodePath("TextureRect")
+CountLabel = NodePath("Label")
+DescriptionPanel = NodePath("Panel")
+DescriptionLabel = NodePath("Panel/Label")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1299751624]
+offset_right = 40.0
+offset_bottom = 40.0
+scale = Vector2(0.23999988, 0.23999988)
+texture = ExtResource("1_6atkh")
+
+[node name="Label" type="Label" parent="." unique_id=2089201624]
+modulate = Color(1, 0, 0, 1)
+offset_left = -13.0
+offset_top = -1.0
+offset_right = 27.0
+offset_bottom = 22.0
+scale = Vector2(1.4520969, 1.4520969)
+text = "?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Panel" type="Panel" parent="." unique_id=779946339]
+offset_left = -16.0
+offset_top = 30.0
+offset_right = 51.0
+offset_bottom = 52.0
+
+[node name="Label" type="Label" parent="Panel" unique_id=1637455582]
+layout_mode = 0
+offset_top = -1.9999995
+offset_right = 186.11046
+offset_bottom = 70.22197
+scale = Vector2(0.36000124, 0.36000124)
+text = "?????"
+horizontal_alignment = 1
+vertical_alignment = 1

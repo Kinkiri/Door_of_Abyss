@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://djiilhm1jyasb"]
+
+[ext_resource type="Script" uid="uid://dnlsqjf0bupsk" path="res://Scripts/Data/Actions/DrawCardAction.cs" id="1_actions"]
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_card"]
+
+[sub_resource type="Resource" id="Resource_0v6ps"]
+script = ExtResource("1_actions")
+Value = 2
+
+[resource]
+script = ExtResource("1_card")
+CardID = "无中生有"
+CardName = "无中生有"
+Description = "抽两张牌"
+Type = 1
+Actions = Array[Object]([SubResource("Resource_0v6ps")])
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

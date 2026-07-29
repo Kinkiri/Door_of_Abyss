@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://dyo3pvkadycis"]
+
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_mdk1n"]
+[ext_resource type="Resource" uid="uid://ce81ji0jjv2yr" path="res://Resource/Data/Buff/强壮.tres" id="1_pkrgy"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_82elv"]
+
+[sub_resource type="Resource" id="Resource_qrm4r"]
+script = ExtResource("2_82elv")
+BuffData = ExtResource("1_pkrgy")
+InitialStacks = 2
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[resource]
+script = ExtResource("1_mdk1n")
+CardID = "变强"
+CardName = "变强"
+Description = "对一名友方单位施加2层强壮"
+Type = 1
+Shape = 1
+Filter = 2
+Actions = Array[Object]([SubResource("Resource_qrm4r")])
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

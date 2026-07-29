@@ -1,0 +1,105 @@
+[gd_scene format=3 uid="uid://n2lf7klphtj5"]
+
+[ext_resource type="Script" uid="uid://d7gvkpac4jmr" path="res://Scripts/View/UnitView.cs" id="1_oallc"]
+[ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="2_sgsew"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fw11u"]
+size = Vector2(120, 120)
+
+[node name="DefaultUnit" type="Node2D" unique_id=918862661 node_paths=PackedStringArray("NameLabel", "HPLabel", "ATKLabel", "DescriptionPanel", "DescriptionLabel")]
+script = ExtResource("1_oallc")
+NameLabel = NodePath("Control/Name")
+HPLabel = NodePath("Control/HP")
+ATKLabel = NodePath("Control/ATK")
+DescriptionPanel = NodePath("Panel")
+DescriptionLabel = NodePath("Panel/Label")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=249111711]
+scale = Vector2(0.931094, 0.931094)
+texture = ExtResource("2_sgsew")
+
+[node name="Control" type="Control" parent="." unique_id=336620384]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="Control" unique_id=148693596]
+layout_mode = 0
+offset_left = -51.0
+offset_top = -60.0
+offset_right = 51.0
+offset_bottom = -37.0
+text = "名字"
+horizontal_alignment = 1
+
+[node name="HPico" type="Label" parent="Control" unique_id=511339566]
+modulate = Color(1, 0.14117648, 0, 1)
+layout_mode = 0
+offset_left = 8.0
+offset_top = 36.0
+offset_right = 41.0
+offset_bottom = 59.0
+text = "❤️"
+horizontal_alignment = 1
+
+[node name="HP" type="Label" parent="Control" unique_id=1543809364]
+modulate = Color(1, 0.14117648, 0, 1)
+layout_mode = 0
+offset_left = 28.0
+offset_top = 36.0
+offset_right = 61.0
+offset_bottom = 59.0
+text = "0"
+horizontal_alignment = 1
+
+[node name="ATKico" type="Label" parent="Control" unique_id=1397139365]
+layout_mode = 0
+offset_left = -61.0
+offset_top = 33.0
+offset_right = -28.0
+offset_bottom = 56.0
+text = "🤺"
+horizontal_alignment = 1
+
+[node name="ATK" type="Label" parent="Control" unique_id=594771906]
+layout_mode = 0
+offset_left = -40.0
+offset_top = 36.0
+offset_right = -7.0
+offset_bottom = 59.0
+text = "0"
+horizontal_alignment = 1
+
+[node name="BuffContainer" type="HBoxContainer" parent="." unique_id=259459456]
+offset_left = -60.0
+offset_top = 53.0
+offset_right = 60.0
+offset_bottom = 76.0
+
+[node name="Panel" type="Panel" parent="." unique_id=710251118]
+visible = false
+offset_left = -119.0
+offset_top = -195.0
+offset_right = 119.0
+offset_bottom = -74.0
+
+[node name="Label" type="Label" parent="Panel" unique_id=2088603210]
+layout_mode = 0
+offset_left = -1.0
+offset_top = 11.0
+offset_right = 237.0
+offset_bottom = 103.0
+text = "??"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Area2D" type="Area2D" parent="." unique_id=421000204]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=653882582]
+position = Vector2(1, 0)
+shape = SubResource("RectangleShape2D_fw11u")
+
+[connection signal="mouse_entered" from="Area2D" to="." method="OnMouseEntered"]
+[connection signal="mouse_exited" from="Area2D" to="." method="OnMouseExited"]

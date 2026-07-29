@@ -1,0 +1,42 @@
+using Godot;
+
+/// <summary>
+/// 造成伤害。可复用于卡牌和被动效果。
+/// </summary>
+[GlobalClass]
+public partial class DamageAction : GameAction
+{
+    [Export] public int Value;
+
+    /// <summary>动态值源，设置后覆盖 Value</summary>
+    [Export] public ValueSource ValueSource { get; set; }
+
+    protected override void Apply(Context ctx)
+    {
+        if (ctx.TargetUnits == null) return;
+
+        int dmg = ValueSource?.GetValue(ctx) ?? Value;
+
+        foreach (var target in ctx.TargetUnits)
+        {
+            if (target == null || !target.IsAlive) continue;
+
+            int dealt = UnitManager.Instance.DamageUnit(target, dmg);
+            if (dealt <= 0) continue;
+
+            GD.Print($"[DamageAction] 对 {target.UnitData?.UnitName} 造成 {dealt} 点伤害");
+
+            // 有来源单位时触发战斗被动事件
+            if (ctx.SourceUnit != null)
+            {
+                EventBus.Instance?.Fire(EventType.OnDealDamage,
+                    new Context { TargetUnit = target }, subject: ctx.SourceUnit);
+                EventBus.Instance?.Fire(EventType.OnTakeDamage,
+                    new Context { TargetUnit = ctx.SourceUnit }, subject: target);
+                if (!target.IsAlive)
+                    EventBus.Instance?.Fire(EventType.OnKill,
+                        new Context { TargetUnit = target }, subject: ctx.SourceUnit);
+            }
+        }
+    }
+}

@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://dr5crh4jdw3kf"]
+
+[ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/WaveData.cs" id="1_4qidm"]
+[ext_resource type="Resource" path="res://Resource/Data/Maps/格调.tres" id="1_wp8c3"]
+[ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/LevelData.cs" id="1_y0i6a"]
+[ext_resource type="Resource" uid="uid://bn23m0b6t8tvw" path="res://Resource/Data/Units/弓手.tres" id="2_nvsh4"]
+[ext_resource type="Resource" uid="uid://cl8dt7np6l2rg" path="res://Resource/Data/Units/战墙.tres" id="2_wp8c3"]
+[ext_resource type="Resource" uid="uid://besew5ondee15" path="res://Resource/Data/Units/小兵.tres" id="3_cs3pf"]
+[ext_resource type="Resource" uid="uid://cqrsbb234uglr" path="res://Resource/Data/Units/先锋.tres" id="3_nvsh4"]
+[ext_resource type="Resource" uid="uid://bqf677fitv6wi" path="res://Resource/Data/Units/炸弹手.tres" id="7_gcxre"]
+[ext_resource type="Resource" uid="uid://brpvxdujqqh5b" path="res://Resource/Data/Units/吸血鬼.tres" id="8_pt52y"]
+[ext_resource type="Resource" uid="uid://casbp4wx7562d" path="res://Resource/Data/Units/巨型战士.tres" id="9_gk8k7"]
+[ext_resource type="Resource" uid="uid://dsqfv7ael8av5" path="res://Resource/Data/Units/精兵.tres" id="10_k5l7i"]
+
+[sub_resource type="Resource" id="Resource_4qidm"]
+script = ExtResource("1_4qidm")
+UnitDatas = Array[Object]([ExtResource("2_wp8c3"), ExtResource("3_nvsh4"), ExtResource("3_cs3pf")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_n4hmb"]
+script = ExtResource("1_4qidm")
+Round = 2
+UnitDatas = Array[Object]([ExtResource("2_nvsh4"), ExtResource("9_gk8k7"), ExtResource("9_gk8k7")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_dqlwa"]
+script = ExtResource("1_4qidm")
+Round = 4
+UnitDatas = Array[Object]([ExtResource("7_gcxre"), ExtResource("7_gcxre"), ExtResource("7_gcxre")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_glvj2"]
+script = ExtResource("1_4qidm")
+Round = 5
+UnitDatas = Array[Object]([ExtResource("8_pt52y"), ExtResource("8_pt52y"), ExtResource("9_gk8k7")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_aj6n3"]
+script = ExtResource("1_4qidm")
+Round = 7
+UnitDatas = Array[Object]([ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i"), ExtResource("10_k5l7i")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[resource]
+script = ExtResource("1_y0i6a")
+LevelName = "格调"
+Waves = Array[Object]([SubResource("Resource_4qidm"), SubResource("Resource_n4hmb"), SubResource("Resource_dqlwa"), SubResource("Resource_glvj2"), SubResource("Resource_aj6n3")])
+MapData = ExtResource("1_wp8c3")
+DoorPlaceZoneMax = Vector2i(1, 1)
+DefaultSpawnAreaMin = Vector2i(-3, 7)
+DefaultSpawnAreaMax = Vector2i(4, 11)
+metadata/_custom_type_script = "uid://wk0covoailum"

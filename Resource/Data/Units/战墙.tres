@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://cl8dt7np6l2rg"]
+
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/UnitData.cs" id="1_4v3bf"]
+[ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/Units/戈多机器人.tscn" id="1_icfuf"]
+
+[resource]
+script = ExtResource("1_4v3bf")
+UnitID = "战墙"
+UnitName = "战墙"
+AttackPower = 0
+HealthPoints = 4
+Stamina = 0
+AttackDistance = 0
+Type = 1
+ActionPoints = 0
+UnitPrefab = ExtResource("1_icfuf")
+PassiveEffects = null
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

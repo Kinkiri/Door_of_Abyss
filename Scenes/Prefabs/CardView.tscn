@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://mwok0rnckmre"]
+
+[ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="1_um4yc"]
+[ext_resource type="Script" uid="uid://cofenyywaw62f" path="res://Scripts/View/CardView.cs" id="2_s5gib"]
+
+[node name="CardView" type="TextureButton" unique_id=970240823 node_paths=PackedStringArray("CardName", "CardCost", "CardDescription", "DescriptionPanel")]
+offset_right = 128.0
+offset_bottom = 128.0
+pivot_offset = Vector2(64, 67)
+texture_normal = ExtResource("1_um4yc")
+script = ExtResource("2_s5gib")
+CardName = NodePath("Name")
+CardCost = NodePath("Cost")
+CardDescription = NodePath("Panel/Description")
+DescriptionPanel = NodePath("Panel")
+
+[node name="Cost" type="Label" parent="." unique_id=1747473329]
+layout_mode = 0
+offset_left = 99.99999
+offset_top = -7.9794326
+offset_right = 140.0
+offset_bottom = 15.020567
+scale = Vector2(1.7934153, 1.7934153)
+text = "c"
+
+[node name="Name" type="Label" parent="." unique_id=28436121]
+layout_mode = 0
+offset_left = 9.999998
+offset_top = 1.088172
+offset_right = 50.0
+offset_bottom = 24.088173
+text = "名字"
+
+[node name="Panel" type="Panel" parent="." unique_id=1212925830]
+layout_mode = 0
+offset_left = -39.0
+offset_top = -121.0
+offset_right = 169.0
+offset_bottom = -12.0
+
+[node name="Description" type="Label" parent="Panel" unique_id=1616115876]
+layout_mode = 0
+offset_left = -1.0
+offset_top = 2.0000076
+offset_right = 258.9996
+offset_bottom = 136.99979
+scale = Vector2(0.80000126, 0.80000126)
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 1

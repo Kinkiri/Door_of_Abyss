@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://dl8hmrc3mnmtt"]
+
+[ext_resource type="Script" path="res://Scripts/Data/Actions/DamageAction.cs" id="1_actions"]
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_card"]
+
+[sub_resource type="Resource" id="Resource_pdtq3"]
+script = ExtResource("1_actions")
+Value = 2
+
+[resource]
+script = ExtResource("1_card")
+CardID = "天火"
+CardName = "天火！"
+Description = "对3*3的区域的所有敌方单位造成2点伤害"
+Type = 1
+Shape = 4
+Filter = 1
+Cost = 2
+Actions = Array[Object]([SubResource("Resource_pdtq3")])
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

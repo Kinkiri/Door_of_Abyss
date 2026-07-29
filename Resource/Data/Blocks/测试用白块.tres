@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="BlockData" format=3 uid="uid://b63yiwk0fnylq"]
+
+[ext_resource type="Script" uid="uid://ce0wxis7r8i0b" path="res://Scripts/Data/BlockData.cs" id="1_fww2i"]
+
+[resource]
+script = ExtResource("1_fww2i")
+BlockName = "别踩白块"
+BlockDescription = "踩了就输"
+metadata/_custom_type_script = "uid://ce0wxis7r8i0b"

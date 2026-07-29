@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://bqf677fitv6wi"]
+
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/UnitData.cs" id="1_lg7m1"]
+[ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/Units/戈多机器人.tscn" id="1_xfodj"]
+
+[resource]
+script = ExtResource("1_lg7m1")
+UnitID = "炸弹手"
+UnitName = "炸弹手"
+AttackPower = 3
+HealthPoints = 1
+UnitPrefab = ExtResource("1_xfodj")
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

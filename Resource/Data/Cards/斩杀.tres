@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://dvml5fmfagard"]
+
+[ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="1_77k5y"]
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_xov0g"]
+[ext_resource type="Script" uid="uid://b3r23g1bf7ybd" path="res://Scripts/Data/Condition/HPCondition.cs" id="2_6q3wi"]
+
+[sub_resource type="Resource" id="Resource_33pkt"]
+script = ExtResource("1_77k5y")
+Value = 99999
+metadata/_custom_type_script = "uid://bcjncmte44un1"
+
+[sub_resource type="Resource" id="Resource_77k5y"]
+script = ExtResource("2_6q3wi")
+Value = 75
+metadata/_custom_type_script = "uid://b3r23g1bf7ybd"
+
+[resource]
+script = ExtResource("1_xov0g")
+CardID = "斩杀"
+CardName = "斩杀"
+Description = "血低于75%直接秒杀"
+Type = 1
+Shape = 1
+Filter = 1
+Cost = 2
+Actions = Array[Object]([SubResource("Resource_33pkt")])
+Conditions = Array[Object]([SubResource("Resource_77k5y")])
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"
