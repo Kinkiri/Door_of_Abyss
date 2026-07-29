@@ -19,18 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-注：本许可证仅适用于项目中的代码部分（.cs / .csproj / .sln 等程序文件）。
-
-本项目的**美术资源、音乐音效、字体、关卡配置等非代码资产**保留所有权利，
-仅供个人学习与交流，严禁任何形式的商业使用。
-
-Note: This license applies only to the code portion of this project
-(.cs / .csproj / .sln and other program files).
-
-All **art assets, music, sound effects, fonts, level configurations,
-and other non-code assets** in this project are All Rights Reserved.
-They are provided for personal learning and communication purposes only.
-Any form of commercial use is strictly prohibited.
