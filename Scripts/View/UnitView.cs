@@ -41,6 +41,11 @@ public partial class UnitView : Node2D
     [ExportGroup("移动")]
     [Export] public float MoveBounceDuration = 0.3f;
 
+    [ExportGroup("攻击")]
+    [Export] public Color AttackFlashColor = new Color(1.5f, 1.5f, 1.5f);
+    [Export] public float AttackFlashIn = 0.05f;
+    [Export] public float AttackFlashOut = 0.08f;
+
     [ExportGroup("浮动数字")]
     [Export] public float FloatLifetime = 0.7f;
     [Export] public float FloatRise = 28f;
@@ -70,6 +75,9 @@ public partial class UnitView : Node2D
         summon.SetEase(Tween.EaseType.Out);
         summon.TweenProperty(this, "scale", Vector2.One, SummonScaleDuration);
 
+        // 订阅 ActionQueue 事件（攻击闪白、Buff 弹跳）
+        ActionQueue.OnActionExecuted += OnActionExecuted;
+
         Unit.OnUnitUpdate += UpdateView;
         UpdateView();
         _firstUpdate = false;
@@ -77,6 +85,7 @@ public partial class UnitView : Node2D
 
     public override void _ExitTree()
     {
+        ActionQueue.OnActionExecuted -= OnActionExecuted;
         if (Unit != null) Unit.OnUnitUpdate -= UpdateView;
     }
 
@@ -94,6 +103,37 @@ public partial class UnitView : Node2D
 
         // 正常存活时的安全检测
         if (Unit == null) { QueueFree(); }
+    }
+
+    /// <summary>响应 ActionQueue：自己是攻击者时闪白，自己被施加/移除 Buff 时弹跳</summary>
+    private void OnActionExecuted(GameAction action, Context ctx)
+    {
+        if (action == null || _isDying || Unit == null) return;
+
+        switch (action)
+        {
+            case DamageAction when ctx.SourceUnit == Unit:
+                // 攻击者闪白
+                var flash = CreateTween();
+                flash.TweenProperty(this, "modulate", AttackFlashColor, AttackFlashIn);
+                flash.TweenProperty(this, "modulate", Colors.White, AttackFlashOut);
+                break;
+
+            case ApplyBuffAction or RemoveBuffAction:
+                // 检查自己是否在目标中
+                if (ctx.TargetUnits != null)
+                {
+                    foreach (var t in ctx.TargetUnits)
+                    {
+                        if (t == Unit)
+                        {
+                            PlayBuffBounce();
+                            break;
+                        }
+                    }
+                }
+                break;
+        }
     }
 
     /// <summary>
