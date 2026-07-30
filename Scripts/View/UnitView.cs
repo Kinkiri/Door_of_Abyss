@@ -237,11 +237,11 @@ public partial class UnitView : Node2D
             var node = FloatingNumberPrefab.Instantiate<FloatingNumber>();
             if (node == null) { GD.PrintErr("[UnitView] Instantiate<FloatingNumber> 返回 null"); return; }
 
-            var root = GetTree()?.Root;
+            var root = GetTree()?.CurrentScene;
             if (root == null) { node.QueueFree(); return; }
 
             root.AddChild(node);
-            GD.Print($"[UnitView] 已加到根节点, parent={node.GetParent()?.Name}");
+            GD.Print($"[UnitView] 已加到当前场景, parent={root.Name}");
 
             node.GlobalPosition = GlobalPosition + new Vector2(0, -20);
             GD.Print($"[UnitView] 浮动数字: {text} 颜色={color} 位置={node.GlobalPosition} Label={node.NumberLabel != null}");
