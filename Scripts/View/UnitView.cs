@@ -244,7 +244,7 @@ public partial class UnitView : Node2D
             GD.Print($"[UnitView] 已加到当前场景, parent={root.Name}");
 
             node.GlobalPosition = GlobalPosition + new Vector2(0, -20);
-            GD.Print($"[UnitView] 浮动数字: {text} 颜色={color} 位置={node.GlobalPosition} Label={node.NumberLabel != null}");
+            GD.Print($"[UnitView] 浮动数字: {text} 颜色={color} 位置={node.GlobalPosition}");
             node.Show(text, color, FloatLifetime, FloatRise);
         }
         catch (Exception e)
