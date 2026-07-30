@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -82,8 +83,8 @@ public partial class ActionQueue : Node
         // 执行动作逻辑
         item.Action.Execute(item.Context);
 
-        // 发送信号供 View 层播动画（后续由 View 订阅）
-        EmitSignal(SignalName.ActionStarted, item.Action.GetType().Name, item.Action.AnimationDuration);
+        // 通知 ViewAnimator 等订阅者播放视觉效果（C# 事件，无类型限制）
+        OnActionExecuted?.Invoke(item.Action, item.Context);
 
         // 等待动画时长后执行下一个
         var timer = GetTree().CreateTimer(item.Action.AnimationDuration);
@@ -111,7 +112,12 @@ public partial class ActionQueue : Node
         };
     }
 
-    [Signal] public delegate void ActionStartedEventHandler(string actionName, float duration);
+    // ========================================================================
+    // 事件（C# 事件，非 Godot 信号 — 无参数类型限制）
+    // ViewAnimator 订阅此事件播放视觉效果
+    // ========================================================================
+    /// <summary>每个动作执行完毕后触发，参数为 (已执行的动作, 上下文)</summary>
+    public static event Action<GameAction, Context> OnActionExecuted;
 
     private struct QueuedAction
     {
