@@ -191,12 +191,9 @@ public partial class UnitManager : Node
         unit.IsDead = true;
         unit.UpdateUnit();
 
-        // 清理视觉节点
+        // 清理视觉节点引用（不 QueueFree——UnitView 自己播完死亡动画后销毁）
         if (_unitViews.TryGetValue(unit, out var view))
-        {
-            view.QueueFree();
             _unitViews.Remove(unit);
-        }
 
         // 取消被动效果订阅
         EventBus.Instance?.Unsubscribe(unit);

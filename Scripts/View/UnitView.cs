@@ -109,7 +109,7 @@ public partial class UnitView : Node2D
         if (ATKLabel != null) ATKLabel.Text = $" {Unit.AttackPower}";
 
         // ── HP 变化检测 ─────────────────────────────────────────────
-        if (!_firstUpdate)
+        if (!_firstUpdate && !_isDying)
         {
             int hpDiff = Unit.CurrentHP - _prevHP;
             if (hpDiff < 0)
@@ -119,8 +119,8 @@ public partial class UnitView : Node2D
         }
         _prevHP = Unit.CurrentHP;
 
-        // ── 位置变化检测 ─────────────────────────────────────────────
-        if (!_firstUpdate && Unit.GridPos != _prevGridPos)
+        // ── 位置变化检测（死亡时不做）─────────────────────────────
+        if (!_firstUpdate && !_isDying && Unit.GridPos != _prevGridPos)
             PlayMoveLanding();
         _prevGridPos = Unit.GridPos;
         Position = MapManager.Instance.GridToWorld(Unit.GridPos);
