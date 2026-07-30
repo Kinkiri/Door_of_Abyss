@@ -69,8 +69,6 @@ public partial class UnitView : Node2D
             QueueFree();
             return;
         }
-
-        Position = MapManager.Instance.GridToWorld(Unit.GridPos);
     }
 
     public void UpdateView()

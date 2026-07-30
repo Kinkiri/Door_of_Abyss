@@ -39,9 +39,9 @@ public partial class ViewAnimator : Node
     [Export] public float FloatNumberRise = 28f;
     [Export] public int FloatNumberFontSize = 18;
 
-    // ========== 移动（瞬移闪现） ==========
+    // ========== 移动 ==========
     [ExportGroup("移动")]
-    [Export] public float MoveFlashDuration = 0.15f;
+    [Export] public float MoveDuration = 0.3f;
 
     public override void _Ready()
     {
@@ -55,6 +55,8 @@ public partial class ViewAnimator : Node
     private void OnActionExecuted(GameAction action, Context ctx)
     {
         if (action == null) return;
+
+        GD.Print($"[ViewAnimator] 收到 {action.GetType().Name}, TargetUnits={(ctx.TargetUnits?.Length.ToString() ?? "null")}, TargetUnit={ctx.TargetUnit?.UnitData?.UnitName}");
 
         switch (action)
         {
@@ -85,14 +87,25 @@ public partial class ViewAnimator : Node
     private void PlayDamageAnimation(Context ctx, DamageAction dmg)
     {
         var targets = ctx.TargetUnits;
-        if (targets == null) return;
+        if (targets == null)
+        {
+            GD.Print("[ViewAnimator] 伤害动画跳过: TargetUnits=null");
+            return;
+        }
 
         int dmgValue = dmg.ValueSource != null ? dmg.ValueSource.GetValue(ctx) : dmg.Value;
 
         foreach (var unit in targets)
         {
             var view = UnitManager.Instance?.GetUnitView(unit);
-            if (view == null) continue;
+            if (view == null)
+            {
+                GD.Print($"[ViewAnimator] 伤害动画跳过: 找不到 {unit?.UnitData?.UnitName} 的视图");
+                continue;
+            }
+
+            GD.Print($"[ViewAnimator] 播放伤害动画: {unit.UnitData?.UnitName} value={dmgValue}");
+
 
             // 闪红
             var flash = CreateTween();
@@ -186,19 +199,20 @@ public partial class ViewAnimator : Node
     }
 
     // ========================================================================
-    // 移动（闪烁一下）
+    // 移动（新位置着陆弹跳）
     // ========================================================================
     private void PlayMoveAnimation(Context ctx)
     {
         var unit = ctx.SourceUnit ?? ctx.TargetUnit;
         if (unit == null) return;
-
         var view = UnitManager.Instance?.GetUnitView(unit);
         if (view == null) return;
 
-        var flash = CreateTween();
-        flash.TweenProperty(view, "modulate", new Color(0.7f, 0.7f, 1), MoveFlashDuration);
-        flash.TweenProperty(view, "modulate", Colors.White, MoveFlashDuration);
+        var bounce = CreateTween();
+        bounce.SetTrans(Tween.TransitionType.Back);
+        bounce.SetEase(Tween.EaseType.Out);
+        bounce.TweenProperty(view, "scale", Vector2.One * 1.15f, MoveDuration * 0.4f);
+        bounce.TweenProperty(view, "scale", Vector2.One, MoveDuration * 0.6f);
     }
 
     // ========================================================================
