@@ -47,7 +47,6 @@ public partial class UnitView : Node2D
     [Export] public float AttackFlashOut = 0.08f;
 
     [ExportGroup("浮动数字")]
-    [Export] public PackedScene FloatingNumberPrefab { get; set; }
     [Export] public float FloatLifetime = 0.7f;
     [Export] public float FloatRise = 28f;
     [Export] public int FloatFontSize = 18;
@@ -173,7 +172,7 @@ public partial class UnitView : Node2D
 
     private void PlayDamageFlash(int amount)
     {
-        GD.Print($"[UnitView] PlayDamageFlash: {Unit?.UnitData?.UnitName} amount={amount} _isDying={_isDying} prefab={FloatingNumberPrefab != null}");
+        GD.Print($"[UnitView] PlayDamageFlash: {Unit?.UnitData?.UnitName} amount={amount} _isDying={_isDying}");
         var tween = CreateTween();
         tween.TweenProperty(this, "modulate", DamageColor, DamageFlashDuration);
         tween.TweenProperty(this, "modulate", Colors.White, DamageFlashDuration * 0.5f);
@@ -184,7 +183,7 @@ public partial class UnitView : Node2D
 
     private void PlayHealFlash(int amount)
     {
-        GD.Print($"[UnitView] PlayHealFlash: {Unit?.UnitData?.UnitName} amount={amount} prefab={FloatingNumberPrefab != null}");
+        GD.Print($"[UnitView] PlayHealFlash: {Unit?.UnitData?.UnitName} amount={amount}");
         var tween = CreateTween();
         tween.TweenProperty(this, "modulate", HealColor, HealFlashDuration);
         tween.TweenProperty(this, "modulate", Colors.White, HealFlashDuration * 0.5f);
@@ -226,31 +225,46 @@ public partial class UnitView : Node2D
 
     private void ShowFloatingNumber(string text, Color color)
     {
-        if (FloatingNumberPrefab == null)
+        var scene = GetTree()?.CurrentScene;
+        if (scene == null) return;
+
+        // 找或创建 CanvasLayer（永远在最上层）
+        var layer = scene.GetNodeOrNull<CanvasLayer>("FloatLayer");
+        if (layer == null)
         {
-            GD.Print($"[UnitView] ShowFloatingNumber 跳过: FloatingNumberPrefab 为空");
-            return;
+            layer = new CanvasLayer();
+            layer.Name = "FloatLayer";
+            layer.Layer = 128;
+            scene.AddChild(layer);
         }
 
-        try
+        // 创建 Label
+        var label = new Label();
+        label.Text = text;
+        label.Modulate = color;
+        label.AddThemeFontSizeOverride("font_size", FloatFontSize);
+        label.HorizontalAlignment = HorizontalAlignment.Center;
+        label.SetSize(new Vector2(80, 30));
+
+        // 世界坐标 → 屏幕坐标
+        var camera = GetViewport()?.GetCamera2D();
+        if (camera != null)
         {
-            var node = FloatingNumberPrefab.Instantiate<FloatingNumber>();
-            if (node == null) { GD.PrintErr("[UnitView] Instantiate<FloatingNumber> 返回 null"); return; }
-
-            var root = GetTree()?.CurrentScene;
-            if (root == null) { node.QueueFree(); return; }
-
-            root.AddChild(node);
-            GD.Print($"[UnitView] 已加到当前场景, parent={root.Name}");
-
-            node.GlobalPosition = GlobalPosition + new Vector2(0, -20);
-            GD.Print($"[UnitView] 浮动数字: {text} 颜色={color} 位置={node.GlobalPosition}");
-            node.Show(text, color, FloatLifetime, FloatRise);
+            var screenCenter = GetViewport().GetVisibleRect().Size / 2;
+            var offset = GlobalPosition - camera.GlobalPosition;
+            label.Position = screenCenter + offset * camera.Zoom + new Vector2(-40, -20);
         }
-        catch (Exception e)
-        {
-            GD.PrintErr($"[UnitView] ShowFloatingNumber 异常: {e.Message}");
-        }
+        else
+            label.Position = new Vector2(-40, -20);
+
+        layer.AddChild(label);
+
+        // 上飘 + 淡出
+        var tween = CreateTween();
+        tween.SetParallel(true);
+        tween.TweenProperty(label, "position", label.Position + Vector2.Up * FloatRise, FloatLifetime);
+        tween.TweenProperty(label, "modulate:a", 0, FloatLifetime * 0.8f);
+        tween.TweenCallback(Callable.From(label.QueueFree));
     }
 
     // ========================================================================

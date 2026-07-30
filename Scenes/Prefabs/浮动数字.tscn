@@ -1,6 +1,0 @@
-[gd_scene format=3]
-
-[ext_resource type="Script" path="res://Scripts/View/FloatingNumber.cs" id="1_fn"]
-
-[node name="FloatingNumber" type="Node2D"]
-script = ExtResource("1_fn")
