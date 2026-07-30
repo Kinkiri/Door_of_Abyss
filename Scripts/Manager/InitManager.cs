@@ -16,6 +16,9 @@ public partial class InitManager : Node
     {
         GD.Print("[InitManager] 开始初始化所有管理器");
 
+        // 触发 CardLibrary 静态构造函数（懒加载），加载并校验所有卡牌数据
+        _ = CardLibrary.CardList.Count;
+
         // 无依赖
         MapManager.Instance?.Init();
         UnitManager.Instance?.Init();

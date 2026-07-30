@@ -14,10 +14,12 @@ public partial class ApplyBuffAction : GameAction
 
     protected override void Apply(Context ctx)
     {
-        GD.Print($"[ApplyBuffAction] target={ctx.TargetUnit?.UnitData?.UnitName} buff={BuffData?.BuffName} stacks={InitialStacks}");
-        if (ctx.TargetUnit != null && BuffData != null)
+        if (ctx.TargetUnits == null) return;
+        GD.Print($"[ApplyBuffAction] targets={ctx.TargetUnits.Length} buff={BuffData?.BuffName} stacks={InitialStacks}");
+        foreach (var target in ctx.TargetUnits)
         {
-            BuffManager.Instance?.ApplyBuff(ctx.TargetUnit, BuffData, ctx.SourceUnit, InitialStacks);
+            if (target != null && BuffData != null)
+                BuffManager.Instance?.ApplyBuff(target, BuffData, ctx.SourceUnit, InitialStacks);
         }
     }
 }

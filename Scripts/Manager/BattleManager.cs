@@ -646,6 +646,11 @@ public partial class BattleManager : Node2D
             int spawned = 0;
             for (int i = 0; i < wave.UnitDatas.Length && i < cells.Count; i++)
             {
+                if (wave.UnitDatas[i] == null)
+                {
+                    GD.PrintErr($"[Battle] 波次 {wave.Round} 第 {i} 个 UnitData 为 null，跳过");
+                    continue;
+                }
                 var unit = UnitManager.Instance.SpawnUnit(wave.UnitDatas[i], cells[i], Team.Enemy);
                 if (unit != null) spawned++;
             }

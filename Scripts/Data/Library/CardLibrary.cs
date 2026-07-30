@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 /// <summary>
 /// 卡牌库类，负责加载和管理所有卡牌数据资源
@@ -39,6 +40,70 @@ public partial class CardLibrary : Library
         foreach (var card in CardList)
         {
             GD.Print($"  {card}");
+        }
+
+        // 加载完成后校验数据
+        ValidateAll();
+    }
+
+    /// <summary>
+    /// 校验所有已加载卡牌的合法性，对不合法项输出 GD.PushWarning。
+    /// 不抛异常——校验是辅助排查，不影响正常加载流程。
+    /// </summary>
+    public static void ValidateAll()
+    {
+        int errorCount = 0;
+        var sb = new StringBuilder();
+        var seenIDs = new HashSet<string>();
+
+        foreach (var card in CardList)
+        {
+            // 1) CardID 不能为空/未配置
+            if (string.IsNullOrWhiteSpace(card.CardID) || card.CardID == "UnknownCard")
+            {
+                sb.AppendLine($"  [{card.GetType().Name}] CardID 未配置或仍为默认值");
+                errorCount++;
+            }
+
+            // 2) CardID 不能重复
+            if (!string.IsNullOrWhiteSpace(card.CardID) && card.CardID != "UnknownCard")
+            {
+                if (!seenIDs.Add(card.CardID))
+                {
+                    sb.AppendLine($"  [CardID={card.CardID}] 重复 CardID");
+                    errorCount++;
+                }
+            }
+
+            // 3) UnitCardData → TargetShape 必须是 SingleCell
+            if (card is UnitCardData unitCard && unitCard.Shape != TargetShape.SingleCell)
+            {
+                sb.AppendLine($"  [{card.CardID}] 单位卡的 Shape 应为 SingleCell，当前为 {unitCard.Shape}");
+                errorCount++;
+            }
+
+            // 4) Cost 不能为负
+            if (card.Cost < 0)
+            {
+                sb.AppendLine($"  [{card.CardID}] Cost={card.Cost}，不能为负");
+                errorCount++;
+            }
+
+            // 5) AreaRange 不能为负
+            if (card.AreaRange < 0)
+            {
+                sb.AppendLine($"  [{card.CardID}] AreaRange={card.AreaRange}，不能为负");
+                errorCount++;
+            }
+        }
+
+        if (errorCount > 0)
+        {
+            GD.PushWarning($"[CardLibrary] 校验发现在 {CardList.Count} 张卡牌中有 {errorCount} 个问题:\n{sb}");
+        }
+        else
+        {
+            GD.Print($"[CardLibrary] 校验完成：{CardList.Count} 张卡牌全部通过");
         }
     }
 

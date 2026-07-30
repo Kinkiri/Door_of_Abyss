@@ -16,4 +16,5 @@ Type = 1
 Shape = 5
 Cost = 2
 Actions = Array[Object]([SubResource("Resource_yadyw")])
+Conditions = null
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

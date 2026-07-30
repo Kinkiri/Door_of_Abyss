@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://b327xsmybu8k6"]
 
 [ext_resource type="Script" uid="uid://c6euywspbjyd" path="res://Scripts/Data/Actions/AutoAttackAction.cs" id="1_action"]
-[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/UnitData.cs" id="1_data"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_data"]
 [ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="1_effect"]
 [ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/单位视图.tscn" id="1_prefab"]
 
@@ -13,6 +13,7 @@ script = ExtResource("1_effect")
 TriggerEvent = 1
 MaxTriggerCount = 1
 Actions = Array[Object]([SubResource("Resource_3b85t")])
+Conditions = null
 
 [resource]
 script = ExtResource("1_data")

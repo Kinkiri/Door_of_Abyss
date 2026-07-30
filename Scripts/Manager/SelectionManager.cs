@@ -366,9 +366,26 @@ public partial class SelectionManager : Node2D
         var map = MapManager.Instance?.Map;
         if (map == null) return null;
 
-        // 全地图目标：显示所有格子
+        // 全地图目标：根据 Filter 只显示有匹配单位的格子
         if (shape == TargetShape.All)
-            return new HashSet<Vector2I>(map.Keys);
+        {
+            var teamFilter = card.Filter switch
+            {
+                TargetFilter.Enemy => BattleManager.Instance?.CurrentTeam == Team.Player ? Team.Enemy : Team.Player,
+                TargetFilter.Ally => BattleManager.Instance?.CurrentTeam,
+                _ => (Team?)null,
+            };
+
+            var result = new HashSet<Vector2I>();
+            foreach (var (pos, cell) in map)
+            {
+                var u = cell.OccupyingUnit;
+                if (u == null || !u.IsAlive || u.IsDead) continue;
+                if (teamFilter != null && u.Team != teamFilter) continue;
+                result.Add(pos);
+            }
+            return result.Count > 0 ? result : null;
+        }
 
         if (!map.ContainsKey(center)) return null;
 

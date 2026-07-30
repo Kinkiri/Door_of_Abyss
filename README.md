@@ -331,8 +331,8 @@ OrCondition
 
 | 动作 | 字段 | 可逆 | 说明 |
 |---|---|---|---|
-| DamageAction | Value/ValueSource | x | 伤害，触发战斗被动 |
-| HealAction | Value/ValueSource | x | 治疗 |
+| DamageAction | Value/ValueSource | x | 伤害，触发战斗被动。遍历 `TargetUnits` 支持多目标 |
+| HealAction | Value/ValueSource | x | 治疗。遍历 `TargetUnits` 支持多目标 |
 | DrawCardAction | Value/ValueSource | x | 抽牌 |
 | ModifyCostAction | Value/ValueSource | x | 增减费用 |
 
@@ -360,7 +360,7 @@ MaxHP 规则：施加时只加上限不减当前 HP，还原时截断。
 
 | 动作 | 字段 | 说明 |
 |---|---|---|
-| ApplyBuffAction | BuffData, InitialStacks | 施加 Buff，初始层数可设（默认 1） |
+| ApplyBuffAction | BuffData, InitialStacks | 施加 Buff。**遍历 `TargetUnits` 支持多目标**（如 Shape=All）。
 | ModifyBuffAction | BuffID, TurnsDelta, StacksDelta | 修改回合/叠层。**减层逐层还原**，归零移除 |
 | RemoveBuffAction | BuffID | 无条件整个移除（驱散） |
 
@@ -441,6 +441,7 @@ MaxHP 规则：施加时只加上限不减当前 HP，还原时截断。
 ### 叠层 = 效果倍率
 
 InitialStacks=2 + ModifyStatAction(ATK,+1) -> ATK+2。
+已有 Buff 时再次施加，叠层数按 `InitialStacks` 增长（不是固定 +1）。
 ModifyBuffAction(StacksDelta=-1) -> 减 1 层，还原 1 次 -> ATK-1。
 归零 -> 移除，还原全部 + OnExpireActions。
 
@@ -518,6 +519,22 @@ Actions=[AutoAttackAction]
 
 **变强：** `Type=Spell, Shape=SingleUnit, Filter=Ally, Cost=1`
 `Actions=[ApplyBuffAction{BuffData=<强壮.tres>, InitialStacks=2}]`
+
+**风羽：** `Type=Spell, Shape=All, Filter=Ally, Cost=2`
+`Actions=[DrawCardAction{Value=1}, ApplyBuffAction{BuffData=<风羽.tres>}]`
+说明：全体友方本回合攻击距离+1 并抽 1 张牌。
+
+### 7.4 全图目标（Shape=All）
+
+Shape=All 时预览高亮只显示 Filter 匹配且有存活单位的格子，不会全地图渲染。
+
+### 7.5 资源校验
+
+打开游戏时 `CardLibrary.ValidateAll()` 自动校验所有卡牌：
+- `UnitCardData` 的 Shape 必须为 `SingleCell`
+- `CardID` 不能为空/重复
+- `Cost`、`AreaRange` 等 int 字段不能为负
+- 问题项输出警告，不影响加载流程
 
 ## 8. 目标系统
 
@@ -658,6 +675,8 @@ UnitData PassiveEffects=[EffectData{
   Actions=[DamageAction{Value=3}]
 }]
 ```
+
+> 注意：`OnUnitDeath` 允许死者触发自身被动，EventBus 不拦截已死单位的亡语订阅。
 
 ### 10.10 强风术 - 击退 2 格
 

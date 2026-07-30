@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://cqrsbb234uglr"]
 
-[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/UnitData.cs" id="1_eksbm"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_eksbm"]
 [ext_resource type="Script" uid="uid://dvi5cm6ic86ev" path="res://Scripts/Data/Actions/ModifyCostAction.cs" id="1_yih4y"]
 [ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_2xiu5"]
 [ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/单位视图.tscn" id="3_yih4y"]

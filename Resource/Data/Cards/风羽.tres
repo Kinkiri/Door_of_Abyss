@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://dg3krk17fcll6"]
+
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_d5ua7"]
+[ext_resource type="Script" uid="uid://dnlsqjf0bupsk" path="res://Scripts/Data/Actions/DrawCardAction.cs" id="1_mjs7r"]
+[ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="2_sbqb3"]
+[ext_resource type="Script" uid="uid://b3sdoj1kcep0a" path="res://Scripts/Data/BuffData.cs" id="3_fmrdh"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="4_0k4fr"]
+
+[sub_resource type="Resource" id="Resource_d5ua7"]
+script = ExtResource("1_mjs7r")
+Value = 1
+metadata/_custom_type_script = "uid://dnlsqjf0bupsk"
+
+[sub_resource type="Resource" id="Resource_cs3pf"]
+script = ExtResource("2_sbqb3")
+TargetStat = 3
+Value = 1
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_nvsh4"]
+script = ExtResource("3_fmrdh")
+BuffID = "风羽"
+BuffName = "风羽"
+Description = "本回合攻击距离加一"
+MaxStack = -1
+OnApplyActions = Array[Object]([SubResource("Resource_cs3pf")])
+OnExpireActions = null
+OnRoundEndActions = null
+PassiveEffects = null
+metadata/_custom_type_script = "uid://b3sdoj1kcep0a"
+
+[sub_resource type="Resource" id="Resource_wp8c3"]
+script = ExtResource("4_0k4fr")
+BuffData = SubResource("Resource_nvsh4")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[resource]
+script = ExtResource("1_d5ua7")
+CardID = "风羽"
+CardName = "风羽"
+Description = "令所有己方单位本回合攻击范围+1:抽一张牌"
+Type = 1
+Shape = 5
+Filter = 2
+Cost = 2
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_d5ua7"), SubResource("Resource_wp8c3")])
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

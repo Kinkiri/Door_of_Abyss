@@ -164,7 +164,12 @@ public partial class EventBus : Node
         foreach (var entry in list.ToList())
         {
             var owner = entry.Owner;
-            if (!owner.IsAlive || owner.IsDead) continue;
+
+            // 亡语：OnUnitDeath 允许死者触发自身的被动效果
+            // 其他事件只触发存活单位的被动
+            if (type != EventType.OnUnitDeath && (!owner.IsAlive || owner.IsDead))
+                continue;
+
             if (subject != null && owner != subject) continue;
 
             // 触发次数限制检查

@@ -51,6 +51,6 @@ Type = 1
 Shape = 1
 Filter = 1
 Cost = 2
-Actions = Array[Object]([SubResource("Resource_33pkt")])
 Conditions = Array[Object]([SubResource("Resource_dltph")])
+Actions = Array[Object]([SubResource("Resource_33pkt")])
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

@@ -63,10 +63,11 @@ public partial class BuffManager : Node
                 }
 
                 // 叠层：-1 = 无限叠，>0 不超过上限，0 不应出现
+                // 此处用 initialStacks（例如卡牌定义的初始层数），而非固定 +1
                 if (buffData.MaxStack == -1)
-                    existing.StackCount++;
+                    existing.StackCount += initialStacks;
                 else if (buffData.MaxStack > 0)
-                    existing.StackCount = System.Math.Min(existing.StackCount + 1, buffData.MaxStack);
+                    existing.StackCount = System.Math.Min(existing.StackCount + initialStacks, buffData.MaxStack);
                 existing.RemainingTurns = buffData.Duration;
 
                 {

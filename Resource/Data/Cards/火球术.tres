@@ -15,6 +15,7 @@ Description = "造成两点伤害"
 Type = 1
 Shape = 1
 Filter = 1
+AreaRange = 1
 Actions = Array[Object]([SubResource("Resource_pdtq3")])
 Conditions = null
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

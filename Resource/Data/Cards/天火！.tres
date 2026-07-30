@@ -15,6 +15,7 @@ Description = "对3*3的区域的所有敌方单位造成2点伤害"
 Type = 1
 Shape = 4
 Filter = 1
+AreaRange = 1
 Cost = 2
 Actions = Array[Object]([SubResource("Resource_pdtq3")])
 Conditions = Array[Object]([])

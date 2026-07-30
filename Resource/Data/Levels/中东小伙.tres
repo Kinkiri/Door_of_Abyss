@@ -1,0 +1,71 @@
+[gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://24v55ttqt4ks"]
+
+[ext_resource type="Resource" uid="uid://d25s2ku8yh4py" path="res://Resource/Data/Cards/炸弹手.tres" id="1_lpk8p"]
+[ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="1_t8o3p"]
+[ext_resource type="Resource" uid="uid://djiilhm1jyasb" path="res://Resource/Data/Cards/无中生有.tres" id="2_u3p6e"]
+[ext_resource type="Resource" uid="uid://dl8hmrc3mnmtt" path="res://Resource/Data/Cards/天火！.tres" id="3_baohl"]
+[ext_resource type="Resource" uid="uid://dyo3pvkadycis" path="res://Resource/Data/Cards/变强.tres" id="4_oc8o0"]
+[ext_resource type="Resource" uid="uid://devamvw6um62p" path="res://Resource/Data/Cards/多动症.tres" id="5_q3d5i"]
+[ext_resource type="Resource" uid="uid://b8oubcccs7tte" path="res://Resource/Data/Cards/火球术.tres" id="6_y6xdi"]
+[ext_resource type="Resource" uid="uid://dg3krk17fcll6" path="res://Resource/Data/Cards/风羽.tres" id="7_u3p6e"]
+[ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="7_xgybs"]
+[ext_resource type="Resource" path="res://Resource/Data/Maps/new map.tres" id="8_31lwp"]
+[ext_resource type="Resource" uid="uid://bqf677fitv6wi" path="res://Resource/Data/Units/炸弹手.tres" id="9_drmll"]
+[ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="10_iegl3"]
+
+[sub_resource type="Resource" id="Resource_lxn13"]
+script = ExtResource("7_xgybs")
+DeckName = "中东打法"
+Cards = Array[Object]([ExtResource("1_lpk8p"), ExtResource("1_lpk8p"), ExtResource("1_lpk8p"), ExtResource("2_u3p6e"), ExtResource("3_baohl"), ExtResource("4_oc8o0"), ExtResource("5_q3d5i"), ExtResource("6_y6xdi"), ExtResource("3_baohl"), ExtResource("1_lpk8p"), ExtResource("1_lpk8p"), ExtResource("1_lpk8p"), ExtResource("7_u3p6e"), ExtResource("7_u3p6e")])
+metadata/_custom_type_script = "uid://b1eamjx1y7exn"
+
+[sub_resource type="Resource" id="Resource_mrntf"]
+script = ExtResource("10_iegl3")
+UnitDatas = Array[Object]([ExtResource("9_drmll"), ExtResource("9_drmll")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_q6p3j"]
+script = ExtResource("10_iegl3")
+Round = 2
+SpawnAreaMax = Vector2i(6, 0)
+UnitDatas = Array[Object]([ExtResource("9_drmll"), ExtResource("9_drmll")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_mt5ji"]
+script = ExtResource("10_iegl3")
+Round = 3
+SpawnAreaMax = Vector2i(0, 6)
+UnitDatas = Array[Object]([ExtResource("9_drmll"), ExtResource("9_drmll")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_cge07"]
+script = ExtResource("10_iegl3")
+Round = 4
+SpawnAreaMin = Vector2i(0, 6)
+SpawnAreaMax = Vector2i(6, 6)
+UnitDatas = Array[Object]([ExtResource("9_drmll"), ExtResource("9_drmll")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_mj3vb"]
+script = ExtResource("10_iegl3")
+Round = 6
+UnitDatas = Array[Object]([ExtResource("9_drmll"), ExtResource("9_drmll"), ExtResource("9_drmll"), ExtResource("9_drmll")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_k7wen"]
+script = ExtResource("10_iegl3")
+Round = 8
+SpawnAreaMax = Vector2i(6, 6)
+UnitDatas = Array[Object]([ExtResource("9_drmll"), ExtResource("9_drmll"), ExtResource("9_drmll"), ExtResource("9_drmll"), ExtResource("9_drmll")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[resource]
+script = ExtResource("1_t8o3p")
+LevelName = "中东"
+Waves = Array[Object]([SubResource("Resource_mrntf"), SubResource("Resource_q6p3j"), SubResource("Resource_mt5ji"), SubResource("Resource_cge07"), SubResource("Resource_mj3vb"), SubResource("Resource_k7wen")])
+MapData = ExtResource("8_31lwp")
+DoorPlaceZoneMin = Vector2i(3, 3)
+DoorPlaceZoneMax = Vector2i(3, 3)
+DefaultSpawnAreaMax = Vector2i(0, 6)
+LevelDeck = SubResource("Resource_lxn13")
+metadata/_custom_type_script = "uid://wk0covoailum"
