@@ -156,27 +156,35 @@ public partial class BattleManager : Node2D
             return;
         }
 
-        int dmg = attacker.AttackPower;
-        UnitManager.Instance.DamageUnit(target, dmg);
-        attacker.ActionPoints--;
-        attacker.UpdateUnit();
-        GD.Print($"[Battle] {attacker.UnitData?.UnitName} 攻击 {target.UnitData?.UnitName}" +
-                 $"，造成 {dmg} 点伤害，剩余 AP: {attacker.ActionPoints}");
+        // 通过 DamageAction + ActionQueue 执行伤害（触发动画）
+        var dmgAction = new DamageAction
+        {
+            Value = attacker.AttackPower,
+            AnimationDuration = 0.3f,
+        };
+        var ctx = new Context
+        {
+            TargetUnit = target,
+            TargetUnits = new[] { target },
+            SourceUnit = attacker,
+            SourceTeam = attacker.Team,
+        };
 
-        // 触发战斗相关被动事件
-        EventBus.Instance?.Fire(EventType.OnDealDamage, new Context { TargetUnit = target }, subject: attacker);
-        EventBus.Instance?.Fire(EventType.OnTakeDamage, new Context { TargetUnit = attacker }, subject: target);
-        if (!target.IsAlive)
-            EventBus.Instance?.Fire(EventType.OnKill, new Context { TargetUnit = target }, subject: attacker);
+        ActionQueue.Instance.Enqueue(new[] { dmgAction }, ctx, Callable.From(() =>
+        {
+            attacker.ActionPoints--;
+            attacker.UpdateUnit();
+            GD.Print($"[Battle] {attacker.UnitData?.UnitName} 攻击 {target.UnitData?.UnitName}" +
+                     $"，造成 {attacker.AttackPower} 点伤害，剩余 AP: {attacker.ActionPoints}");
 
-        CheckVictory();
+            CheckVictory();
+            EventBus.Instance?.Fire(EventType.OnUnitAct, new Context(), subject: attacker);
 
-        EventBus.Instance?.Fire(EventType.OnUnitAct, new Context(), subject: attacker);
-
-        if (attacker.ActionPoints <= 0)
-            SelectionManager.Instance.ClearSelection();
-        else
-            SelectionManager.Instance.RecalculateRanges();
+            if (attacker.ActionPoints <= 0)
+                SelectionManager.Instance.ClearSelection();
+            else
+                SelectionManager.Instance.RecalculateRanges();
+        }));
     }
 
     private void OnCardPlay(Card card, Context ctx)
@@ -259,20 +267,28 @@ public partial class BattleManager : Node2D
     {
         if (attacker.ActionPoints <= 0) return;
 
-        int dmg = attacker.AttackPower;
-        UnitManager.Instance.DamageUnit(target, dmg);
-        attacker.ActionPoints--;
-        attacker.UpdateUnit();
-        GD.Print($"[Battle][AI] {attacker.UnitData?.UnitName} 攻击 {target.UnitData?.UnitName}，造成 {dmg} 点伤害");
+        var dmgAction = new DamageAction
+        {
+            Value = attacker.AttackPower,
+            AnimationDuration = 0.3f,
+        };
+        var ctx = new Context
+        {
+            TargetUnit = target,
+            TargetUnits = new[] { target },
+            SourceUnit = attacker,
+            SourceTeam = attacker.Team,
+        };
 
-        // 触发战斗相关被动事件
-        EventBus.Instance?.Fire(EventType.OnDealDamage, new Context { TargetUnit = target }, subject: attacker);
-        EventBus.Instance?.Fire(EventType.OnTakeDamage, new Context { TargetUnit = attacker }, subject: target);
-        if (!target.IsAlive)
-            EventBus.Instance?.Fire(EventType.OnKill, new Context { TargetUnit = target }, subject: attacker);
+        ActionQueue.Instance.Enqueue(new[] { dmgAction }, ctx, Callable.From(() =>
+        {
+            attacker.ActionPoints--;
+            attacker.UpdateUnit();
+            GD.Print($"[Battle][AI] {attacker.UnitData?.UnitName} 攻击 {target.UnitData?.UnitName}，造成 {attacker.AttackPower} 点伤害");
 
-        CheckVictory();
-        EventBus.Instance?.Fire(EventType.OnUnitAct, new Context(), subject: attacker);
+            CheckVictory();
+            EventBus.Instance?.Fire(EventType.OnUnitAct, new Context(), subject: attacker);
+        }));
     }
 
     #endregion

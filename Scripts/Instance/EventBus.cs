@@ -17,6 +17,9 @@ public partial class EventBus : Node
     /// <summary>触发计数追踪：(owner, type) → (maxCount, currentCount)</summary>
     private Dictionary<(Unit owner, EventType type), (int max, int current)> _triggerCounts = new();
 
+    /// <summary>每次 Fire 后触发，供 ViewAnimator 等外部订阅者做视觉效果</summary>
+    public static event Action<EventType, Context, Unit> OnAnyEventFired;
+
     private struct Subscription
     {
         public Unit Owner;
@@ -263,6 +266,9 @@ public partial class EventBus : Node
         }
 
         GD.Print($"[EventBus] <<< Fire({type}) 完成，实际触发 {triggered} 个");
+
+        // 通知 ViewAnimator 等外部订阅者（不受被动订阅机制限制）
+        OnAnyEventFired?.Invoke(type, ctx, subject);
     }
 
     /// <summary>

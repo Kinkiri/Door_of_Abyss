@@ -24,4 +24,7 @@ public partial class Context
     public Cell[] TargetCells { get; set; }
     public Cell TargetCell { get; set; }
 
+    /// <summary>SummonUnitAction 召唤的单位，供 ViewAnimator 做入场动画</summary>
+    public Unit SpawnedUnit { get; set; }
+
 }

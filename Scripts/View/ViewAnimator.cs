@@ -52,6 +52,7 @@ public partial class ViewAnimator : Node
     {
         ActionQueue.OnActionExecuted -= OnActionExecuted;
     }
+
     private void OnActionExecuted(GameAction action, Context ctx)
     {
         if (action == null) return;
@@ -97,7 +98,7 @@ public partial class ViewAnimator : Node
 
         foreach (var unit in targets)
         {
-            var view = UnitManager.Instance?.GetUnitView(unit);
+            var view = FindUnitView(unit);
             if (view == null)
             {
                 GD.Print($"[ViewAnimator] 伤害动画跳过: 找不到 {unit?.UnitData?.UnitName} 的视图");
@@ -106,16 +107,44 @@ public partial class ViewAnimator : Node
 
             GD.Print($"[ViewAnimator] 播放伤害动画: {unit.UnitData?.UnitName} value={dmgValue}");
 
+            if (!unit.IsAlive || unit.IsDead)
+            {
+                // 单位已死亡：播死亡动画（缩放消失），不再闪红
+                PlayDeathAnimation(view);
+            }
+            else
+            {
+                // 单位存活：闪红 + 浮动数字
+                var flash = CreateTween();
+                flash.TweenProperty(view, "modulate", DamageFlashColor, DamageFlashDuration);
+                flash.TweenProperty(view, "modulate", Colors.White, DamageFlashDuration * 0.5f);
 
-            // 闪红
-            var flash = CreateTween();
-            flash.TweenProperty(view, "modulate", DamageFlashColor, DamageFlashDuration);
-            flash.TweenProperty(view, "modulate", Colors.White, DamageFlashDuration * 0.5f);
-
-            // 浮动数字
-            if (ShowDamageNumbers && dmgValue > 0)
-                ShowFloatingNumber(view, $"-{dmgValue}", DamageFlashColor);
+                if (ShowDamageNumbers && dmgValue > 0)
+                    ShowFloatingNumber(view, $"-{dmgValue}", DamageFlashColor);
+            }
         }
+    }
+
+    // ========================================================================
+    // 查找 UnitView：先查字典，再查场景树（应对已死亡单位的视图）
+    // ========================================================================
+    private static UnitView FindUnitView(Unit unit)
+    {
+        if (unit == null) return null;
+
+        // 首选字典查找
+        var view = UnitManager.Instance?.GetUnitView(unit);
+        if (view != null) return view;
+
+        // 回退：场景树中搜索（单位死亡后 _unitViews 已清除，但节点仍在当前帧存活）
+        var mapLayer = MapManager.Instance?.BaseMapLayer;
+        if (mapLayer == null) return null;
+        foreach (var child in mapLayer.GetChildren())
+        {
+            if (child is UnitView uv && uv.Unit == unit)
+                return uv;
+        }
+        return null;
     }
 
     // ========================================================================
@@ -130,7 +159,7 @@ public partial class ViewAnimator : Node
 
         foreach (var unit in targets)
         {
-            var view = UnitManager.Instance?.GetUnitView(unit);
+            var view = FindUnitView(unit);
             if (view == null) continue;
 
             // 闪绿
@@ -154,7 +183,7 @@ public partial class ViewAnimator : Node
 
         foreach (var unit in targets)
         {
-            var view = UnitManager.Instance?.GetUnitView(unit);
+            var view = FindUnitView(unit);
             if (view == null) continue;
 
             var bounce = CreateTween();
@@ -168,21 +197,31 @@ public partial class ViewAnimator : Node
     // ========================================================================
     private void PlaySummonAnimation(Context ctx)
     {
-        var targets = ctx.TargetUnits;
-        if (targets == null) return;
-
-        foreach (var unit in targets)
+        // 优先从 SpawnedUnit 取，否则从 TargetUnits 回退
+        var spawned = ctx.SpawnedUnit;
+        if (spawned == null && ctx.TargetUnits is { Length: > 0 })
+            spawned = ctx.TargetUnits[0];
+        if (spawned == null)
         {
-            var view = UnitManager.Instance?.GetUnitView(unit);
-            if (view == null) continue;
-
-            // _Ready 已经设好了位置，从 0 弹入
-            view.Scale = Vector2.Zero;
-            var summon = CreateTween();
-            summon.SetTrans(Tween.TransitionType.Back);
-            summon.SetEase(Tween.EaseType.Out);
-            summon.TweenProperty(view, "scale", Vector2.One, SummonScaleDuration);
+            GD.Print("[ViewAnimator] 召唤动画跳过: 无目标单位");
+            return;
         }
+
+        var view = FindUnitView(spawned);
+        if (view == null)
+        {
+            GD.Print($"[ViewAnimator] 召唤动画跳过: 找不到 {spawned.UnitData?.UnitName} 的视图");
+            return;
+        }
+
+        GD.Print($"[ViewAnimator] 播放召唤动画: {spawned.UnitData?.UnitName}");
+
+        // _Ready 已经设好了位置，从 0 弹入
+        view.Scale = Vector2.Zero;
+        var summon = CreateTween();
+        summon.SetTrans(Tween.TransitionType.Back);
+        summon.SetEase(Tween.EaseType.Out);
+        summon.TweenProperty(view, "scale", Vector2.One, SummonScaleDuration);
     }
 
     // ========================================================================
@@ -205,7 +244,7 @@ public partial class ViewAnimator : Node
     {
         var unit = ctx.SourceUnit ?? ctx.TargetUnit;
         if (unit == null) return;
-        var view = UnitManager.Instance?.GetUnitView(unit);
+        var view = FindUnitView(unit);
         if (view == null) return;
 
         var bounce = CreateTween();

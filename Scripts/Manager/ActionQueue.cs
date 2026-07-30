@@ -109,6 +109,7 @@ public partial class ActionQueue : Node
             SourceCell = src.SourceCell,
             TargetCell = src.TargetCell,
             TargetCells = src.TargetCells,
+            SpawnedUnit = src.SpawnedUnit,
         };
     }
 
