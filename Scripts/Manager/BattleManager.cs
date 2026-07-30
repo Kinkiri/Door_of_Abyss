@@ -156,6 +156,11 @@ public partial class BattleManager : Node2D
             return;
         }
 
+        // 先扣 AP（即时生效，防止动画期间单位被重复操作）
+        attacker.ActionPoints--;
+        GD.Print($"[Battle] {attacker.UnitData?.UnitName} 攻击 {target.UnitData?.UnitName}" +
+                 $"，造成 {attacker.AttackPower} 点伤害，剩余 AP: {attacker.ActionPoints}");
+
         // 通过 DamageAction + ActionQueue 执行伤害（触发动画）
         var dmgAction = new DamageAction
         {
@@ -172,11 +177,7 @@ public partial class BattleManager : Node2D
 
         ActionQueue.Instance.Enqueue(new[] { dmgAction }, ctx, Callable.From(() =>
         {
-            attacker.ActionPoints--;
             attacker.UpdateUnit();
-            GD.Print($"[Battle] {attacker.UnitData?.UnitName} 攻击 {target.UnitData?.UnitName}" +
-                     $"，造成 {attacker.AttackPower} 点伤害，剩余 AP: {attacker.ActionPoints}");
-
             CheckVictory();
             EventBus.Instance?.Fire(EventType.OnUnitAct, new Context(), subject: attacker);
 
@@ -267,6 +268,10 @@ public partial class BattleManager : Node2D
     {
         if (attacker.ActionPoints <= 0) return;
 
+        // 先扣 AP（即时生效）
+        attacker.ActionPoints--;
+        GD.Print($"[Battle][AI] {attacker.UnitData?.UnitName} 攻击 {target.UnitData?.UnitName}，造成 {attacker.AttackPower} 点伤害");
+
         var dmgAction = new DamageAction
         {
             Value = attacker.AttackPower,
@@ -282,10 +287,7 @@ public partial class BattleManager : Node2D
 
         ActionQueue.Instance.Enqueue(new[] { dmgAction }, ctx, Callable.From(() =>
         {
-            attacker.ActionPoints--;
             attacker.UpdateUnit();
-            GD.Print($"[Battle][AI] {attacker.UnitData?.UnitName} 攻击 {target.UnitData?.UnitName}，造成 {attacker.AttackPower} 点伤害");
-
             CheckVictory();
             EventBus.Instance?.Fire(EventType.OnUnitAct, new Context(), subject: attacker);
         }));
