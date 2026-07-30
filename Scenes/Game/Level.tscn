@@ -15,7 +15,6 @@
 [ext_resource type="Script" uid="uid://uxcmexwkqapj" path="res://Scripts/Manager/BuffManager.cs" id="13_agiwf"]
 [ext_resource type="PackedScene" uid="uid://c0jkh2ny483rk" path="res://Scenes/Prefabs/buff视图.tscn" id="14_8vj8p"]
 [ext_resource type="Script" uid="uid://cviletllf2rxv" path="res://Scripts/Manager/ActionQueue.cs" id="15_vmp7b"]
-[ext_resource type="Script" uid="uid://b3kbguerpcsbo" path="res://Scripts/View/ViewAnimator.cs" id="16_22vck"]
 [ext_resource type="Script" uid="uid://8mt8agyetpu1" path="res://Scripts/View/MapView.cs" id="16_eklyj"]
 [ext_resource type="Resource" uid="uid://b63yiwk0fnylq" path="res://Resource/Data/Blocks/测试用白块.tres" id="17_3fxlp"]
 [ext_resource type="Resource" uid="uid://bnlkpwal7w4ii" path="res://Resource/Data/Blocks/测试用灰块.tres" id="18_0diw8"]
@@ -87,9 +86,6 @@ BuffViewPrefab = ExtResource("14_8vj8p")
 
 [node name="ActionQueue" type="Node" parent="Manager" unique_id=930070617]
 script = ExtResource("15_vmp7b")
-
-[node name="Anm" type="Node" parent="Manager" unique_id=1630771903]
-script = ExtResource("16_22vck")
 
 [node name="Map" type="Node2D" parent="." unique_id=315899385 node_paths=PackedStringArray("BaseTerrainLayer", "MoveMapLayer", "AttackMapLayer", "CardPreviewLayer")]
 script = ExtResource("16_eklyj")

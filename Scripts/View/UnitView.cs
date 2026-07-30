@@ -47,6 +47,7 @@ public partial class UnitView : Node2D
     [Export] public float AttackFlashOut = 0.08f;
 
     [ExportGroup("浮动数字")]
+    [Export] public PackedScene FloatingNumberPrefab { get; set; }
     [Export] public float FloatLifetime = 0.7f;
     [Export] public float FloatRise = 28f;
     [Export] public int FloatFontSize = 18;
@@ -223,20 +224,12 @@ public partial class UnitView : Node2D
 
     private void ShowFloatingNumber(string text, Color color)
     {
-        var label = new Label();
-        label.Text = text;
-        label.Modulate = color;
-        label.AddThemeFontSizeOverride("font_size", FloatFontSize);
-        label.HorizontalAlignment = HorizontalAlignment.Center;
-        label.Position = new Vector2(-30, -20);
-        label.SetSize(new Vector2(60, 30));
-        AddChild(label);
+        if (FloatingNumberPrefab == null) return;
 
-        var tween = CreateTween();
-        tween.SetParallel(true);
-        tween.TweenProperty(label, "position", label.Position + Vector2.Up * FloatRise, FloatLifetime);
-        tween.TweenProperty(label, "modulate:a", 0, FloatLifetime * 0.8f);
-        tween.TweenCallback(Callable.From(label.QueueFree));
+        var node = FloatingNumberPrefab.Instantiate<FloatingNumber>();
+        node.Position = new Vector2(0, -20);
+        AddChild(node);
+        node.Show(text, color, FloatLifetime, FloatRise);
     }
 
     // ========================================================================

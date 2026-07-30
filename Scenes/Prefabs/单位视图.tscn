@@ -17,6 +17,8 @@ EnemyIndicator = NodePath("ColorRect")
 DamageFlashDuration = 0.3
 HealFlashDuration = 0.3
 DeathFadeDuration = 0.5
+AttackFlashIn = 0.01
+AttackFlashOut = 0.6
 
 [node name="Area2D" type="Area2D" parent="." unique_id=421000204]
 
