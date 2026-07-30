@@ -3,8 +3,8 @@ using System;
 
 /// <summary>
 /// 单位视觉实体，跟随 Unit 数据更新位置和属性显示。
-/// 生命周期由 UnitManager 管理，不自行调用 Manager 逻辑。
-/// 鼠标悬停显示描述面板，需要用户将 Sprite/Area2D 的 MouseEntered/MouseExited 信号连接到对应方法。
+/// 内建动画：召唤入场、受伤闪红、治疗闪绿、死亡消散、移动着陆、Buff 弹跳。
+/// 所有动画参数已 Export，可在预制体的 Inspector 中修改。
 /// </summary>
 public partial class UnitView : Node2D
 {
@@ -13,88 +13,202 @@ public partial class UnitView : Node2D
     [Export] public Label NameLabel;
     [Export] public Label HPLabel;
     [Export] public Label ATKLabel;
-
-    /// <summary>描述面板，鼠标悬停时显示</summary>
     [Export] public Panel DescriptionPanel { get; set; }
-
-    /// <summary>描述面板内的文本</summary>
     [Export] public Label DescriptionLabel { get; set; }
-
-    /// <summary>敌方标志精灵，UnitView 创建时自动判断显示/隐藏</summary>
     [Export] public ColorRect EnemyIndicator { get; set; }
+
+    // ── 动画导出参数 ──────────────────────────────────────────────────────
+    [ExportGroup("受伤")]
+    [Export] public Color DamageColor = new Color(1, 0.2f, 0.2f);
+    [Export] public float DamageFlashDuration = 0.12f;
+    [Export] public bool ShowDamageNumbers = true;
+
+    [ExportGroup("治疗")]
+    [Export] public Color HealColor = new Color(0.2f, 1, 0.2f);
+    [Export] public float HealFlashDuration = 0.12f;
+    [Export] public bool ShowHealNumbers = true;
+
+    [ExportGroup("Buff")]
+    [Export] public float BuffBounceScale = 1.25f;
+    [Export] public float BuffBounceDuration = 0.25f;
+
+    [ExportGroup("召唤")]
+    [Export] public float SummonScaleDuration = 0.3f;
+
+    [ExportGroup("死亡")]
+    [Export] public float DeathFadeDuration = 0.35f;
+
+    [ExportGroup("移动")]
+    [Export] public float MoveBounceDuration = 0.3f;
+
+    [ExportGroup("浮动数字")]
+    [Export] public float FloatLifetime = 0.7f;
+    [Export] public float FloatRise = 28f;
+    [Export] public int FloatFontSize = 18;
+
+    // ── 追踪状态 ──────────────────────────────────────────────────────────
+    private int _prevHP;
+    private Vector2I _prevGridPos;
+    private bool _firstUpdate = true;
+    private bool _isDying = false;
 
     public override void _Ready()
     {
-        if (Unit == null)
-        {
-            GD.PrintErr("UnitView: Unit 未赋值，销毁");
-            QueueFree();
-            return;
-        }
+        if (Unit == null) { QueueFree(); return; }
+        if (UnitData == null) UnitData = Unit.UnitData;
 
-        if (UnitData == null)
-            UnitData = Unit.UnitData;
-
-        // 敌方标记：只有敌方单位才显示
-        if (EnemyIndicator != null)
-            EnemyIndicator.Visible = Unit.Team == Team.Enemy;
-
-        // 敌方单位名字红色
-        if (NameLabel != null && Unit.Team == Team.Enemy)
-            NameLabel.Modulate = Colors.Red;
-
-        if (DescriptionPanel != null)
-            DescriptionPanel.Hide();
-
+        if (EnemyIndicator != null) EnemyIndicator.Visible = Unit.Team == Team.Enemy;
+        if (NameLabel != null && Unit.Team == Team.Enemy) NameLabel.Modulate = Colors.Red;
+        if (DescriptionPanel != null) DescriptionPanel.Hide();
         if (DescriptionLabel != null && UnitData != null)
-            DescriptionLabel.Text = $"{UnitData.Description} \n" +
-                                        $"HP: {UnitData.HealthPoints} " +
-                                        $"ATK: {UnitData.AttackPower}\n" +
-                                        $"AD: {UnitData.AttackDistance} " +
-                                        $"AP: {UnitData.ActionPoints}";
+            DescriptionLabel.Text = $"{UnitData.Description}\nHP:{UnitData.HealthPoints} ATK:{UnitData.AttackPower} AD:{UnitData.AttackDistance} AP:{UnitData.ActionPoints}";
+
+        // 召唤入场：从 0 弹入
+        Scale = Vector2.Zero;
+        var summon = CreateTween();
+        summon.SetTrans(Tween.TransitionType.Back);
+        summon.SetEase(Tween.EaseType.Out);
+        summon.TweenProperty(this, "scale", Vector2.One, SummonScaleDuration);
+
         Unit.OnUnitUpdate += UpdateView;
         UpdateView();
+        _firstUpdate = false;
     }
 
     public override void _ExitTree()
     {
-        if (Unit != null)
-            Unit.OnUnitUpdate -= UpdateView;
+        if (Unit != null) Unit.OnUnitUpdate -= UpdateView;
     }
 
     public override void _Process(double delta)
     {
-        if (Unit == null || Unit.IsDead)
+        // 死亡动画：检测到死亡后播放一次，之后不再处理
+        if (!_isDying && Unit != null && (Unit.IsDead || !Unit.IsAlive))
         {
-            QueueFree();
+            _isDying = true;
+            PlayDeathAnimation();
             return;
         }
+        // 死亡动画播放中，什么都不做等动画结束
+        if (_isDying) return;
+
+        // 正常存活时的安全检测
+        if (Unit == null) { QueueFree(); }
     }
 
+    /// <summary>
+    /// Unit 数据变化时调用：更新标签 + 检测 HP/位置变化触发动画
+    /// </summary>
     public void UpdateView()
     {
         if (UnitData == null) return;
 
-        if (NameLabel != null)
-            NameLabel.Text = UnitData.UnitName;
-        if (HPLabel != null)
-            HPLabel.Text = $" {Unit.CurrentHP}/{Unit.MaxHP}";
-        if (ATKLabel != null)
-            ATKLabel.Text = $" {Unit.AttackPower}";
+        // 标签更新
+        if (NameLabel != null) NameLabel.Text = UnitData.UnitName;
+        if (HPLabel != null) HPLabel.Text = $" {Unit.CurrentHP}/{Unit.MaxHP}";
+        if (ATKLabel != null) ATKLabel.Text = $" {Unit.AttackPower}";
+
+        // ── HP 变化检测 ─────────────────────────────────────────────
+        if (!_firstUpdate)
+        {
+            int hpDiff = Unit.CurrentHP - _prevHP;
+            if (hpDiff < 0)
+                PlayDamageFlash(-hpDiff);
+            else if (hpDiff > 0)
+                PlayHealFlash(hpDiff);
+        }
+        _prevHP = Unit.CurrentHP;
+
+        // ── 位置变化检测 ─────────────────────────────────────────────
+        if (!_firstUpdate && Unit.GridPos != _prevGridPos)
+            PlayMoveLanding();
+        _prevGridPos = Unit.GridPos;
         Position = MapManager.Instance.GridToWorld(Unit.GridPos);
     }
 
-    /// <summary>鼠标悬停进入时调用（用户从 Sprite/Area2D 的 MouseEntered 信号连接）</summary>
-    public void OnMouseEntered()
+    // ========================================================================
+    // 动画方法
+    // ========================================================================
+
+    private void PlayDamageFlash(int amount)
     {
-        if (DescriptionPanel != null)
-            DescriptionPanel.Show();
+        var tween = CreateTween();
+        tween.TweenProperty(this, "modulate", DamageColor, DamageFlashDuration);
+        tween.TweenProperty(this, "modulate", Colors.White, DamageFlashDuration * 0.5f);
+
+        if (ShowDamageNumbers && amount > 0)
+            ShowFloatingNumber($"-{amount}", DamageColor);
     }
 
-    /// <summary>鼠标悬停离开时调用（用户从 Sprite/Area2D 的 MouseExited 信号连接）</summary>
+    private void PlayHealFlash(int amount)
+    {
+        var tween = CreateTween();
+        tween.TweenProperty(this, "modulate", HealColor, HealFlashDuration);
+        tween.TweenProperty(this, "modulate", Colors.White, HealFlashDuration * 0.5f);
+
+        if (ShowHealNumbers && amount > 0)
+            ShowFloatingNumber($"+{amount}", HealColor);
+    }
+
+    /// <summary>外部调用（ViewAnimator）：Buff 施加时弹跳</summary>
+    public void PlayBuffBounce()
+    {
+        var bounce = CreateTween();
+        bounce.TweenProperty(this, "scale", Vector2.One * BuffBounceScale, BuffBounceDuration * 0.5f);
+        bounce.TweenProperty(this, "scale", Vector2.One, BuffBounceDuration * 0.5f);
+    }
+
+    private void PlayDeathAnimation()
+    {
+        var death = CreateTween();
+        death.TweenProperty(this, "modulate", new Color(1, 0.2f, 0.2f, 1), DeathFadeDuration * 0.3f);
+        death.TweenProperty(this, "scale", Vector2.Zero, DeathFadeDuration * 0.7f);
+        death.Parallel().TweenProperty(this, "modulate:a", 0, DeathFadeDuration * 0.7f);
+        death.TweenCallback(Callable.From(QueueFree));
+    }
+
+    private void PlayMoveLanding()
+    {
+        // 着陆弹跳：_Process 已经把 Position 同步到新位置，弹一下表示落地
+        var bounce = CreateTween();
+        bounce.SetTrans(Tween.TransitionType.Back);
+        bounce.SetEase(Tween.EaseType.Out);
+        bounce.TweenProperty(this, "scale", Vector2.One * 1.15f, MoveBounceDuration * 0.4f);
+        bounce.TweenProperty(this, "scale", Vector2.One, MoveBounceDuration * 0.6f);
+    }
+
+    // ========================================================================
+    // 浮动数字
+    // ========================================================================
+
+    private void ShowFloatingNumber(string text, Color color)
+    {
+        var label = new Label();
+        label.Text = text;
+        label.Modulate = color;
+        label.AddThemeFontSizeOverride("font_size", FloatFontSize);
+        label.HorizontalAlignment = HorizontalAlignment.Center;
+        label.Position = new Vector2(0, -20);
+        AddChild(label);
+
+        var tween = CreateTween();
+        tween.SetParallel(true);
+        tween.TweenProperty(label, "position", label.Position + Vector2.Up * FloatRise, FloatLifetime);
+        tween.TweenProperty(label, "modulate:a", 0, FloatLifetime * 0.8f);
+        tween.TweenCallback(Callable.From(label.QueueFree));
+    }
+
+    // ========================================================================
+    // 鼠标悬停
+    // ========================================================================
+
+    public void OnMouseEntered()
+    {
+        if (DescriptionPanel != null) DescriptionPanel.Show();
+    }
+
     public void OnMouseExited()
     {
-        if (DescriptionPanel != null)
-            DescriptionPanel.Hide();
+        if (DescriptionPanel != null) DescriptionPanel.Hide();
     }
 }
