@@ -233,9 +233,12 @@ public partial class UnitView : Node2D
         }
 
         var node = FloatingNumberPrefab.Instantiate<FloatingNumber>();
-        node.Position = new Vector2(0, -20);
-        AddChild(node);
-        GD.Print($"[UnitView] 浮动数字: {text} 颜色={color}");
+        // 加到场景根节点，避免被地图 TileMap 层遮挡
+        var root = GetTree()?.Root;
+        if (root == null) { node.QueueFree(); return; }
+        root.AddChild(node);
+        node.GlobalPosition = GlobalPosition + new Vector2(0, -20);
+        GD.Print($"[UnitView] 浮动数字: {text} 颜色={color} 位置={node.GlobalPosition}");
         node.Show(text, color, FloatLifetime, FloatRise);
     }
 
