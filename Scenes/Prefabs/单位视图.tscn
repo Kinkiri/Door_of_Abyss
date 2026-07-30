@@ -88,10 +88,10 @@ text = "0"
 horizontal_alignment = 1
 
 [node name="BuffContainer" type="HBoxContainer" parent="." unique_id=259459456]
-offset_left = -60.0
-offset_top = 53.0
-offset_right = 60.0
-offset_bottom = 76.0
+offset_left = -64.0
+offset_top = 46.0
+offset_right = 65.0
+offset_bottom = 94.0
 
 [node name="Panel" type="Panel" parent="." unique_id=710251118]
 visible = false

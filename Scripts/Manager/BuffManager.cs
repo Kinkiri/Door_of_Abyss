@@ -316,6 +316,8 @@ public partial class BuffManager : Node
         }
 
         bv.Setup(buff);
+        // Node2D 子节点不被 HBoxContainer 自动布局，手动设置位置避免重叠
+        bv.Position = new Vector2(container.GetChildCount() * 30, 0);
         container.AddChild(bv);
         _buffViews[buff] = bv;
         GD.Print($"[BuffManager] BuffView 创建: {buff.Data.BuffName} → {target.UnitData?.UnitName}");

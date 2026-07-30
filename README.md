@@ -589,7 +589,7 @@ Shape=All 时预览高亮只显示 Filter 匹配且有存活单位的格子，�
 
 ```
 PlayerData.DoorDatas = [圣晶.tres, 水晶.tres]
-                         ↓
+						 ↓
 OnEnterGameStart
   → 放置门 [1/2] 圣晶（手动或自动）
   → 放置门 [2/2] 水晶

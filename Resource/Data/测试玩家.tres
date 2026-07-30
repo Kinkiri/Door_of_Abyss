@@ -2,11 +2,12 @@
 
 [ext_resource type="Script" uid="uid://d2widi0p087e8" path="res://Scripts/Data/PlayerData.cs" id="1_21qan"]
 [ext_resource type="Resource" uid="uid://brrpcr8sgqo3a" path="res://Resource/Data/Units/默认门.tres" id="1_mt5ji"]
+[ext_resource type="Resource" uid="uid://ba452bevxqhb3" path="res://Resource/Data/Cards/精兵.tres" id="9_2b15x"]
 [ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="11_ljakr"]
 
 [sub_resource type="Resource" id="Resource_h85jk"]
 script = ExtResource("11_ljakr")
-Cards = Array[Object]([])
+Cards = Array[Object]([ExtResource("9_2b15x"), ExtResource("9_2b15x"), ExtResource("9_2b15x"), ExtResource("9_2b15x"), ExtResource("9_2b15x")])
 metadata/_custom_type_script = "uid://b1eamjx1y7exn"
 
 [resource]
