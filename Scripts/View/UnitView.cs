@@ -188,7 +188,8 @@ public partial class UnitView : Node2D
         label.Modulate = color;
         label.AddThemeFontSizeOverride("font_size", FloatFontSize);
         label.HorizontalAlignment = HorizontalAlignment.Center;
-        label.Position = new Vector2(0, -20);
+        label.Position = new Vector2(-30, -20);
+        label.SetSize(new Vector2(60, 30));
         AddChild(label);
 
         var tween = CreateTween();

@@ -23,11 +23,27 @@ public partial class ViewAnimator : Node
     {
         if (action == null) return;
 
-        // 只处理 Buff 类动作，调用 UnitView 的弹跳动画
-        if (action is ApplyBuffAction or RemoveBuffAction)
+        switch (action)
         {
-            PlayBuffAnimations(ctx);
+            case DamageAction:
+                PlayAttackerFlash(ctx);
+                break;
+            case ApplyBuffAction or RemoveBuffAction:
+                PlayBuffAnimations(ctx);
+                break;
         }
+    }
+
+    /// <summary>攻击者闪白</summary>
+    private void PlayAttackerFlash(Context ctx)
+    {
+        if (ctx.SourceUnit == null) return;
+        var view = FindUnitView(ctx.SourceUnit);
+        if (view == null) return;
+
+        var flash = CreateTween();
+        flash.TweenProperty(view, "modulate", new Color(1.5f, 1.5f, 1.5f), 0.05f);
+        flash.TweenProperty(view, "modulate", Colors.White, 0.08f);
     }
 
     private void PlayBuffAnimations(Context ctx)
