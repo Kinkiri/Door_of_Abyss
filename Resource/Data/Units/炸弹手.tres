@@ -8,7 +8,6 @@
 [sub_resource type="Resource" id="Resource_do3l5"]
 script = ExtResource("1_4wbxk")
 Value = 3
-AnimationDuration = 0.2
 metadata/_custom_type_script = "uid://bcjncmte44un1"
 
 [sub_resource type="Resource" id="Resource_0v6ps"]

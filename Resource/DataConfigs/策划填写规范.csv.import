@@ -1,0 +1,16 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://488t3iy5tlq5"
+
+[deps]
+
+source_file="res://Resource/DataConfigs/策划填写规范.csv"
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

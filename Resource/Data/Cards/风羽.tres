@@ -42,6 +42,7 @@ Description = "令所有己方单位本回合攻击范围+1:抽一张牌"
 Type = 1
 Shape = 5
 Filter = 2
+Tags = null
 Cost = 2
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_d5ua7"), SubResource("Resource_wp8c3")])

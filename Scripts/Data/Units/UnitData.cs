@@ -10,6 +10,18 @@ public partial class UnitData : Resource
     /// <summary>单位名称</summary>
     [Export] public string UnitName { get; set; } = "未知单位";
 
+    /// <summary>世界观</summary>
+    [Export] public World World { get; set; } = World.测试;
+
+    /// <summary>势力</summary>
+    [Export] public Faction Faction { get; set; } = Faction.测试;
+
+    /// <summary>普通标签</summary>
+    [Export] public Tag Tag { get; set; }
+
+    /// <summary>稀有度</summary>
+    [Export] public Rarity Rarity { get; set; } = Rarity.Basic;
+
     /// <summary>攻击力</summary>
     [Export] public int AttackPower { get; set; } = 1;
 

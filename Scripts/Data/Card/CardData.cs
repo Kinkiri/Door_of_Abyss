@@ -1,4 +1,5 @@
 using Godot;
+using Godot.Collections;
 
 /// <summary>
 /// 卡牌模板数据
@@ -22,6 +23,18 @@ public abstract partial class CardData : Resource
 
     /// <summary>当 Shape 为 AreaDiamond/AreaSquare 时，扩散半径（曼哈顿距离或半径）</summary>
     [Export] public virtual int AreaRange { get; set; } = 0;
+
+    /// <summary>世界观</summary>
+    [Export] public World World { get; set; } = World.测试;
+
+    /// <summary>势力</summary>
+    [Export] public Faction Faction { get; set; } = Faction.测试;
+
+    /// <summary>普通标签</summary>
+    [Export] public Array<Tag> Tags { get; set; }
+
+    /// <summary>稀有度</summary>
+    [Export] public Rarity Rarity { get; set; } = Rarity.Basic;
 
     /// <summary>使用消耗（行动次数 / 法力值）</summary>
     [Export] public int Cost { get; set; } = 1;
