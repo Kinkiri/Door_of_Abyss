@@ -14,6 +14,9 @@ ATKLabel = NodePath("Control/ATK")
 DescriptionPanel = NodePath("Panel")
 DescriptionLabel = NodePath("Panel/Label")
 EnemyIndicator = NodePath("ColorRect")
+DamageFlashDuration = 0.3
+HealFlashDuration = 0.3
+DeathFadeDuration = 0.5
 
 [node name="Area2D" type="Area2D" parent="." unique_id=421000204]
 

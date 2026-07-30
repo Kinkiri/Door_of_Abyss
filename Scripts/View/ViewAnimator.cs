@@ -9,6 +9,12 @@ using System;
 /// </summary>
 public partial class ViewAnimator : Node
 {
+    // ========== 攻击闪白 ==========
+    [ExportGroup("攻击")]
+    [Export] public Color AttackFlashColor = new Color(1.5f, 1.5f, 1.5f);
+    [Export] public float AttackFlashIn = 0.05f;
+    [Export] public float AttackFlashOut = 0.08f;
+
     public override void _Ready()
     {
         ActionQueue.OnActionExecuted += OnActionExecuted;
@@ -42,8 +48,8 @@ public partial class ViewAnimator : Node
         if (view == null) return;
 
         var flash = CreateTween();
-        flash.TweenProperty(view, "modulate", new Color(1.5f, 1.5f, 1.5f), 0.05f);
-        flash.TweenProperty(view, "modulate", Colors.White, 0.08f);
+        flash.TweenProperty(view, "modulate", AttackFlashColor, AttackFlashIn);
+        flash.TweenProperty(view, "modulate", Colors.White, AttackFlashOut);
     }
 
     private void PlayBuffAnimations(Context ctx)
