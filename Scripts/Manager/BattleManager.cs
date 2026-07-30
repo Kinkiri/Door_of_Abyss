@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// 胜利条件委托
@@ -37,6 +38,9 @@ public partial class BattleManager : Node2D
     /// <summary>放门区域格子（供 MapView 渲染）</summary>
     public HashSet<Vector2I> LastDoorPlaceZone { get; private set; }
 
+    /// <summary>记录当前放到第几个门</summary>
+    private int _placingDoorIndex = 0;
+
     public Team Winner { get; private set; } = Team.Neutral;
 
     /// <summary>胜利条件（可替换），默认：敌方全灭</summary>
@@ -49,9 +53,6 @@ public partial class BattleManager : Node2D
 
     /// <summary>费用上限</summary>
     public const int MaxCost = 10;
-
-    /// <summary>每回合回复费用</summary>
-    public const int CostPerRound = 2;
 
     /// <summary>当前可用费用</summary>
     public int PlayerCost { get; private set; } = 0;
@@ -480,23 +481,27 @@ public partial class BattleManager : Node2D
         }
 
         // 判断是否进入玩家手动放门模式
-        bool canPlaceDoor = PlayerData?.DoorData != null
+        var doors = PlayerData?.DoorDatas?.Where(d => d != null).ToArray();
+        bool canPlaceDoor = doors is { Length: > 0 }
             && LevelData?.DoorPlaceZoneMin != LevelData?.DoorPlaceZoneMax;
 
         if (canPlaceDoor)
         {
+            _placingDoorIndex = 0;
             StartDoorPlacement();
             return; // 不自动推进，等玩家放门
         }
 
-        // 无手动放门 → 旧方式自动放置
-        AutoPlacePlayerDoorAndAdvance();
+        // 无手动放门 → 自动放置所有门
+        AutoPlaceDoorsAndAdvance();
     }
 
-    /// <summary>进入玩家手动放门阶段</summary>
+    /// <summary>进入玩家手动放门阶段（第 _placingDoorIndex 个门）</summary>
     private void StartDoorPlacement()
     {
         IsPlacingDoor = true;
+        var doors = PlayerData?.DoorDatas?.Where(d => d != null).ToArray();
+        string doorName = doors != null && _placingDoorIndex < doors.Length ? doors[_placingDoorIndex].UnitName : "?";
 
         // 计算可放置区域
         LastDoorPlaceZone = new HashSet<Vector2I>();
@@ -508,13 +513,13 @@ public partial class BattleManager : Node2D
                 if (map != null && map.ContainsKey(new Vector2I(x, y)))
                     LastDoorPlaceZone.Add(new Vector2I(x, y));
 
-        GD.Print($"[Battle] 进入手动放门阶段，可放置区域 {min}~{max} ({(LastDoorPlaceZone?.Count ?? 0)}格)");
+        GD.Print($"[Battle] 放置门 [{_placingDoorIndex + 1}/{doors?.Length ?? 0}] {doorName}，可放置区域 {min}~{max} ({(LastDoorPlaceZone?.Count ?? 0)}格)");
 
         // 通知 MapView 刷新高亮
         SelectionManager.Instance?.EmitSignal(SelectionManager.SignalName.SelectionUpdated);
     }
 
-    /// <summary>玩家点击放置玩家门</summary>
+    /// <summary>玩家点击放置一个门，放完后检查是否还有下一个</summary>
     private void PlacePlayerDoor(Vector2I gridPos)
     {
         if (!IsPlacingDoor) return;
@@ -523,33 +528,49 @@ public partial class BattleManager : Node2D
         if (cell == null || !cell.CanStand) return;
         if (!LastDoorPlaceZone.Contains(gridPos)) return;
 
-        var door = UnitManager.Instance.SpawnUnit(PlayerData.DoorData, gridPos, Team.Player);
+        var doors = PlayerData?.DoorDatas?.Where(d => d != null).ToArray();
+        if (doors == null || _placingDoorIndex >= doors.Length) return;
+
+        var doorData = doors[_placingDoorIndex];
+        var door = UnitManager.Instance.SpawnUnit(doorData, gridPos, Team.Player);
         if (door == null)
         {
             GD.PrintErr("[Battle] 放置玩家门失败");
             return;
         }
 
-        GD.Print($"[Battle] 玩家门放置于 {gridPos} ID={door.ID} HP={door.CurrentHP}");
-        IsPlacingDoor = false;
-        LastDoorPlaceZone = null;
+        GD.Print($"[Battle] 放置门 [{_placingDoorIndex + 1}/{doors.Length}] {doorData.UnitName} 于 {gridPos} ID={door.ID} HP={door.CurrentHP}");
+        _placingDoorIndex++;
 
         // 清除高亮
+        LastDoorPlaceZone = null;
         SelectionManager.Instance?.EmitSignal(SelectionManager.SignalName.SelectionUpdated);
 
-        // 继续后续 GameStart 流程
-        FinishGameStart();
+        if (_placingDoorIndex < doors.Length)
+        {
+            // 还有下一个门要放
+            StartDoorPlacement();
+        }
+        else
+        {
+            // 所有门放完
+            IsPlacingDoor = false;
+            FinishGameStart();
+        }
     }
 
-    /// <summary>不手动放门时，自动放置并继续</summary>
-    private void AutoPlacePlayerDoorAndAdvance()
+    /// <summary>不手动放门时，自动放置所有门并继续</summary>
+    private void AutoPlaceDoorsAndAdvance()
     {
-        if (PlayerData?.DoorData != null)
+        var doors = PlayerData?.DoorDatas?.Where(d => d != null).ToArray();
+        if (doors is { Length: > 0 })
         {
-            // 取 ZoneMin 做默认位置（1x1 区域时就是那格）
             var pos = LevelData?.DoorPlaceZoneMin ?? Vector2I.Zero;
-            var door = UnitManager.Instance.SpawnUnit(PlayerData.DoorData, pos, Team.Player);
-            GD.Print($"[Battle] 自动放置玩家门于 {pos}: {(door != null ? $"ID={door.ID}" : "失败")}");
+            foreach (var doorData in doors)
+            {
+                var door = UnitManager.Instance.SpawnUnit(doorData, pos, Team.Player);
+                GD.Print($"[Battle] 自动放置门 {doorData.UnitName} 于 {pos}: {(door != null ? $"ID={door.ID}" : "失败")}");
+            }
         }
         FinishGameStart();
     }
@@ -672,14 +693,27 @@ public partial class BattleManager : Node2D
         }
         GD.Print($"[Battle] 回合 {RoundCount} 开始，所有单位行动次数已重置");
 
-        // 每回合回复固定费用
-        PlayerCost = Mathf.Min(PlayerCost + CostPerRound, MaxCost);
-        EmitSignal(SignalName.CostChanged, PlayerCost, MaxCost);
-        GD.Print($"[Battle] 费用回复 +{CostPerRound}，当前 {PlayerCost}/{MaxCost}");
+        // 收集所有我方门的 CostPerRound / DrawPerRound
+        int totalCost = 0;
+        int totalDraw = 0;
+        foreach (var u in UnitManager.Instance.ActiveUnits)
+        {
+            if (u.IsAlive && !u.IsDead && u.Team == Team.Player && u.Type == UnitType.Door
+                && u.UnitData is DoorData doorData)
+            {
+                totalCost += doorData.CostPerRound;
+                totalDraw += doorData.DrawPerRound;
+            }
+        }
 
-        // 每回合开始抽 1 张牌
-        if (CardManager.Instance != null)
-            CardManager.Instance.DrawCards(1);
+        PlayerCost = Mathf.Min(PlayerCost + totalCost, MaxCost);
+        EmitSignal(SignalName.CostChanged, PlayerCost, MaxCost);
+        GD.Print($"[Battle] 费用回复 +{totalCost}（来自门），当前 {PlayerCost}/{MaxCost}");
+
+        if (totalDraw > 0 && CardManager.Instance != null)
+            CardManager.Instance.DrawCards(totalDraw);
+        if (totalDraw > 0)
+            GD.Print($"[Battle] 抽牌 {totalDraw} 张（来自门）");
 
         // 检查本回合是否有波次
         SpawnWaveForRound(RoundCount);
@@ -771,7 +805,7 @@ public partial class BattleManager : Node2D
 
     private static bool DefaultEnemyWin()
     {
-        return UnitManager.Instance?.PlayerDoor == null || !UnitManager.Instance.PlayerDoor.IsAlive;
+        return !UnitManager.GetDoors(Team.Player).Any(u => u.IsAlive && !u.IsDead);
     }
 
     private static bool ActiveTeamUnits(Team team)

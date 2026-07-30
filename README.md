@@ -557,19 +557,44 @@ Shape=All 时预览高亮只显示 Filter 匹配且有存活单位的格子，�
 
 ---
 
-## 9. 部署系统
+## 9. 部署与门经济系统
 
-单位召唤只能在己方门周围的部署范围内放置。
+### 9.1 部署范围
+
+单位召唤只能在己方门的部署范围内放置。
 
 | 字段 | 位置 | 说明 |
 |---|---|---|
-| `DeployRange` | `DoorData` | 曼哈顿距离，默认 2。每个门独立配置 |
-| `PlayerData.DoorData` | `PlayerData.tres` | 玩家门数据，创建 `DoorData` Resource 拖入 |
+| `DeployRange` | `DoorData` | 曼哈顿距离，默认 2。每个门独立配置，多门时范围取并集 |
+| `DoorDatas[]` | `PlayerData.tres` | 玩家门列表，支持多门。每回合累加所有存活门的收益 |
+| `CostPerRound` | `DoorData` | 每回合此门回复的费用，默认 2 |
+| `DrawPerRound` | `DoorData` | 每回合此门提供的抽牌数，默认 1 |
 
 **限制逻辑：**
-- `SummonUnitAction.Apply()` — 超出范围拒绝执行
+- `SummonUnitAction.Apply()` — 目标在任意门范围内即可，否则拒绝
 - `SelectionManager.ComputeCardPreview()` — 预览只显示范围内格子
 - `MapView.RenderCardPreview()` — 选中召唤卡时用图集(0,0)渲染部署范围高亮
+
+### 9.2 门经济（多门叠加）
+
+硬编码的 `CostPerRound = 2` 已删除。每回合 `OnEnterRoundStart()` 遍历场上所有我方门：
+
+```
+场上有 1 个门 (CostPerRound=2, DrawPerRound=1) → +2费, 抽1张
+场上有 2 个门 (CostPerRound=2, DrawPerRound=1) → +4费, 抽2张
+场上无门 → +0费, 不抽牌
+```
+
+### 9.3 门放置流程
+
+```
+PlayerData.DoorDatas = [圣晶.tres, 水晶.tres]
+                         ↓
+OnEnterGameStart
+  → 放置门 [1/2] 圣晶（手动或自动）
+  → 放置门 [2/2] 水晶
+  → FinishGameStart（初始化卡组 → 抽2 → 推进）
+```
 
 ---
 

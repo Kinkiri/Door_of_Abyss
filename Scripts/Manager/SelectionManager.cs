@@ -437,15 +437,17 @@ public partial class SelectionManager : Node2D
         return cells.Count > 0 ? cells : null;
     }
 
-    /// <summary>检查格子是否在己方门的部署范围内</summary>
+    /// <summary>检查格子是否在己方门的部署范围内（任意一门范围内即可）</summary>
     private static bool IsWithinDeployRange(Vector2I gridPos)
     {
-        var door = UnitManager.Instance?.PlayerDoor;
-        if (door == null) return true;
-        int range = (door.UnitData as DoorData)?.DeployRange ?? 2;
-        int dist = System.Math.Abs(gridPos.X - door.GridPos.X) +
-                   System.Math.Abs(gridPos.Y - door.GridPos.Y);
-        return dist <= range;
+        foreach (var door in UnitManager.GetDoors(Team.Player))
+        {
+            int range = (door.UnitData as DoorData)?.DeployRange ?? 2;
+            int dist = System.Math.Abs(gridPos.X - door.GridPos.X) +
+                       System.Math.Abs(gridPos.Y - door.GridPos.Y);
+            if (dist <= range) return true;
+        }
+        return false; // 没有门时不允许部署
     }
 
     private static bool IsTargetFilterMatch(TargetFilter filter, Unit target)

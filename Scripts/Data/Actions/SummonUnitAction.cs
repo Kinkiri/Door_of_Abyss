@@ -1,4 +1,5 @@
 using Godot;
+using System.Linq;
 
 /// <summary>
 /// 在目标格子召唤单位。单位数据来自 SourceCard.CardData（需为 UnitCardData）。
@@ -12,15 +13,20 @@ public partial class SummonUnitAction : GameAction
         if (ctx.TargetCell == null) return;
         if (ctx.SourceCard?.CardData is not UnitCardData unitCard) return;
 
-        // 检查是否在门附近的部署范围内
+        // 检查目标是否在任意门的部署范围内
         if (ctx.SourceTeam == Team.Player)
         {
-            var door = UnitManager.Instance?.PlayerDoor;
-            int range = (door?.UnitData as DoorData)?.DeployRange ?? 2;
-            if (door != null && !IsWithinRange(ctx.TargetCell.GridPos, door.GridPos, range))
+            bool inRange = false;
+            foreach (var door in UnitManager.GetDoors(Team.Player))
             {
-                int dist = ManhattanDist(ctx.TargetCell.GridPos, door.GridPos);
-                GD.Print($"[SummonUnitAction] 超出部署范围: 门在 {door.GridPos}，目标 {ctx.TargetCell.GridPos}，距离 {dist} > {range}");
+                int range = (door.UnitData as DoorData)?.DeployRange ?? 2;
+                if (IsWithinRange(ctx.TargetCell.GridPos, door.GridPos, range))
+                { inRange = true; break; }
+            }
+            if (!inRange)
+            {
+                string doorInfo = string.Join(", ", UnitManager.GetDoors(Team.Player).Select(d => $"{d.UnitData?.UnitName}@{d.GridPos}"));
+                GD.Print($"[SummonUnitAction] 超出所有门部署范围: 目标 {ctx.TargetCell.GridPos}，门: {doorInfo}");
                 return;
             }
         }

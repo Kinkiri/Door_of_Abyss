@@ -10,6 +10,6 @@ public partial class PlayerData : Resource
     /// <summary>玩家构筑的卡组</summary>
     [Export] public DeckData PlayerDeck { get; set; }
 
-    /// <summary>玩家门（水晶）数据模板，含部署范围等门专属属性</summary>
-    [Export] public DoorData DoorData { get; set; }
+    /// <summary>玩家方的门（水晶）列表，多门时每个独立配置经济收益和部署范围</summary>
+    [Export] public DoorData[] DoorDatas { get; set; }
 }

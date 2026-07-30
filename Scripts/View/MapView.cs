@@ -184,27 +184,33 @@ public partial class MapView : Node2D
             CardPreviewLayer.SetCell(pos, HighlightSourceId, atlas);
     }
 
-    /// <summary>渲染门周围的部署范围</summary>
+    /// <summary>渲染所有玩家门的部署范围（并集）</summary>
     private void RenderDeployRange()
     {
-        var door = UnitManager.Instance?.PlayerDoor;
-        if (door == null) return;
-        if (door.UnitData is not DoorData doorData) return;
-        int range = doorData.DeployRange;
-
-        var deployCells = new HashSet<Vector2I>();
         var map = MapManager.Instance?.Map;
         if (map == null) return;
 
-        Vector2I doorPos = door.GridPos;
-        for (int dx = -range; dx <= range; dx++)
-            for (int dy = -range; dy <= range; dy++)
-            {
-                if (System.Math.Abs(dx) + System.Math.Abs(dy) > range) continue;
-                var pos = new Vector2I(doorPos.X + dx, doorPos.Y + dy);
-                if (map.ContainsKey(pos))
-                    CardPreviewLayer.SetCell(pos, HighlightSourceId, Vector2I.Zero);
-            }
+        var deployCells = new HashSet<Vector2I>();
+        foreach (var door in UnitManager.GetDoors(Team.Player))
+        {
+            if (door.UnitData is not DoorData doorData) continue;
+            int range = doorData.DeployRange;
+            Vector2I doorPos = door.GridPos;
+            for (int dx = -range; dx <= range; dx++)
+                for (int dy = -range; dy <= range; dy++)
+                {
+                    if (System.Math.Abs(dx) + System.Math.Abs(dy) > range) continue;
+                    var pos = new Vector2I(doorPos.X + dx, doorPos.Y + dy);
+                    if (map.ContainsKey(pos))
+                        deployCells.Add(pos);
+                }
+        }
+
+        // 渲染部署范围高亮（沿用攻击高亮色）
+        if (AttackMapLayer == null) return;
+        var atlas = new Vector2I(16, 0);
+        foreach (var pos in deployCells)
+            AttackMapLayer.SetCell(pos, HighlightSourceId, atlas);
     }
 
     /// <summary>渲染放门区域</summary>

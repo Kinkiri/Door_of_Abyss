@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// 敌方 AI：在 EnemyAction 阶段自动驱动作战单位行动
@@ -37,18 +38,21 @@ public partial class EnemyAI : Node
                 tempList.Add(u);
         }
 
-        // 按离玩家门距离排序（近的先行动，攻击优先）
-        var playerDoor = UnitManager.Instance?.PlayerDoor;
+        // 按离最近玩家门距离排序（近的先行动，攻击优先）
+        var playerDoors = UnitManager.GetDoors(Team.Player).ToList();
         tempList.Sort((a, b) =>
         {
-            int da = playerDoor != null ? ManhattanDist(a.GridPos, playerDoor.GridPos) : 0;
-            int db = playerDoor != null ? ManhattanDist(b.GridPos, playerDoor.GridPos) : 0;
+            int da = playerDoors.Count > 0 ? playerDoors.Min(d => ManhattanDist(a.GridPos, d.GridPos)) : 0;
+            int db = playerDoors.Count > 0 ? playerDoors.Min(d => ManhattanDist(b.GridPos, d.GridPos)) : 0;
             return da.CompareTo(db);
         });
 
+        string doorInfo = playerDoors.Count > 0
+            ? string.Join(", ", playerDoors.Select(d => $"{d.UnitData?.UnitName}@{d.GridPos}"))
+            : "无存活门";
+        GD.Print($"[EnemyAI] 敌方总计 {totalEnemy}，可行动 {tempList.Count} (玩家门: {doorInfo})");
+
         _actionQueue = new Queue<Unit>(tempList);
-        GD.Print($"[EnemyAI] 敌方总计 {totalEnemy}，可行动 {_actionQueue.Count}" +
-                 $" {(playerDoor != null ? $"(玩家门在 {playerDoor.GridPos})" : "")}");
 
         if (_actionQueue.Count == 0)
         {

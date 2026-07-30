@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// 单位管理器，负责管理战斗中所有单位的生成、移动和移除
@@ -23,8 +24,13 @@ public partial class UnitManager : Node
         return view;
     }
 
-    /// <summary>玩家方的门（水晶），归零则战败</summary>
-    public Unit PlayerDoor { get; private set; }
+    /// <summary>获取指定阵营的所有存活门</summary>
+    public static IEnumerable<Unit> GetDoors(Team team)
+    {
+        return Instance?.ActiveUnits
+            .Where(u => u.IsAlive && !u.IsDead && u.Team == team && u.Type == UnitType.Door)
+            ?? Enumerable.Empty<Unit>();
+    }
 
     public override void _Ready()
     {
@@ -88,13 +94,6 @@ public partial class UnitManager : Node
         MapManager.Instance.BaseMapLayer.AddChild(view);
 
         unit.UpdateUnit();
-
-        // 门注册
-        if (unit.Type == UnitType.Door && team == Team.Player)
-        {
-            PlayerDoor = unit;
-            GD.Print($"[UnitManager] 玩家门已放置: 位置={gridPos} HP={unit.CurrentHP}/{unit.MaxHP}");
-        }
 
         // 注册被动效果 + 触发登场事件
         EventBus.Instance?.Subscribe(unit, unitData.PassiveEffects);
@@ -198,9 +197,6 @@ public partial class UnitManager : Node
             view.QueueFree();
             _unitViews.Remove(unit);
         }
-
-        // 若移除的是玩家门，清除引用
-        if (unit == PlayerDoor) PlayerDoor = null;
 
         // 取消被动效果订阅
         EventBus.Instance?.Unsubscribe(unit);
