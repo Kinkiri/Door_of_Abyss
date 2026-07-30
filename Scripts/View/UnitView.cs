@@ -173,6 +173,7 @@ public partial class UnitView : Node2D
 
     private void PlayDamageFlash(int amount)
     {
+        GD.Print($"[UnitView] PlayDamageFlash: {Unit?.UnitData?.UnitName} amount={amount} _isDying={_isDying} prefab={FloatingNumberPrefab != null}");
         var tween = CreateTween();
         tween.TweenProperty(this, "modulate", DamageColor, DamageFlashDuration);
         tween.TweenProperty(this, "modulate", Colors.White, DamageFlashDuration * 0.5f);
@@ -183,6 +184,7 @@ public partial class UnitView : Node2D
 
     private void PlayHealFlash(int amount)
     {
+        GD.Print($"[UnitView] PlayHealFlash: {Unit?.UnitData?.UnitName} amount={amount} prefab={FloatingNumberPrefab != null}");
         var tween = CreateTween();
         tween.TweenProperty(this, "modulate", HealColor, HealFlashDuration);
         tween.TweenProperty(this, "modulate", Colors.White, HealFlashDuration * 0.5f);
@@ -224,11 +226,16 @@ public partial class UnitView : Node2D
 
     private void ShowFloatingNumber(string text, Color color)
     {
-        if (FloatingNumberPrefab == null) return;
+        if (FloatingNumberPrefab == null)
+        {
+            GD.Print($"[UnitView] ShowFloatingNumber 跳过: FloatingNumberPrefab 为空");
+            return;
+        }
 
         var node = FloatingNumberPrefab.Instantiate<FloatingNumber>();
         node.Position = new Vector2(0, -20);
         AddChild(node);
+        GD.Print($"[UnitView] 浮动数字: {text} 颜色={color}");
         node.Show(text, color, FloatLifetime, FloatRise);
     }
 

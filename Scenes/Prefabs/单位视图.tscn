@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://n2lf7klphtj5"]
 
 [ext_resource type="Script" uid="uid://d7gvkpac4jmr" path="res://Scripts/View/UnitView.cs" id="1_nw7r0"]
+[ext_resource type="PackedScene" uid="uid://bytl8qhsumb8p" path="res://Scenes/Prefabs/浮动数字.tscn" id="2_27xo5"]
 [ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="2_giepe"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fw11u"]
@@ -19,6 +20,8 @@ HealFlashDuration = 0.3
 DeathFadeDuration = 0.5
 AttackFlashIn = 0.01
 AttackFlashOut = 0.6
+FloatingNumberPrefab = ExtResource("2_27xo5")
+FloatLifetime = 3.0
 
 [node name="Area2D" type="Area2D" parent="." unique_id=421000204]
 
