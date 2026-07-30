@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://kg35kqhytq0t"]
+
+[ext_resource type="Script" path="res://Scripts/View/FloatingNumber.cs" id="1_fn"]
+
+[node name="FloatingNumber" type="Node2D" unique_id=2045378007]
+script = ExtResource("1_fn")

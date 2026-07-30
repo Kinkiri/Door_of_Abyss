@@ -34,10 +34,7 @@ public partial class SummonUnitAction : GameAction
         var spawned = UnitManager.Instance.SpawnUnit(
             unitCard.UnitData, ctx.TargetCell.GridPos, ctx.SourceTeam);
         if (spawned != null)
-        {
-            ctx.SpawnedUnit = spawned;
             GD.Print($"[SummonUnitAction] 召唤 {unitCard.UnitData.UnitName} 于 {ctx.TargetCell.GridPos}");
-        }
     }
 
     private static bool IsWithinRange(Vector2I pos, Vector2I doorPos, int range)
