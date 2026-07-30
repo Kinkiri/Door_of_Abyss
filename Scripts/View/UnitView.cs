@@ -232,14 +232,25 @@ public partial class UnitView : Node2D
             return;
         }
 
-        var node = FloatingNumberPrefab.Instantiate<FloatingNumber>();
-        // 加到场景根节点，避免被地图 TileMap 层遮挡
-        var root = GetTree()?.Root;
-        if (root == null) { node.QueueFree(); return; }
-        root.AddChild(node);
-        node.GlobalPosition = GlobalPosition + new Vector2(0, -20);
-        GD.Print($"[UnitView] 浮动数字: {text} 颜色={color} 位置={node.GlobalPosition}");
-        node.Show(text, color, FloatLifetime, FloatRise);
+        try
+        {
+            var node = FloatingNumberPrefab.Instantiate<FloatingNumber>();
+            if (node == null) { GD.PrintErr("[UnitView] Instantiate<FloatingNumber> 返回 null"); return; }
+
+            var root = GetTree()?.Root;
+            if (root == null) { node.QueueFree(); return; }
+
+            root.AddChild(node);
+            GD.Print($"[UnitView] 已加到根节点, parent={node.GetParent()?.Name}");
+
+            node.GlobalPosition = GlobalPosition + new Vector2(0, -20);
+            GD.Print($"[UnitView] 浮动数字: {text} 颜色={color} 位置={node.GlobalPosition} Label={node.NumberLabel != null}");
+            node.Show(text, color, FloatLifetime, FloatRise);
+        }
+        catch (Exception e)
+        {
+            GD.PrintErr($"[UnitView] ShowFloatingNumber 异常: {e.Message}");
+        }
     }
 
     // ========================================================================
