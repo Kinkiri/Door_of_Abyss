@@ -124,6 +124,14 @@ Scripts/                         ~5500 行 C#
 │   ├── MapManager.cs            地图管理
 │   ├── SelectionManager.cs      输入 + 选中 + 范围 + 卡牌流程
 │   └── UnitManager.cs           单位生命周期
+├── View/                        视图层
+│   ├── BuffView.cs              Buff 图标（Node2D，内含 TextureRect + Label）
+│   ├── CardView.cs              卡牌展示
+│   ├── DragCamera2D.cs          拖拽摄像机
+│   ├── HandPanel.cs             手牌面板
+│   ├── MapView.cs               地图渲染 + 高亮
+│   ├── RoundView.cs             回合面板
+│   └── UnitView.cs              单位视觉 + 内建动画（入场/受伤/治疗/死亡/移动/Buff）
 ├── Tests/
 │   └── TestRunner.cs            全面系统性测试（45+ 用例，内置运行器）
 ├── Tools/
@@ -849,3 +857,57 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 4. 在 Godot 中打开 TextToResourceImporter.cs → File → Run
 5. .tres 文件自动生成到 Resource/Data/ 下
 ```
+
+## 12. 动画系统
+
+所有视觉动画内建于 `UnitView`，无需额外节点。
+
+### 12.1 动画一览
+
+| 动画 | 触发方式 | 实现位置 |
+|---|---|---|
+| 召唤入场 | `_Ready` | `Scale=0` → `Back.Out` 弹到 1 |
+| 受伤闪红 | `UpdateView` 检测 HP 下降 | `modulate` 闪红 0.12s → 恢复白 |
+| 治疗闪绿 | `UpdateView` 检测 HP 上升 | `modulate` 闪绿 0.12s → 恢复白 |
+| 死亡消散 | `_Process` 检测 `IsDead` | 缩放 0 + 淡出 0.35s → `QueueFree` |
+| 移动着陆 | `UpdateView` 检测 GridPos 变化 | `Back.Out` 缩放弹跳 1.15→1 |
+| Buff 弹跳 | `ActionQueue.OnActionExecuted` | `PlayBuffBounce()` 缩放 1.25→1 |
+| 攻击闪白 | `ActionQueue.OnActionExecuted` | `modulate` 亮白 0.05s + 恢复 0.08s |
+| 浮动数字 | `UpdateView` 检测 HP 变化 | 预制体 `FloatLabel` 显示 1s 后隐藏 |
+
+### 12.2 死亡动画流程
+
+```
+DamageUnit → DestroyUnit → RemoveUnit
+  ├─ IsDead=true
+  ├─ UpdateUnit() → UpdateView()（跳过 HP 动画，_isDying 守卫）
+  └─ _unitViews.Remove(unit)          ← 字典清理，不 QueueFree
+
+UnitView._Process 检测 IsDead
+  → PlayDeathAnimation()
+    → Tween: scale 0 + modulate 淡出
+    → TweenCallback: QueueFree         ← 动画播完才销毁
+```
+
+### 12.3 攻击走 ActionQueue
+
+玩家攻击 / AI 攻击不再直接调用 `DamageUnit`，改为通过 `DamageAction` + `ActionQueue`：
+
+```
+OnUnitAttack / AIDoAttack
+  → AP--（即时扣减）
+  → ActionQueue.Enqueue([DamageAction])
+    → Execute → DamageUnit（伤害即时生效）
+    → OnActionExecuted → UnitView 攻击者闪白 + 目标闪红
+    → 等待 AnimationDuration
+    → 回调: CheckVictory, OnUnitAct
+```
+
+BattleManager 的 `OnUnitMove`/`OnUnitAttack`/`AIDoAttack`/`AIDoMove` 均通过 ActionQueue 执行，确保动画时序一致。
+
+### 12.4 浮动数字配置
+
+在单位预制体 `单位视图.tscn` 中：
+1. 在 `UnitView` 节点下添加 `Label`，默认 `Visible=false`
+2. 拖入 Inspector 的 `FloatLabel` 字段
+3. `FloatLifetime`（显示秒数，默认 1s）和 `FloatRise`（上飘像素，默认 28px）可在 Inspector 调节

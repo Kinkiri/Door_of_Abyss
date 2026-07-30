@@ -1,13 +1,12 @@
 [gd_scene format=3 uid="uid://n2lf7klphtj5"]
 
 [ext_resource type="Script" uid="uid://d7gvkpac4jmr" path="res://Scripts/View/UnitView.cs" id="1_nw7r0"]
-[ext_resource type="PackedScene" uid="uid://bytl8qhsumb8p" path="res://Scenes/Prefabs/浮动数字.tscn" id="2_27xo5"]
 [ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="2_giepe"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fw11u"]
 size = Vector2(118, 120)
 
-[node name="DefaultUnit" type="Node2D" unique_id=918862661 node_paths=PackedStringArray("NameLabel", "HPLabel", "ATKLabel", "DescriptionPanel", "DescriptionLabel", "EnemyIndicator")]
+[node name="DefaultUnit" type="Node2D" unique_id=918862661 node_paths=PackedStringArray("NameLabel", "HPLabel", "ATKLabel", "DescriptionPanel", "DescriptionLabel", "EnemyIndicator", "FloatLabel")]
 script = ExtResource("1_nw7r0")
 NameLabel = NodePath("Control/Name")
 HPLabel = NodePath("Control/HP")
@@ -20,8 +19,7 @@ HealFlashDuration = 0.3
 DeathFadeDuration = 0.5
 AttackFlashIn = 0.01
 AttackFlashOut = 0.6
-FloatingNumberPrefab = ExtResource("2_27xo5")
-FloatLifetime = 3.0
+FloatLabel = NodePath("FLN")
 
 [node name="Area2D" type="Area2D" parent="." unique_id=421000204]
 
@@ -115,6 +113,23 @@ offset_top = 11.0
 offset_right = 237.0
 offset_bottom = 103.0
 text = "??"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FLN" type="Label" parent="." unique_id=1231976500]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -5.0
+offset_top = -11.5
+offset_right = 5.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(6.5599995, 6.5599995)
+pivot_offset = Vector2(5, 11.5)
+text = "1"
 horizontal_alignment = 1
 vertical_alignment = 1
 
