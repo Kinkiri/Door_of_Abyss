@@ -31,11 +31,6 @@ pivot_offset = Vector2(62, 63)
 mouse_filter = 2
 color = Color(0.7768705, 0.09762501, 0.20975986, 1)
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=249111711]
-visible = false
-scale = Vector2(0.931094, 0.931094)
-texture = ExtResource("2_qv6y3")
-
 [node name="Emojis" type="Control" parent="." unique_id=638043015]
 layout_mode = 3
 anchors_preset = 0
@@ -53,6 +48,58 @@ pivot_offset = Vector2(76.00001, 79.00001)
 theme_override_font_sizes/font_size = 109
 text = "🐜"
 
+[node name="Emoji2" type="Label" parent="Emojis" unique_id=1776229342]
+layout_mode = 0
+offset_left = -70.0
+offset_top = -58.0
+offset_right = 80.0
+offset_bottom = 91.0
+scale = Vector2(-0.18587717, 0.37411916)
+pivot_offset = Vector2(76.00001, 79.00001)
+theme_override_font_sizes/font_size = 109
+text = "🦿"
+
+[node name="Emoji3" type="Label" parent="Emojis" unique_id=181030845]
+layout_mode = 0
+offset_left = -76.00001
+offset_top = -59.000004
+offset_right = 73.99999
+offset_bottom = 90.0
+rotation = -0.13616554
+scale = Vector2(0.1497304, 0.43011954)
+pivot_offset = Vector2(76.00001, 79.00001)
+theme_override_font_sizes/font_size = 109
+text = "🦿"
+
+[node name="Emoji4" type="Label" parent="Emojis" unique_id=2080857845]
+layout_mode = 0
+offset_left = -85.99999
+offset_top = -62.999992
+offset_right = 64.00001
+offset_bottom = 86.00001
+rotation = -0.2224999
+scale = Vector2(0.36844382, 0.29412284)
+pivot_offset = Vector2(76.00001, 79.00001)
+theme_override_font_sizes/font_size = 109
+text = "🦿"
+
+[node name="Emoji5" type="Label" parent="Emojis" unique_id=1389103886]
+layout_mode = 0
+offset_left = -112.0
+offset_top = -113.0
+offset_right = 38.0
+offset_bottom = 36.0
+rotation = 1.6560898
+scale = Vector2(0.36844382, 0.29412284)
+pivot_offset = Vector2(76.00001, 79.00001)
+theme_override_font_sizes/font_size = 109
+text = "🦿"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=249111711]
+visible = false
+scale = Vector2(0.931094, 0.931094)
+texture = ExtResource("2_qv6y3")
+
 [node name="Area2D" type="Area2D" parent="." unique_id=421000204]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=653882582]
@@ -62,8 +109,6 @@ debug_color = Color(0, 0.60705024, 0.65952575, 0.41960785)
 [node name="Control" type="Control" parent="." unique_id=336620384]
 layout_mode = 3
 anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
 mouse_filter = 2
 
 [node name="Name" type="Label" parent="Control" unique_id=148693596]
@@ -110,7 +155,6 @@ text = "🤺"
 horizontal_alignment = 1
 
 [node name="ATK" type="Label" parent="Control" unique_id=594771906]
-visible = false
 layout_mode = 0
 offset_left = -40.0
 offset_top = 36.0
@@ -122,12 +166,11 @@ horizontal_alignment = 1
 
 [node name="BuffContainer" type="HBoxContainer" parent="." unique_id=259459456]
 offset_left = -64.0
-offset_top = 46.0
+offset_top = 54.0
 offset_right = 65.0
 offset_bottom = 94.0
 
 [node name="Panel" type="Panel" parent="." unique_id=710251118]
-visible = false
 offset_left = -119.0
 offset_top = -195.0
 offset_right = 119.0
@@ -136,12 +179,13 @@ offset_bottom = -74.0
 [node name="Label" type="Label" parent="Panel" unique_id=2088603210]
 layout_mode = 0
 offset_left = -1.0
-offset_top = 11.0
+offset_top = -7.0
 offset_right = 237.0
-offset_bottom = 103.0
-text = "??"
+offset_bottom = 123.0
+text = "??钢肢蝼蛄"
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 1
 
 [node name="FLN" type="Label" parent="." unique_id=1231976500]
 visible = false

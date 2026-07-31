@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://imt0c6m6v8hi"]
+
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_gtw1g"]
+[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="1_rvlb7"]
+[ext_resource type="Resource" uid="uid://dcn0trco7dp5h" path="res://Resource/Data/Units/圣主教/癫狂教徒.tres" id="2_5cvep"]
+
+[sub_resource type="Resource" id="Resource_l3b8s"]
+script = ExtResource("1_gtw1g")
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[resource]
+script = ExtResource("1_rvlb7")
+UnitData = ExtResource("2_5cvep")
+CardID = "癫狂教徒"
+CardName = "癫狂教徒"
+Type = 0
+Shape = 2
+World = 1
+Faction = 1
+Tags = Array[int]([1])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_l3b8s")])
+metadata/_custom_type_script = "uid://p1hhkgy2pem"

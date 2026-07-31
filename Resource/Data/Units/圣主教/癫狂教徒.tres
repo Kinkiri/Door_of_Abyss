@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://dcn0trco7dp5h"]
+
+[ext_resource type="Resource" uid="uid://1vn7taouefwf" path="res://Resource/Data/Cards/圣主教/赎罪券.tres" id="1_3smf4"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_21878"]
+[ext_resource type="Script" uid="uid://osx8pac8nfq5" path="res://Scripts/Data/Actions/CreateCardAction.cs" id="2_r7qo1"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_kfm7r"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="4_wt3k0"]
+
+[sub_resource type="Resource" id="Resource_cc05l"]
+script = ExtResource("2_r7qo1")
+CardData = ExtResource("1_3smf4")
+Count = 2
+AnimationDuration = 0.1
+metadata/_custom_type_script = "uid://osx8pac8nfq5"
+
+[sub_resource type="Resource" id="Resource_7q47r"]
+script = ExtResource("3_kfm7r")
+TriggerEvent = 2
+Actions = Array[Object]([SubResource("Resource_cc05l")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("1_21878")
+UnitID = "癫狂教徒"
+UnitName = "癫狂教徒"
+World = 1
+Faction = 1
+Tags = Array[int]([1])
+AttackPower = 2
+HealthPoints = 3
+AttackDistance = 2
+Description = "部署获得两张“赎罪券"
+UnitPrefab = ExtResource("4_wt3k0")
+PassiveEffects = Array[Object]([SubResource("Resource_7q47r")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

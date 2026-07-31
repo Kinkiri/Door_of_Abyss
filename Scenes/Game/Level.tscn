@@ -52,7 +52,6 @@ script = ExtResource("1_edprt")
 [node name="Manager" type="Node" parent="." unique_id=385605123]
 
 [node name="Battle" type="Node2D" parent="Manager" unique_id=142002766]
-visible = false
 script = ExtResource("2_22vck")
 LevelData = ExtResource("3_edprt")
 PlayerData = ExtResource("4_llcsm")

@@ -32,7 +32,6 @@ World = 1
 Faction = 2
 Tags = Array[int]([4, 0, 7])
 Rarity = 1
-HealthPoints = 1
 Description = "义肢1 被消灭：若拥有义肢，则在原地部署另一只钢肢蝼蛄"
 UnitPrefab = ExtResource("5_afbfo")
 PassiveEffects = Array[Object]([SubResource("Resource_aflhj")])

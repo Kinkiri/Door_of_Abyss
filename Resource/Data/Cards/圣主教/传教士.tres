@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://xftoysy8v416"]
+
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_o5c43"]
+[ext_resource type="Resource" uid="uid://bxxeob8a2wm1y" path="res://Resource/Data/Units/圣主教/传教士.tres" id="2_o5c43"]
+[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="3_yy8na"]
+
+[sub_resource type="Resource" id="Resource_l3b8s"]
+script = ExtResource("1_o5c43")
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[resource]
+script = ExtResource("3_yy8na")
+UnitData = ExtResource("2_o5c43")
+CardID = "传教士"
+CardName = "传教士"
+Type = 0
+Shape = 2
+World = 1
+Faction = 1
+Tags = Array[int]([1])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_l3b8s")])
+metadata/_custom_type_script = "uid://p1hhkgy2pem"

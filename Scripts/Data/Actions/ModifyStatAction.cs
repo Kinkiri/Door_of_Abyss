@@ -3,10 +3,7 @@ using Godot.Collections;
 
 /// <summary>
 /// 修改单位战斗属性（可逆，Buff 到期自动还原）。
-/// 修改固定数值而非百分比，叠层时效果线性叠加。
-/// MaxHP 语义：施加时当前生命随上限同步增加；还原时上限减回、当前生命不随减（超出截断）。
-/// RequiredTags：仅当目标单位带任一这些 Tag 时才生效（null/空 = 不限制）。
-/// Tag 来自 UnitData 模板（战斗中不变），故 Apply/Revert 条件必然对称，可逆安全。
+/// 支持多目标（遍历 ctx.TargetUnits），每个目标独立判定 Tag 和计算值。
 /// </summary>
 [GlobalClass]
 public partial class ModifyStatAction : GameAction
@@ -20,81 +17,109 @@ public partial class ModifyStatAction : GameAction
     /// <summary>仅当目标单位带任一这些 Tag 时生效；null/空 = 不限制</summary>
     [Export] public Array<Tag> RequiredTags { get; set; }
 
-    private bool TagRequiredMet(Context ctx)
+    private bool TagRequiredMet(Unit unit)
     {
         if (RequiredTags == null || RequiredTags.Count == 0) return true;
-        var unitTags = ctx.TargetUnit?.UnitData?.Tags;
+        var unitTags = unit?.UnitData?.Tags;
         if (unitTags == null) return false;
         foreach (var tag in RequiredTags)
             if (unitTags.Contains(tag)) return true;
         return false;
     }
 
+    // ------------------- 修改为多目标版本 -------------------
     protected override void Apply(Context ctx)
     {
-        if (ctx.TargetUnit == null) return;
-        if (!TagRequiredMet(ctx)) return;
+        var originalTarget = ctx.TargetUnit;
+        var units = (ctx.TargetUnits != null && ctx.TargetUnits.Length > 0)
+                    ? ctx.TargetUnits
+                    : new[] { ctx.TargetUnit };
 
-        int val = ValueSource?.GetValue(ctx) ?? Value;
-
-        switch (TargetStat)
+        foreach (var unit in units)
         {
-            case ModifyStatType.AttackPower:
-                ctx.TargetUnit.AttackPower += val;
-                break;
-            case ModifyStatType.MaxHP:
-                ctx.TargetUnit.MaxHP += val;
-                // 施加时当前生命随上限同步增加相同值（只增不减）
-                ctx.TargetUnit.CurrentHP += val;
-                break;
-            case ModifyStatType.Stamina:
-                ctx.TargetUnit.Stamina += val;
-                break;
-            case ModifyStatType.AttackDistance:
-                ctx.TargetUnit.AttackDistance += val;
-                break;
-            case ModifyStatType.ActionPoints:
-                // 改上限（最小 1），当前行动点随上限同步增加（参照 MaxHP 语义）
-                ctx.TargetUnit.MaxActionPoints += val;
-                ctx.TargetUnit.ActionPoints += val;
-                break;
+            if (unit == null || unit.IsDead) continue;
+
+            // 临时将当前目标设为 Context 的主目标，使 ValueSource 能正确读取该目标属性
+            ctx.TargetUnit = unit;
+
+            // 检查 Tag 条件
+            if (!TagRequiredMet(unit)) continue;
+
+            int val = ValueSource?.GetValue(ctx) ?? Value;
+
+            // 根据类型修改属性
+            switch (TargetStat)
+            {
+                case ModifyStatType.AttackPower:
+                    unit.AttackPower += val;
+                    break;
+                case ModifyStatType.MaxHP:
+                    unit.MaxHP += val;
+                    unit.CurrentHP += val;  // 施加时当前生命随上限增加
+                    break;
+                case ModifyStatType.Stamina:
+                    unit.Stamina += val;
+                    break;
+                case ModifyStatType.AttackDistance:
+                    unit.AttackDistance += val;
+                    break;
+                case ModifyStatType.ActionPoints:
+                    unit.MaxActionPoints += val;
+                    unit.ActionPoints += val;
+                    break;
+            }
+
+            unit.UpdateUnit();
+            GD.Print($"[ModifyStatAction] {TargetStat} {val:+0;-0} → {unit.UnitData?.UnitName}");
         }
 
-        ctx.TargetUnit.UpdateUnit();
-        GD.Print($"[ModifyStatAction] {TargetStat} {val:+0;-0} → {ctx.TargetUnit.UnitData?.UnitName}");
+        // 恢复原始 TargetUnit（防止后续使用混乱）
+        ctx.TargetUnit = originalTarget;
     }
 
     public override void Revert(Context ctx)
     {
-        if (ctx?.TargetUnit == null) return;
-        if (!TagRequiredMet(ctx)) return;
+        var originalTarget = ctx.TargetUnit;
+        var units = (ctx.TargetUnits != null && ctx.TargetUnits.Length > 0)
+                    ? ctx.TargetUnits
+                    : new[] { ctx.TargetUnit };
 
-        int val = ValueSource?.GetValue(ctx) ?? Value;
-
-        switch (TargetStat)
+        foreach (var unit in units)
         {
-            case ModifyStatType.AttackPower:
-                ctx.TargetUnit.AttackPower -= val;
-                break;
-            case ModifyStatType.MaxHP:
-                ctx.TargetUnit.MaxHP -= val;
-                // 当前生命不随上限减少，仅超出新上限时截断
-                ctx.TargetUnit.CurrentHP = Mathf.Min(ctx.TargetUnit.CurrentHP, ctx.TargetUnit.MaxHP);
-                break;
-            case ModifyStatType.Stamina:
-                ctx.TargetUnit.Stamina -= val;
-                break;
-            case ModifyStatType.AttackDistance:
-                ctx.TargetUnit.AttackDistance -= val;
-                break;
-            case ModifyStatType.ActionPoints:
-                // 上限减回（最小不低于 1），当前行动点不随上限减少，仅超出新上限时截断
-                ctx.TargetUnit.MaxActionPoints = System.Math.Max(1, ctx.TargetUnit.MaxActionPoints - val);
-                ctx.TargetUnit.ActionPoints = System.Math.Min(ctx.TargetUnit.ActionPoints, ctx.TargetUnit.MaxActionPoints);
-                break;
+            if (unit == null || unit.IsDead) continue;
+
+            ctx.TargetUnit = unit;
+
+            if (!TagRequiredMet(unit)) continue;
+
+            int val = ValueSource?.GetValue(ctx) ?? Value;
+
+            switch (TargetStat)
+            {
+                case ModifyStatType.AttackPower:
+                    unit.AttackPower -= val;
+                    break;
+                case ModifyStatType.MaxHP:
+                    unit.MaxHP -= val;
+                    // 当前生命不随上限减少，仅超出新上限时截断
+                    unit.CurrentHP = Mathf.Min(unit.CurrentHP, unit.MaxHP);
+                    break;
+                case ModifyStatType.Stamina:
+                    unit.Stamina -= val;
+                    break;
+                case ModifyStatType.AttackDistance:
+                    unit.AttackDistance -= val;
+                    break;
+                case ModifyStatType.ActionPoints:
+                    unit.MaxActionPoints = System.Math.Max(1, unit.MaxActionPoints - val);
+                    unit.ActionPoints = System.Math.Min(unit.ActionPoints, unit.MaxActionPoints);
+                    break;
+            }
+
+            unit.UpdateUnit();
+            GD.Print($"[ModifyStatAction] 还原 {TargetStat} {val:+0;-0} → {unit.UnitData?.UnitName}");
         }
 
-        ctx.TargetUnit.UpdateUnit();
-        GD.Print($"[ModifyStatAction] 还原 {TargetStat} {val:+0;-0} → {ctx.TargetUnit.UnitData?.UnitName}");
+        ctx.TargetUnit = originalTarget;
     }
 }

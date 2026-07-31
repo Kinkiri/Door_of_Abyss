@@ -118,11 +118,17 @@ public partial class CardManager : Node
         NotifyCardsUpdated();
         return card;
     }
-
+    /// <summary>
+    /// 造一张牌并加入手牌
+    /// </summary>
+    /// <param name="cardData"></param>
+    /// <returns></returns>
     public Card CreateCard(CardData cardData)
     {
         var card = new Card(cardData);
         GD.Print($"[CardManager] 创建卡牌: [{card.CardID}] {card.CardName}");
+        HandCards.Add(card);
+        NotifyCardsUpdated();
         return card;
     }
 

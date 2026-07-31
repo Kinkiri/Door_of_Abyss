@@ -39,8 +39,6 @@ texture = ExtResource("2_ixqmk")
 [node name="Emojis" type="Control" parent="." unique_id=638043015]
 layout_mode = 3
 anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
 
 [node name="Emoji" type="Label" parent="Emojis" unique_id=1395468568]
 layout_mode = 0
@@ -142,7 +140,7 @@ horizontal_alignment = 1
 
 [node name="BuffContainer" type="HBoxContainer" parent="." unique_id=259459456]
 offset_left = -64.0
-offset_top = 46.0
+offset_top = 55.0
 offset_right = 65.0
 offset_bottom = 94.0
 
@@ -162,6 +160,7 @@ offset_bottom = 103.0
 text = "??"
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 1
 
 [node name="FLN" type="Label" parent="." unique_id=1231976500]
 visible = false
