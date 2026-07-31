@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://cgk4anboptubr"]
+
+[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="1_6efkh"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_sco3p"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_afbfo"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_gfiwa"]
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="4_6n652"]
+
+[sub_resource type="Resource" id="Resource_msxe0"]
+script = ExtResource("2_afbfo")
+BuffData = ExtResource("1_6efkh")
+AnimationDuration = 0.3
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_o0lpd"]
+script = ExtResource("3_gfiwa")
+TriggerEvent = 2
+Actions = Array[Object]([SubResource("Resource_msxe0")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[sub_resource type="Resource" id="Resource_6efkh"]
+script = ExtResource("4_6n652")
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[sub_resource type="Resource" id="Resource_aflhj"]
+script = ExtResource("3_gfiwa")
+TriggerEvent = 10
+Actions = Array[Object]([SubResource("Resource_6efkh")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("1_sco3p")
+UnitID = "钢肢蝼蛄"
+UnitName = "钢肢蝼蛄"
+World = 1
+Faction = 2
+Tags = Array[int]([4, 0, 7])
+Rarity = 1
+HealthPoints = 1
+PassiveEffects = Array[Object]([SubResource("Resource_o0lpd"), SubResource("Resource_aflhj")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

@@ -359,7 +359,9 @@ OrCondition
 
 | 动作 | 说明 |
 |---|---|
-| SummonUnitAction | 召唤 SourceCard 的单位，卡牌必须为 UnitCardData |
+| SummonUnitAction | 通用召唤：配置 `UnitData`（Resource 引用）或 `UnitID`（字符串查 UnitLibrary，亡语重生等循环引用场景用字符串）可直接召唤任意单位（无部署范围限制，可用于法术/被动）；两者都未配置时回退到单位卡自身（`UnitCardData.UnitData`），且仅此路径保留"己方门部署范围内"检查 |
+
+部署限制出牌前由 `SelectionManager.ValidateCardTarget` 拦截（范围外点击不出牌、不扣费），`SummonUnitAction` 内保留同检查作为双保险。
 
 ### 3.3 自动攻击
 
@@ -731,6 +733,15 @@ Actions=[RepeatAction{
 UnitData PassiveEffects=[EffectData{
   TriggerEvent=OnUnitDeath, Target=EventTarget
   Actions=[DamageAction{Value=3}]
+}]
+```
+
+**亡语重生（原地召唤新的自己）：** 死亡时所在格子已先被释放，事件附带 `TargetCell`/`SourceTeam`，用通用召唤（`UnitID` 字符串查库，避免循环引用）原地重生同阵营单位：
+
+```
+UnitData PassiveEffects=[EffectData{
+  TriggerEvent=OnUnitDeath, Target=Self
+  Actions=[SummonUnitAction{UnitID="小兵"}]   // 小兵 = 自己
 }]
 ```
 

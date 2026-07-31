@@ -220,6 +220,12 @@ public partial class SelectionManager : Node2D
                     GD.Print("[Selection] 该格子已被单位占据");
                     return false;
                 }
+                // 部署限制前置拦截：单位卡只能在己方门部署范围内召唤（防止出牌后动作拒绝导致白亏卡牌）
+                if (!IsWithinDeployRange(ctx.TargetCell.GridPos))
+                {
+                    GD.Print("[Selection] 该格子不在部署范围内");
+                    return false;
+                }
             }
             return true;
         }

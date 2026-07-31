@@ -12,7 +12,7 @@ public enum Tag
     /// </summary>
     攻击义肢,
     /// <summary>
-    /// 使义肢额外增加体力上限
+    /// 使义肢额外增加体力
     /// </summary>
     体力义肢,
     /// <summary>
@@ -22,5 +22,6 @@ public enum Tag
     /// <summary>
     /// 使义肢额外增加攻击范围
     /// </summary>
-    距离义肢
+    距离义肢,
+    动物
 }

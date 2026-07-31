@@ -143,8 +143,28 @@ public partial class UnitManager : Node
     {
         GD.Print($"UnitManager: {unit.UnitData?.UnitName} 死亡");
 
-        // 触发死亡事件（subject=死者）
-        EventBus.Instance?.Fire(EventType.OnUnitDeath, new Context { TargetUnit = unit }, subject: unit);
+        // 先释放所在格子（亡语被动可能原地召唤新单位；RemoveUnit 内重复清理幂等保留）
+        Cell deathCell = null;
+        if (MapManager.Instance.TryGetCell(unit.GridPos, out deathCell)
+            && deathCell.OccupyingUnit == unit)
+        {
+            deathCell.OccupyingUnit = null;
+            // 运行时 CanPass/CanStand 由 UnitManager 动态管理——
+            // 单位占据时设为 false，移走时恢复为 BaseBlock 原始值
+            deathCell.CanPass = deathCell.BaseBlock?.CanPass ?? true;
+            deathCell.CanStand = deathCell.BaseBlock?.CanStand ?? true;
+        }
+
+        // 触发死亡事件（subject=死者；附格子/阵营，供亡语原地召唤/同阵营效果使用）
+        EventBus.Instance?.Fire(EventType.OnUnitDeath,
+            new Context
+            {
+                TargetUnit = unit,
+                TargetCell = deathCell,
+                SourceUnit = unit,
+                SourceTeam = unit.Team,
+            },
+            subject: unit);
 
         RemoveUnit(unit);
     }

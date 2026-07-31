@@ -2,19 +2,33 @@ using Godot;
 using System.Linq;
 
 /// <summary>
-/// 在目标格子召唤单位。单位数据来自 SourceCard.CardData（需为 UnitCardData）。
-/// 召唤位置必须在己方门周围的部署范围内（LevelData.DeployRange 控制，默认 2 格曼哈顿距离）。
+/// 在目标格子召唤单位。
+/// 通用召唤：配置 UnitData（Resource 引用）或 UnitID（字符串查 UnitLibrary，避免循环引用）
+/// 即可召唤任意单位（无部署范围限制，可用于法术/被动/亡语重生）。
+/// 单位卡路径：两者都未配置时回退到 SourceCard（须为 UnitCardData）自身的单位，
+/// 且仅此路径保留"必须在己方门部署范围内"的检查（玩家出单位卡的限制）。
 /// </summary>
 [GlobalClass]
 public partial class SummonUnitAction : GameAction
 {
+    /// <summary>通用召唤：直接指定要召唤的单位模板（null = 走 UnitID 或单位卡路径）</summary>
+    [Export] public UnitData UnitData { get; set; }
+
+    /// <summary>通用召唤：按 UnitID 从 UnitLibrary 查模板（亡语重生等循环引用场景用字符串规避）</summary>
+    [Export] public string UnitID { get; set; } = "";
+
     protected override void Apply(Context ctx)
     {
         if (ctx.TargetCell == null) return;
-        if (ctx.SourceCard?.CardData is not UnitCardData unitCard) return;
 
-        // 检查目标是否在任意门的部署范围内
-        if (ctx.SourceTeam == Team.Player)
+        // 优先用动作配置的单位（UnitData 引用 → UnitID 查库），否则回退到单位卡自身的 UnitData
+        var unitData = UnitData
+            ?? (string.IsNullOrEmpty(UnitID) ? null : UnitLibrary.GetUnitByID(UnitID))
+            ?? (ctx.SourceCard?.CardData as UnitCardData)?.UnitData;
+        if (unitData == null) return;
+
+        // 仅"单位卡路径"（未显式配 UnitData/UnitID）保留部署范围检查；通用召唤无限制
+        if (UnitData == null && string.IsNullOrEmpty(UnitID) && ctx.SourceTeam == Team.Player)
         {
             bool inRange = false;
             foreach (var door in UnitManager.GetDoors(Team.Player))
@@ -32,9 +46,9 @@ public partial class SummonUnitAction : GameAction
         }
 
         var spawned = UnitManager.Instance.SpawnUnit(
-            unitCard.UnitData, ctx.TargetCell.GridPos, ctx.SourceTeam);
+            unitData, ctx.TargetCell.GridPos, ctx.SourceTeam);
         if (spawned != null)
-            GD.Print($"[SummonUnitAction] 召唤 {unitCard.UnitData.UnitName} 于 {ctx.TargetCell.GridPos}");
+            GD.Print($"[SummonUnitAction] 召唤 {unitData.UnitName} 于 {ctx.TargetCell.GridPos}");
     }
 
     private static bool IsWithinRange(Vector2I pos, Vector2I doorPos, int range)

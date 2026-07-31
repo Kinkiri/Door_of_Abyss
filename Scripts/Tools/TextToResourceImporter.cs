@@ -398,8 +398,13 @@ public partial class TextToResourceImporter : EditorScript
             return action;
         }
 
-        // 召唤[:ID] — 如果是卡牌动作列表中的，ID 可选
-        if (dsl == "召唤" || dsl.StartsWith("召唤:"))
+        // 召唤[:ID] — 指定 ID 时用字符串 UnitID（运行时查 UnitLibrary，避免亡语重生等循环引用），无 ID 走单位卡自身路径
+        if (dsl.StartsWith("召唤:"))
+        {
+            var unitId = dsl[3..].Trim();
+            return new SummonUnitAction { UnitID = unitId };
+        }
+        if (dsl == "召唤")
         {
             return new SummonUnitAction();
         }
