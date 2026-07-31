@@ -8,12 +8,41 @@
 [sub_resource type="Resource" id="Resource_sw7ab"]
 script = ExtResource("1_8jfxn")
 Value = 1
+RequiredTags = null
 metadata/_custom_type_script = "uid://qlng65nfa7th"
 
 [sub_resource type="Resource" id="Resource_cmylw"]
 script = ExtResource("1_8jfxn")
 TargetStat = 1
 Value = 1
+RequiredTags = null
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_tagatk"]
+script = ExtResource("1_8jfxn")
+Value = 1
+RequiredTags = Array[int]([3])
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_taghp"]
+script = ExtResource("1_8jfxn")
+TargetStat = 1
+Value = 1
+RequiredTags = Array[int]([2])
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_tagsta"]
+script = ExtResource("1_8jfxn")
+TargetStat = 2
+Value = 1
+RequiredTags = Array[int]([4])
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_tagap"]
+script = ExtResource("1_8jfxn")
+TargetStat = 4
+Value = 1
+RequiredTags = Array[int]([5])
 metadata/_custom_type_script = "uid://qlng65nfa7th"
 
 [sub_resource type="Resource" id="Resource_hweew"]
@@ -25,6 +54,7 @@ metadata/_custom_type_script = "uid://bubokmjt34mm"
 [sub_resource type="Resource" id="Resource_8jfxn"]
 script = ExtResource("3_0fteh")
 TriggerEvent = 8
+MaxTriggerCount = 1
 Actions = Array[Object]([SubResource("Resource_hweew")])
 Conditions = null
 metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
@@ -36,7 +66,7 @@ BuffName = "义肢"
 Description = "+X血上限和攻，每次行动减少"
 Duration = -1
 MaxStack = -1
-OnApplyActions = Array[Object]([SubResource("Resource_sw7ab"), SubResource("Resource_cmylw")])
+OnApplyActions = Array[Object]([SubResource("Resource_sw7ab"), SubResource("Resource_cmylw"), SubResource("Resource_tagatk"), SubResource("Resource_taghp"), SubResource("Resource_tagsta"), SubResource("Resource_tagap")])
 OnExpireActions = null
 OnRoundEndActions = null
 PassiveEffects = Array[Object]([SubResource("Resource_8jfxn")])

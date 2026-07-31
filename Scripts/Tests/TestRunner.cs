@@ -1,4 +1,5 @@
 using Godot;
+using Godot.Collections;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -394,6 +395,47 @@ public partial class TestRunner : Node
             VAssert("CurrentHP 不超上限", () => unit.CurrentHP <= unit.MaxHP);
         });
 
+        // ── ModifyStatAction Tag 条件 ──────────────────────────────────
+        RunGroup("ModifyStatAction Tag 条件", () =>
+        {
+            var taggedAction = new ModifyStatAction
+            {
+                TargetStat = ModifyStatType.AttackPower,
+                Value = 1,
+                RequiredTags = new Array<Tag> { Tag.攻击义肢 },
+            };
+
+            // 带匹配 Tag：生效且可逆
+            var taggedUnit = MakeUnit("带Tag单位", 5, 10);
+            taggedUnit.UnitData.Tags = new Array<Tag> { Tag.攻击义肢 };
+            var taggedCtx = new Context { TargetUnit = taggedUnit };
+
+            taggedAction.Execute(taggedCtx);
+            VAssert("带Tag：Execute 后 ATK=6", () => taggedUnit.AttackPower == 6);
+            taggedAction.Revert(taggedCtx);
+            VAssert("带Tag：Revert 后 ATK=5", () => taggedUnit.AttackPower == 5);
+
+            // 无 Tag：不生效，Revert 也不扣
+            var plainUnit = MakeUnit("无Tag单位", 5, 10);
+            var plainCtx = new Context { TargetUnit = plainUnit };
+            taggedAction.Execute(plainCtx);
+            VAssert("无Tag：Execute 不生效 ATK=5", () => plainUnit.AttackPower == 5);
+            taggedAction.Revert(plainCtx);
+            VAssert("无Tag：Revert 不生效 ATK=5", () => plainUnit.AttackPower == 5);
+
+            // 带其他 Tag：不生效
+            var wrongTagUnit = MakeUnit("错误Tag单位", 5, 10);
+            wrongTagUnit.UnitData.Tags = new Array<Tag> { Tag.科技 };
+            var wrongCtx = new Context { TargetUnit = wrongTagUnit };
+            taggedAction.Execute(wrongCtx);
+            VAssert("错误Tag：不生效 ATK=5", () => wrongTagUnit.AttackPower == 5);
+
+            // 无 RequiredTags：向后兼容，无条件生效
+            var plainAction = new ModifyStatAction { TargetStat = ModifyStatType.AttackPower, Value = 2 };
+            plainAction.Execute(plainCtx);
+            VAssert("无RequiredTags：无条件生效 ATK=7", () => plainUnit.AttackPower == 7);
+        });
+
         // ── EventBus 条件过滤 ────────────────────────────────────────
         RunGroup("EventBus 条件", () =>
         {
@@ -678,8 +720,9 @@ public partial class TestRunner : Node
             VAssert("装备后 MaxHP=12", () => unit.MaxHP == 12);
             VAssert("装备后 CurrentHP=12（随上限同步+2）", () => unit.CurrentHP == 12);
             VAssert("装备后 AD=4", () => unit.AttackDistance == 4);
-            VAssert("装备后 耐力=5", () => unit.MaxStamina == 5);
-            VAssert("装备后 AP=6", () => unit.ActionPoints == 6);
+            VAssert("装备后 耐力=5", () => unit.Stamina == 5);
+            VAssert("装备后 AP=6（当前随上限同步）", () => unit.ActionPoints == 6);
+            VAssert("装备后 MaxAP=6", () => unit.MaxActionPoints == 6);
             VAssert("HasEquipment=true", () => em.HasEquipment(unit));
             VAssert("GetEquipment 返回装备", () => em.GetEquipment(unit)?.Data.EquipmentID == "e1");
 
@@ -689,8 +732,9 @@ public partial class TestRunner : Node
             VAssert("移除后 MaxHP=10", () => unit.MaxHP == 10);
             VAssert("移除后 CurrentHP=10（超出新上限截断）", () => unit.CurrentHP == 10);
             VAssert("移除后 AD=1", () => unit.AttackDistance == 1);
-            VAssert("移除后 耐力=1", () => unit.MaxStamina == 1);
-            VAssert("移除后 AP=1", () => unit.ActionPoints == 1);
+            VAssert("移除后 耐力=1", () => unit.Stamina == 1);
+            VAssert("移除后 AP=1（截断到上限）", () => unit.ActionPoints == 1);
+            VAssert("移除后 MaxAP=1", () => unit.MaxActionPoints == 1);
             VAssert("移除后 HasEquipment=false", () => !em.HasEquipment(unit));
 
             // MaxHP 截断：满血装备 → 移除装备，CurrentHP 截到新上限

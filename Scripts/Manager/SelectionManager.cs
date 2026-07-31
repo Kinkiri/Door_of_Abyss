@@ -100,7 +100,7 @@ public partial class SelectionManager : Node2D
         }
 
         _reachable = PathFinder.GetReachableCellsWithAttackTargets(
-            SelectedUnit.GridPos, SelectedUnit.RemainingStamina,
+            SelectedUnit.GridPos, SelectedUnit.Stamina,
             SelectedUnit.AttackDistance, SelectedUnit.Team,
             MapManager.Instance.Map, out _attackable);
         _attackRange = CalcAttackRange(SelectedUnit);
@@ -318,7 +318,7 @@ public partial class SelectionManager : Node2D
         }
 
         _reachable = PathFinder.GetReachableCellsWithAttackTargets(
-            unit.GridPos, unit.RemainingStamina, unit.AttackDistance,
+            unit.GridPos, unit.Stamina, unit.AttackDistance,
             unit.Team, MapManager.Instance.Map, out _attackable);
         _attackRange = CalcAttackRange(unit);
         EmitSignal(SignalName.SelectionUpdated);

@@ -274,7 +274,7 @@ GameStart（游戏开始）
   └─ 初始化卡组 → 抽 2 张牌
   ↓ 自动
 RoundStart（回合开始）
-  ├─ 所有单位回复 AP，费用 +2
+  ├─ 所有单位行动点恢复满上限，费用 +2
   ├─ 抽 1 张牌，生成波次
   ├─ RoundStart 被动效果
   └─ 重置触发计数器
@@ -371,9 +371,13 @@ OrCondition
 
 | 动作 | 字段 | 说明 |
 |---|---|---|
-| ModifyStatAction | TargetStat, Value/ValueSource | 加减属性值。Buff 到期自动还原 |
+| ModifyStatAction | TargetStat, Value/ValueSource, RequiredTags | 加减属性值。Buff 到期自动还原。`RequiredTags`（可选）：仅当目标单位带任一指定 Tag 时生效（null/空 = 不限制），Tag 来自 UnitData 模板、战斗中不变，施加/还原条件对称可逆安全 |
 
 MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不减）；还原时上限减回、当前 HP **不随上限减少**，仅超出新上限时截断。
+
+**行动点（AP）双值：** `ActionPoints`（当前）+ `MaxActionPoints`（上限）。行动消耗当前值；**每回合开始当前 = 上限**（不从模板取，Buff/装备加的上限在恢复时生效）；**上限最小不低于 1**。ModifyStatAction 修改上限：施加时当前随上限同步增加，还原时上限减回（clamp ≥1）、当前仅截断（同 MaxHP 语义）。
+
+**体力单值：** 体力 = 移动范围半径（曼哈顿距离），单值无"上限/剩余"之分（移动不消耗体力，只扣 AP）。
 
 **叠层刷新**：已有 Buff 再次施加时，只对**新增层数**执行 OnApplyActions（旧层效果保留，不先还原旧层）——避免"还原不扣当前 HP + 全量重施"导致的血量虚增（如 2 层义肢 3/6 血再上 2 层 → 5/8，而非错误的 7/8）。
 
@@ -647,13 +651,17 @@ DamageAction {
 }
 ```
 
-### 11.2 义肢3 - ATK+3, MaxHP+3, 行动后减层
+### 11.2 义肢 - 每层基础加成 + Tag 额外加成 + 行动后减层
 
 **BuffData：** Duration=-1, MaxStack=-1
 ```
 OnApplyActions = [
-  ModifyStatAction(ATK,+3),
-  ModifyStatAction(MaxHP,+3)
+  ModifyStatAction(ATK,+1),                                // 基础：每层 ATK+1
+  ModifyStatAction(MaxHP,+1),                              // 基础：每层 MaxHP+1
+  ModifyStatAction(ATK,+1, RequiredTags=[攻击义肢]),        // Tag 额外：带 Tag 才生效
+  ModifyStatAction(MaxHP,+1, RequiredTags=[生命义肢]),
+  ModifyStatAction(体力,+1, RequiredTags=[体力义肢]),
+  ModifyStatAction(行动点,+1, RequiredTags=[行动义肢])
 ]
 PassiveEffects = [EffectData {
   TriggerEvent=OnUnitAct, MaxTriggerCount=1
@@ -661,7 +669,9 @@ PassiveEffects = [EffectData {
 }]
 ```
 
-**卡牌：** `ApplyBuffAction { BuffData=<义肢.tres>, InitialStacks=3 }`
+**Tag → 额外加成映射：** `攻击义肢`→攻击力、`生命义肢`→生命上限、`体力义肢`→体力（移动范围）、`行动义肢`→行动点上限。单位带哪个 Tag，对应属性额外 +1（按层数倍数）。
+
+**卡牌：** `ApplyBuffAction { BuffData=<义肢.tres>, InitialStacks=2 }`
 
 ### 11.3 50% 概率回合结束治疗 2 点（被动）
 
@@ -787,7 +797,7 @@ ID | 类型 | 目标形状 | 过滤 | 费用 | 范围 | 世界观 | 势力 | 标
 ID | 名称 | HP | ATK | AP | 体力 | 射程 | 类型 | 世界观 | 势力 | 标签 | 稀有度 | 描述 | 被动
 ```
 
-所有数值列纯数字。类型：小队, 建筑, 门, 障碍, 召唤, 特殊。
+所有数值列纯数字。类型：小队, 建筑, 门, 障碍, 召唤, 特殊。AP = 行动点上限（每回合恢复满），体力 = 移动范围半径（曼哈顿距离）。
 
 ### 12.4 Buff 格式
 
@@ -821,9 +831,9 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 | `ATK` / `攻击力` | 来源攻击力 | |
 | `HP` / `生命` | 目标当前生命 | |
 | `MaxHP` / `最大生命` | 目标生命上限 | |
-| `体力` | 来源体力 | |
+| `体力` | 来源体力（移动范围半径） | |
 | `射程` / `距离` | 来源攻击距离 | |
-| `行动` / `行动次数` | 来源行动次数 | |
+| `行动` / `行动次数` | 来源当前行动点数 | |
 | `回合数` | 当前回合 | |
 | `费用` / `最大费用` | 当前或最大费用 | |
 | `友方数` / `敌方数` / `全单位数` | 存活单位计数 | |
@@ -938,8 +948,8 @@ BattleManager 的 `OnUnitMove`/`OnUnitAttack`/`AIDoAttack`/`AIDoMove` 均通过 
 | AttackBonus | 攻击力加成 |
 | MaxHealthBonus | 生命上限加成（装备时当前 HP 随上限同步增加） |
 | AttackDistanceBonus | 攻击距离加成 |
-| StaminaBonus | 耐力上限加成 |
-| ActionPointBonus | 行动点数加成 |
+| StaminaBonus | 体力加成（移动范围半径） |
+| ActionPointBonus | 行动点上限加成（装备时当前行动点随上限同步增加） |
 | OnApplyActions | 附加动作（装备时 Execute、移除时 Revert），与 bonus 字段**叠加** |
 | PassiveEffects | 装备期间被动效果（移除时自动取消订阅） |
 

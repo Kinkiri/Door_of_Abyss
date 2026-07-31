@@ -29,13 +29,14 @@ public partial class SetStatAction : GameAction
                 ctx.TargetUnit.MaxHP = val;
                 break;
             case ModifyStatType.Stamina:
-                ctx.TargetUnit.MaxStamina = val;
+                ctx.TargetUnit.Stamina = val;
                 break;
             case ModifyStatType.AttackDistance:
                 ctx.TargetUnit.AttackDistance = val;
                 break;
             case ModifyStatType.ActionPoints:
-                ctx.TargetUnit.ActionPoints = val;
+                // 设置行动点上限（最小不低于 1），当前行动点不随改（回合开始恢复满）
+                ctx.TargetUnit.MaxActionPoints = System.Math.Max(1, val);
                 break;
         }
 

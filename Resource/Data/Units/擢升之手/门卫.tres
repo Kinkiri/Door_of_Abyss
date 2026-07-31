@@ -2,12 +2,13 @@
 
 [ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="1_5ehkf"]
 [ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_elj16"]
+[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="1_fpyoc"]
 [ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_fpyoc"]
 [ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="3_bpiqf"]
 
 [sub_resource type="Resource" id="Resource_l2avd"]
 script = ExtResource("1_5ehkf")
-InitialStacks = 2
+BuffData = ExtResource("1_fpyoc")
 AnimationDuration = 0.3
 metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
 
@@ -23,7 +24,7 @@ UnitID = "门卫"
 UnitName = "门卫"
 World = 1
 Faction = 2
-Tags = Array[int]([0])
+Tags = Array[int]([0, 5])
 AttackPower = 2
 HealthPoints = 3
 Description = "回合开始：获得义肢2"

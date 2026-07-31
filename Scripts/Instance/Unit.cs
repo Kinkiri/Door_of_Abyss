@@ -27,10 +27,13 @@ public partial class Unit
     public int AttackPower { get; set; }
     public int CurrentHP { get; set; }
     public int MaxHP { get; set; }
-    public int RemainingStamina { get; set; }
-    public int MaxStamina { get; set; }
+    /// <summary>体力（移动范围半径，曼哈顿距离；单值，无上限/剩余之分）</summary>
+    public int Stamina { get; set; }
     public int AttackDistance { get; set; }
-    public int ActionPoints { get; set; }   
+    /// <summary>当前行动点数（行动消耗，每回合开始恢复满）</summary>
+    public int ActionPoints { get; set; }
+    /// <summary>行动点上限（可被 Buff/装备修改，最小不低于 1）</summary>
+    public int MaxActionPoints { get; set; }
     public UnitType Type { get; set; }
 
 
@@ -62,10 +65,10 @@ public partial class Unit
         AttackPower = UnitData?.AttackPower ?? 1;
         MaxHP = UnitData?.HealthPoints ?? 2;
         CurrentHP = MaxHP;
-        MaxStamina = UnitData?.Stamina ?? 1;
-        RemainingStamina = MaxStamina;
+        Stamina = UnitData?.Stamina ?? 1;
         AttackDistance = UnitData?.AttackDistance ?? 1;
-        ActionPoints = UnitData?.ActionPoints ?? 1;
+        MaxActionPoints = System.Math.Max(1, UnitData?.ActionPoints ?? 1);
+        ActionPoints = MaxActionPoints;
         Type = UnitData?.Type ?? UnitType.Squad;
     }
 
@@ -77,16 +80,16 @@ public partial class Unit
         $"ID: {UnitData?.UnitID ?? "UnknownUnit"}\n" +
         $"HP: {CurrentHP}/{MaxHP}\n" +
         $"攻击力: {AttackPower}\n" +
-        $"体力: {RemainingStamina}/{MaxStamina}\n" +
+        $"体力: {Stamina}\n" +
         $"攻击范围: {AttackDistance}\n" +
         $"类型: {Type}\n" +
-        $"动作点数: {ActionPoints}";
+        $"动作点数: {ActionPoints}/{MaxActionPoints}";
 
 
     public override string ToString()
     {
         return $"[Unit {UnitData?.UnitID}] {UnitData?.UnitName} | " +
-               $"HP={CurrentHP}/{MaxHP} 体力={RemainingStamina}/{MaxStamina} 类型={Type} 动作点数={ActionPoints}";
+               $"HP={CurrentHP}/{MaxHP} 体力={Stamina} 类型={Type} 动作点数={ActionPoints}/{MaxActionPoints}";
     }
 
     /// <summary>

@@ -703,11 +703,11 @@ public partial class BattleManager : Node2D
         RoundCount++;
         CurrentTeam = Team.Neutral;
 
-        // 重置所有存活单位的行动次数
+        // 重置所有存活单位的行动次数（恢复满上限，不从模板取——Buff/装备加的上限在此生效）
         foreach (var u in UnitManager.Instance.ActiveUnits)
         {
             if (u.IsAlive && !u.IsDead)
-                u.ActionPoints = u.UnitData?.ActionPoints ?? 1;
+                u.ActionPoints = u.MaxActionPoints;
         }
         GD.Print($"[Battle] 回合 {RoundCount} 开始，所有单位行动次数已重置");
 

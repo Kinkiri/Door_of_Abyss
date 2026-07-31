@@ -22,7 +22,7 @@ public partial class UnitStatValue : ValueSource
         {
             ModifyStatType.AttackPower => unit.AttackPower,
             ModifyStatType.MaxHP => CurrentHP ? unit.CurrentHP : unit.MaxHP,
-            ModifyStatType.Stamina => unit.MaxStamina,
+            ModifyStatType.Stamina => unit.Stamina,
             ModifyStatType.AttackDistance => unit.AttackDistance,
             ModifyStatType.ActionPoints => unit.ActionPoints,
             _ => 0,

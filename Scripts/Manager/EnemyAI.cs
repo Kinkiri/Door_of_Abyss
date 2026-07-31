@@ -139,7 +139,7 @@ public partial class EnemyAI : Node
 
         // 找所有可达格子，选离目标最近的（不走玩家站着的格，因为 CanStand=false）
         var reachable = PathFinder.GetReachableCells(
-            enemy.GridPos, enemy.RemainingStamina, map);
+            enemy.GridPos, enemy.Stamina, map);
 
         Vector2I? bestMove = null;
         int bestDist = int.MaxValue;
@@ -157,7 +157,7 @@ public partial class EnemyAI : Node
 
         if (!bestMove.HasValue)
         {
-            GD.Print($"[EnemyAI]   无可达格子（体力={enemy.RemainingStamina}）");
+            GD.Print($"[EnemyAI]   无可达格子（体力={enemy.Stamina}）");
             return false;
         }
 
