@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EquipmentData" format=3 uid="uid://b8st3tjkr7kj1"]
+
+[ext_resource type="Script" uid="uid://tmoxnw3avry4" path="res://Scripts/Data/Units/EquipmentData.cs" id="1_3urh3"]
+[ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="1_05j3v"]
+[ext_resource type="Script" uid="uid://bndowl6u6n8uh" path="res://Scripts/Data/Actions/HealAction.cs" id="2_8e240"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_aj1f6"]
+
+[sub_resource type="Resource" id="Resource_tp50d"]
+script = ExtResource("2_8e240")
+Value = 1
+metadata/_custom_type_script = "uid://bndowl6u6n8uh"
+
+[sub_resource type="Resource" id="Resource_vlbld"]
+script = ExtResource("3_aj1f6")
+TriggerEvent = 1
+Actions = Array[Object]([SubResource("Resource_tp50d")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("1_3urh3")
+EquipmentID = "测试装备"
+EquipmentName = "测试装备"
+Description = "+1血上限，+1攻，回合末+1血"
+Icon = ExtResource("1_05j3v")
+PassiveEffects = Array[Object]([SubResource("Resource_vlbld")])
+metadata/_custom_type_script = "uid://tmoxnw3avry4"

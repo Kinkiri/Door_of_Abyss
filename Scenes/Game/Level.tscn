@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://ca7kq5v3k0av2" path="res://Scripts/View/DragCamera2D.cs" id="1_edprt"]
 [ext_resource type="Script" uid="uid://7iryg60hqk8k" path="res://Scripts/Manager/BattleManager.cs" id="2_22vck"]
-[ext_resource type="Resource" uid="uid://dr5crh4jdw3kf" path="res://Resource/Data/Levels/格调.tres" id="3_edprt"]
+[ext_resource type="Resource" uid="uid://24v55ttqt4ks" path="res://Resource/Data/Levels/中东小伙.tres" id="3_edprt"]
 [ext_resource type="Resource" uid="uid://bjvfgqjisq7sy" path="res://Resource/Data/测试玩家.tres" id="4_llcsm"]
 [ext_resource type="Script" uid="uid://cjfnh45i7txbs" path="res://Scripts/Manager/SelectionManager.cs" id="5_73o0s"]
 [ext_resource type="Script" uid="uid://07iqkkc7rmnd" path="res://Scripts/Manager/MapManager.cs" id="6_5eta3"]
@@ -24,6 +24,9 @@
 [ext_resource type="PackedScene" uid="uid://mwok0rnckmre" path="res://Scenes/Prefabs/卡牌视图.tscn" id="22_w3f5c"]
 [ext_resource type="Script" uid="uid://b66ib2kt0kmcv" path="res://Scripts/View/RoundView.cs" id="23_byf6f"]
 [ext_resource type="Script" uid="uid://cky1dniflsd46" path="res://Scripts/View/UnitViewManager.cs" id="24_v8m9n"]
+[ext_resource type="Script" uid="uid://bw32r0still1t" path="res://Scripts/Manager/EquipmentManager.cs" id="25_eqmgr"]
+[ext_resource type="PackedScene" uid="uid://coqvtxojvdx33" path="res://Scenes/Prefabs/装备视图.tscn" id="26_eqview"]
+[ext_resource type="Script" uid="uid://b5fhpwj0l58n6" path="res://Scripts/Tests/TestRunner.cs" id="27_73o0s"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8od7v"]
 texture = ExtResource("19_pu45w")
@@ -87,6 +90,9 @@ script = ExtResource("13_agiwf")
 [node name="ActionQueue" type="Node" parent="Manager" unique_id=930070617]
 script = ExtResource("15_vmp7b")
 
+[node name="Equipment" type="Node" parent="Manager" unique_id=477498847]
+script = ExtResource("25_eqmgr")
+
 [node name="Map" type="Node2D" parent="." unique_id=315899385 node_paths=PackedStringArray("BaseTerrainLayer", "MoveMapLayer", "AttackMapLayer", "CardPreviewLayer")]
 script = ExtResource("16_eklyj")
 BaseTerrainLayer = NodePath("BaseMapLayer")
@@ -97,6 +103,7 @@ CardPreviewLayer = NodePath("UILayer/PreviewMapLayer")
 [node name="UnitViewManager" type="Node" parent="Map" unique_id=1266638464 node_paths=PackedStringArray("UnitLayer")]
 script = ExtResource("24_v8m9n")
 BuffViewPrefab = ExtResource("14_8vj8p")
+EquipmentViewPrefab = ExtResource("26_eqview")
 UnitLayer = NodePath("../BaseMapLayer")
 
 [node name="BaseMapLayer" type="TileMapLayer" parent="Map" unique_id=795475500]
@@ -174,5 +181,8 @@ offset_top = 392.0
 offset_right = 1920.0
 offset_bottom = 544.0
 theme_override_font_sizes/font_size = 81
+
+[node name="Node" type="Node" parent="." unique_id=1273218073]
+script = ExtResource("27_73o0s")
 
 [connection signal="button_down" from="CanvasLayer/Button" to="CanvasLayer/Round" method="_on_button_button_down"]

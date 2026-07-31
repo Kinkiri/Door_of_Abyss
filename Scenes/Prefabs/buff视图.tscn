@@ -42,3 +42,4 @@ scale = Vector2(0.36000124, 0.36000124)
 text = "?????"
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 1

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_actions"]
 [ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="1_card"]
-[ext_resource type="Resource" uid="uid://cl8dt7np6l2rg" path="res://Resource/Data/Units/战墙.tres" id="1_unit"]
+[ext_resource type="Resource" uid="uid://cl8dt7np6l2rg" path="res://Resource/Data/Units/测试/战墙.tres" id="1_unit"]
 
 [sub_resource type="Resource" id="Resource_nthp5"]
 script = ExtResource("1_actions")

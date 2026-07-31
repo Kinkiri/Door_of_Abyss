@@ -185,6 +185,9 @@ public partial class UnitManager : Node
 
         // 清理 Buff
         BuffManager.Instance?.RemoveAllBuffs(unit);
+
+        // 清理装备（还原属性加成 + 取消装备被动）
+        EquipmentManager.Instance?.RemoveAllEquipments(unit);
     }
 
     // ======================================================================

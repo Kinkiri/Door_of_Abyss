@@ -1,20 +1,21 @@
-[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://mvhm6o4vfhth"]
+[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://c8ov45tat001j"]
 
 [ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_actions"]
 [ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="1_card"]
-[ext_resource type="Resource" uid="uid://besew5ondee15" path="res://Resource/Data/Units/小兵.tres" id="1_unit"]
+[ext_resource type="Resource" uid="uid://casbp4wx7562d" path="res://Resource/Data/Units/测试/巨型战士.tres" id="1_unit"]
 
-[sub_resource type="Resource" id="Resource_nthp5"]
+[sub_resource type="Resource" id="Resource_ihpy4"]
 script = ExtResource("1_actions")
 
 [resource]
 script = ExtResource("1_card")
 UnitData = ExtResource("1_unit")
-CardID = "小兵"
-CardName = "小兵"
-Description = "小兵碰一下就死了，谁拉他来打仗的？"
+CardID = "巨型战士"
+CardName = "巨型战士"
+Description = "力大，但腿短"
 Type = 0
 Shape = 2
+Cost = 2
 Conditions = null
-Actions = Array[Object]([SubResource("Resource_nthp5")])
+Actions = Array[Object]([SubResource("Resource_ihpy4")])
 metadata/_custom_type_script = "uid://p1hhkgy2pem"

@@ -3,6 +3,7 @@ using Godot;
 /// <summary>
 /// 修改单位战斗属性（可逆，Buff 到期自动还原）。
 /// 修改固定数值而非百分比，叠层时效果线性叠加。
+/// MaxHP 语义：施加时当前生命随上限同步增加；还原时上限减回、当前生命不随减（超出截断）。
 /// </summary>
 [GlobalClass]
 public partial class ModifyStatAction : GameAction
@@ -26,7 +27,8 @@ public partial class ModifyStatAction : GameAction
                 break;
             case ModifyStatType.MaxHP:
                 ctx.TargetUnit.MaxHP += val;
-                // "只加不减"：CurrentHP 不随上限升高
+                // 施加时当前生命随上限同步增加相同值（只增不减）
+                ctx.TargetUnit.CurrentHP += val;
                 break;
             case ModifyStatType.Stamina:
                 ctx.TargetUnit.MaxStamina += val;
@@ -56,7 +58,7 @@ public partial class ModifyStatAction : GameAction
                 break;
             case ModifyStatType.MaxHP:
                 ctx.TargetUnit.MaxHP -= val;
-                // 还原时若 CurrentHP 超出新上限则截断
+                // 当前生命不随上限减少，仅超出新上限时截断
                 ctx.TargetUnit.CurrentHP = Mathf.Min(ctx.TargetUnit.CurrentHP, ctx.TargetUnit.MaxHP);
                 break;
             case ModifyStatType.Stamina:

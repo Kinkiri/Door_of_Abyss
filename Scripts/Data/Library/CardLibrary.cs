@@ -82,14 +82,35 @@ public partial class CardLibrary : Library
                 errorCount++;
             }
 
-            // 4) Cost 不能为负
+            // 4) EquipmentCardData → 必须有 EquipmentData + Shape 必须 SingleUnit + EquipmentID 非空
+            if (card is EquipmentCardData equipCard)
+            {
+                if (equipCard.EquipmentData == null)
+                {
+                    sb.AppendLine($"  [CardID={card.CardID}] 装备卡未配置 EquipmentData");
+                    errorCount++;
+                }
+                else if (string.IsNullOrWhiteSpace(equipCard.EquipmentData.EquipmentID))
+                {
+                    sb.AppendLine($"  [CardID={card.CardID}] 装备的 EquipmentID 未配置");
+                    errorCount++;
+                }
+
+                if (equipCard.Shape != TargetShape.SingleUnit)
+                {
+                    sb.AppendLine($"  [CardID={card.CardID}] 装备卡的 Shape 应为 SingleUnit，当前为 {equipCard.Shape}");
+                    errorCount++;
+                }
+            }
+
+            // 5) Cost 不能为负
             if (card.Cost < 0)
             {
                 sb.AppendLine($"  [{card.CardID}] Cost={card.Cost}，不能为负");
                 errorCount++;
             }
 
-            // 5) AreaRange 不能为负
+            // 6) AreaRange 不能为负
             if (card.AreaRange < 0)
             {
                 sb.AppendLine($"  [{card.CardID}] AreaRange={card.AreaRange}，不能为负");

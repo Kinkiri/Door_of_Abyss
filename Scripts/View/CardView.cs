@@ -51,6 +51,17 @@ public partial class CardView : TextureButton
                                         $"AP: {unitCard.UnitData.ActionPoints}";
             }
         }
+        if (Card.CardData is EquipmentCardData equipmentCard)
+        {
+            if (equipmentCard.EquipmentData != null)
+            {
+                CardDescription.Text += $"\n" +
+                                        $"{equipmentCard.EquipmentData.Description}" +
+                                        $"\n" +
+                                        $"AB: {equipmentCard.EquipmentData.AttackBonus}" +
+                                        $"MHB: {equipmentCard.EquipmentData.MaxHealthBonus}";
+            }
+        }
     }
 
     private void ShowDescription(bool visible)

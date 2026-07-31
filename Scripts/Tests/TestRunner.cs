@@ -386,9 +386,11 @@ public partial class TestRunner : Node
             var hpAction = new ModifyStatAction { TargetStat = ModifyStatType.MaxHP, Value = 5 };
             hpAction.Execute(ctx);
             VAssert("MaxHP Execute 后=13", () => unit.MaxHP == 13);
+            VAssert("CurrentHP Execute 后=13（随上限同步+5）", () => unit.CurrentHP == 13);
 
             hpAction.Revert(ctx);
             VAssert("MaxHP Revert 后=8", () => unit.MaxHP == 8);
+            VAssert("CurrentHP Revert 后=8（不随上限减少，超出截断）", () => unit.CurrentHP == 8);
             VAssert("CurrentHP 不超上限", () => unit.CurrentHP <= unit.MaxHP);
         });
 
@@ -650,6 +652,203 @@ public partial class TestRunner : Node
             VAssert("清除后无 Buff", () => bm.GetBuffs(unit).Count == 0);
             VAssert("清除后 ATK=5", () => unit.AttackPower == 5);
             VAssert("清除后 MaxHP=10", () => unit.MaxHP == 10);
+        });
+
+        // ── 装备系统 ────────────────────────────────────────────
+        RunGroup("装备系统", () =>
+        {
+            var em = EquipmentManager.Instance;
+            if (em == null) { VAssert("EquipmentManager 未就绪", () => false); return; }
+
+            // 全加成装备：属性施加
+            var unit = MakeUnit("装备测试", 5, 10);
+            var equip = new EquipmentData
+            {
+                EquipmentID = "e1",
+                EquipmentName = "全加成装备",
+                AttackBonus = 1,
+                MaxHealthBonus = 2,
+                AttackDistanceBonus = 3,
+                StaminaBonus = 4,
+                ActionPointBonus = 5,
+            };
+
+            em.Equip(unit, equip, null);
+            VAssert("装备后 ATK=6", () => unit.AttackPower == 6);
+            VAssert("装备后 MaxHP=12", () => unit.MaxHP == 12);
+            VAssert("装备后 CurrentHP=12（随上限同步+2）", () => unit.CurrentHP == 12);
+            VAssert("装备后 AD=4", () => unit.AttackDistance == 4);
+            VAssert("装备后 耐力=5", () => unit.MaxStamina == 5);
+            VAssert("装备后 AP=6", () => unit.ActionPoints == 6);
+            VAssert("HasEquipment=true", () => em.HasEquipment(unit));
+            VAssert("GetEquipment 返回装备", () => em.GetEquipment(unit)?.Data.EquipmentID == "e1");
+
+            // 移除装备：属性完整还原（可逆核心）
+            em.RemoveEquipment(unit, em.GetEquipment(unit));
+            VAssert("移除后 ATK=5", () => unit.AttackPower == 5);
+            VAssert("移除后 MaxHP=10", () => unit.MaxHP == 10);
+            VAssert("移除后 CurrentHP=10（超出新上限截断）", () => unit.CurrentHP == 10);
+            VAssert("移除后 AD=1", () => unit.AttackDistance == 1);
+            VAssert("移除后 耐力=1", () => unit.MaxStamina == 1);
+            VAssert("移除后 AP=1", () => unit.ActionPoints == 1);
+            VAssert("移除后 HasEquipment=false", () => !em.HasEquipment(unit));
+
+            // MaxHP 截断：满血装备 → 移除装备，CurrentHP 截到新上限
+            var unit2 = MakeUnit("截断测试", 3, 10);
+            var equip2 = new EquipmentData
+            {
+                EquipmentID = "e2",
+                EquipmentName = "生命装备",
+                MaxHealthBonus = 5,
+            };
+            em.Equip(unit2, equip2, null);   // 10/10 → 15/15（同步满血）
+            em.RemoveEquipment(unit2, em.GetEquipment(unit2));
+            VAssert("MaxHP 还原后 CurrentHP 截断到 10",
+                () => unit2.MaxHP == 10 && unit2.CurrentHP == 10);
+
+            // 受伤后移除：CurrentHP 不随上限减少，仅超出时截断
+            var unit7 = MakeUnit("受伤移除测试", 2, 10);
+            var equip7 = new EquipmentData { EquipmentID = "e7", EquipmentName = "生命装备", MaxHealthBonus = 5 };
+            em.Equip(unit7, equip7, null);   // 10/10 → 15/15
+            unit7.CurrentHP = 8;              // 受伤 8/15
+            em.RemoveEquipment(unit7, em.GetEquipment(unit7));
+            VAssert("受伤后移除：CurrentHP 不随上限减少",
+                () => unit7.MaxHP == 10 && unit7.CurrentHP == 8);
+
+            // 替换语义：旧加成完整还原 + 新加成生效
+            var unit3 = MakeUnit("替换测试", 1, 10);
+            var equipA = new EquipmentData { EquipmentID = "ea", EquipmentName = "装备A", AttackBonus = 2 };
+            var equipB = new EquipmentData { EquipmentID = "eb", EquipmentName = "装备B", AttackBonus = 3, MaxHealthBonus = 4 };
+            em.Equip(unit3, equipA, null);
+            VAssert("替换前 ATK=3", () => unit3.AttackPower == 3);
+            em.Equip(unit3, equipB, null);
+            VAssert("替换后 ATK=4（旧加成已还原）", () => unit3.AttackPower == 4);
+            VAssert("替换后 MaxHP=14", () => unit3.MaxHP == 14);
+            VAssert("替换后 CurrentHP=14（同步+4）", () => unit3.CurrentHP == 14);
+            VAssert("替换后仅剩新装备", () => em.GetEquipment(unit3)?.Data.EquipmentID == "eb");
+
+            // OnApplyActions 与 bonus 叠加：bonus 转动作先执行，OnApplyActions 追加执行
+            var unit8 = MakeUnit("叠加测试", 5, 10);
+            var equip8 = new EquipmentData
+            {
+                EquipmentID = "e8",
+                EquipmentName = "叠加装备",
+                AttackBonus = 1,      // → ModifyStatAction ATK+1
+                MaxHealthBonus = 2,   // → ModifyStatAction MaxHP+2（CurrentHP 同步+2）
+                OnApplyActions = new[]
+                {
+                    new ModifyStatAction { TargetStat = ModifyStatType.AttackPower, Value = 3 },
+                },
+            };
+            em.Equip(unit8, equip8, null);
+            VAssert("叠加装备：ATK=9（bonus+1 且 OnApplyActions+3）", () => unit8.AttackPower == 9);
+            VAssert("叠加装备：MaxHP=12", () => unit8.MaxHP == 12);
+            VAssert("叠加装备：CurrentHP=12（随上限同步+2）", () => unit8.CurrentHP == 12);
+
+            em.RemoveEquipment(unit8, em.GetEquipment(unit8));
+            VAssert("叠加移除：ATK 还原=5", () => unit8.AttackPower == 5);
+            VAssert("叠加移除：MaxHP 还原=10", () => unit8.MaxHP == 10);
+            VAssert("叠加移除：CurrentHP 截断=10", () => unit8.CurrentHP == 10);
+
+            // 死亡清理：RemoveAllEquipments 还原属性
+            var unit4 = MakeUnit("死亡测试", 1, 10);
+            em.Equip(unit4, equipA, null);
+            em.RemoveAllEquipments(unit4);
+            VAssert("RemoveAllEquipments 还原属性", () => unit4.AttackPower == 1);
+            VAssert("RemoveAllEquipments 后无装备", () => !em.HasEquipment(unit4));
+
+            // 死亡单位拒绝装备
+            var unit5 = MakeUnit("死亡拒绝", 1, 10);
+            unit5.IsDead = true;
+            em.Equip(unit5, equipA, null);
+            VAssert("死亡单位无法装备", () => !em.HasEquipment(unit5));
+
+            // 被动效果订阅/取消
+            var unit6 = MakeUnit("被动装备测试", 2, 10);
+            var equipC = new EquipmentData
+            {
+                EquipmentID = "ec",
+                EquipmentName = "被动装备",
+                PassiveEffects = new[]
+                {
+                    new EffectData
+                    {
+                        TriggerEvent = EventType.RoundEnd,
+                        Target = PassiveTarget.Self,
+                        MaxTriggerCount = 1,
+                        Actions = new[] { new HealAction { Value = 2 } },
+                    }
+                },
+            };
+            em.Equip(unit6, equipC, null);
+            unit6.CurrentHP = 5;
+            EventBus.Instance?.ResetTriggerCounts();
+            EventBus.Instance?.Fire(EventType.RoundEnd, new Context());
+            VAssert("装备被动生效（回合结束治疗2）", () => unit6.CurrentHP == 7);
+
+            em.RemoveEquipment(unit6, em.GetEquipment(unit6));
+            unit6.CurrentHP = 5;
+            EventBus.Instance?.ResetTriggerCounts();
+            EventBus.Instance?.Fire(EventType.RoundEnd, new Context());
+            VAssert("移除装备后被动不再触发", () => unit6.CurrentHP == 5);
+        });
+
+        // ── 装备值源/条件 ────────────────────────────────────────
+        RunGroup("装备值源/条件", () =>
+        {
+            var em = EquipmentManager.Instance;
+            if (em == null) { VAssert("EquipmentManager 未就绪", () => false); return; }
+
+            var unit = MakeUnit("值源测试", 5, 10);
+            var ctx = new Context { TargetUnit = unit };
+
+            // 无装备时
+            VAssert("无装备：HasEquipment=0",
+                () => new EquipmentInfoValue { Info = EquipmentInfoType.HasEquipment }.GetValue(ctx) == 0);
+            VAssert("无装备：AttackBonus 返回默认值",
+                () => new EquipmentInfoValue { Info = EquipmentInfoType.AttackBonus, DefaultValue = -1 }.GetValue(ctx) == -1);
+
+            // 装备后读取各加成
+            var equip = new EquipmentData
+            {
+                EquipmentID = "vs1",
+                EquipmentName = "值源装备",
+                AttackBonus = 3,
+                MaxHealthBonus = 2,
+                AttackDistanceBonus = 1,
+                ActionPointBonus = 4,
+            };
+            em.Equip(unit, equip, null);
+            VAssert("装备后：HasEquipment=1",
+                () => new EquipmentInfoValue { Info = EquipmentInfoType.HasEquipment }.GetValue(ctx) == 1);
+            VAssert("装备后：AttackBonus=3",
+                () => new EquipmentInfoValue { Info = EquipmentInfoType.AttackBonus }.GetValue(ctx) == 3);
+            VAssert("装备后：MaxHealthBonus=2",
+                () => new EquipmentInfoValue { Info = EquipmentInfoType.MaxHealthBonus }.GetValue(ctx) == 2);
+            VAssert("装备后：AttackDistanceBonus=1",
+                () => new EquipmentInfoValue { Info = EquipmentInfoType.AttackDistanceBonus }.GetValue(ctx) == 1);
+            VAssert("装备后：ActionPointBonus=4",
+                () => new EquipmentInfoValue { Info = EquipmentInfoType.ActionPointBonus }.GetValue(ctx) == 4);
+            VAssert("装备后：StaminaBonus=0（未配置）",
+                () => new EquipmentInfoValue { Info = EquipmentInfoType.StaminaBonus }.GetValue(ctx) == 0);
+
+            // 条件：精确 ID 匹配
+            VAssert("有装备(vs1) 为真",
+                () => new HasEquipmentCondition { EquipmentID = "vs1", Has = true }.IsMet(ctx));
+            VAssert("有装备(vs2) 为假",
+                () => !new HasEquipmentCondition { EquipmentID = "vs2", Has = true }.IsMet(ctx));
+            VAssert("无装备(vs1) 为假",
+                () => !new HasEquipmentCondition { EquipmentID = "vs1", Has = false }.IsMet(ctx));
+            // 条件：空 ID = 任意装备
+            VAssert("空 ID：有任意装备 为真",
+                () => new HasEquipmentCondition { Has = true }.IsMet(ctx));
+
+            // 移除后
+            em.RemoveEquipment(unit, em.GetEquipment(unit));
+            VAssert("移除后：HasEquipment=0",
+                () => new EquipmentInfoValue { Info = EquipmentInfoType.HasEquipment }.GetValue(ctx) == 0);
+            VAssert("移除后：有任意装备 为假",
+                () => !new HasEquipmentCondition { Has = true }.IsMet(ctx));
         });
 
         // ── 汇总输出 ────────────────────────────────────────────

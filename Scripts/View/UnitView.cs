@@ -89,7 +89,7 @@ public partial class UnitView : Node2D
         if (Unit != null) Unit.OnUnitUpdate -= UpdateView;
     }
 
-    /// <summary>响应 ActionQueue：自己是攻击者时闪白，自己被施加/移除 Buff 时弹跳</summary>
+    /// <summary>响应 ActionQueue：自己是攻击者时闪白，自己被施加/移除 Buff 或装备时弹跳</summary>
     private void OnActionExecuted(GameAction action, Context ctx)
     {
         if (action == null || _isDying || Unit == null) return;
@@ -103,7 +103,7 @@ public partial class UnitView : Node2D
                 flash.TweenProperty(this, "modulate", Colors.White, AttackFlashOut);
                 break;
 
-            case ApplyBuffAction or RemoveBuffAction:
+            case ApplyBuffAction or RemoveBuffAction or EquipAction:
                 // 检查自己是否在目标中
                 if (ctx.TargetUnits != null)
                 {

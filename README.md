@@ -24,6 +24,7 @@
   - [11. 常见配置示例](#11-常见配置示例)
   - [12. 文本转 .tres 工具（策划友好）](#12-文本转-tres-工具策划友好)
   - [13. 动画系统](#13-动画系统)
+  - [14. 装备系统](#14-装备系统)
 
 ---
 
@@ -321,6 +322,7 @@ CompareCondition
 | 条件 | 字段 | 说明 |
 |---|---|---|
 | `HasBuffCondition` | CheckTarget, BuffID, Has | 检查 Buff 是否存在 |
+| `HasEquipmentCondition` | CheckTarget, EquipmentID, Has | 检查装备是否存在（EquipmentID 留空=任意装备） |
 | `RandomCondition` | Probability=0.0~1.0 | 概率判定 |
 
 ### 2.3 复合条件
@@ -371,7 +373,7 @@ OrCondition
 |---|---|---|
 | ModifyStatAction | TargetStat, Value/ValueSource | 加减属性值。Buff 到期自动还原 |
 
-MaxHP 规则：施加时只加上限不减当前 HP，还原时截断。
+MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不减）；还原时上限减回、当前 HP **不随上限减少**，仅超出新上限时截断。
 
 ### 3.5 Buff 动作
 
@@ -416,6 +418,7 @@ MaxHP 规则：施加时只加上限不减当前 HP，还原时截断。
 | ConstantValue | Value | 固定数值 |
 | UnitStatValue | Unit=Source/Target, Stat, CurrentHP=true/false | 单位属性 |
 | BuffInfoValue | Unit, BuffID, Info=StackCount/RemainingTurns | Buff 叠层/回合，不存在时返回 DefaultValue |
+| EquipmentInfoValue | Unit, Info=HasEquipment/各Bonus | 装备信息，无装备时 HasEquipment=0、其余返回 DefaultValue |
 | RandomValue | Min, Max | [Min, Max] 随机整数 |
 | FormulaValue | Op, Left, Right | 嵌套运算（Add/Sub/Mul/Div/Max/Min/Percent） |
 | RoundCountValue | - | 当前回合数 |
@@ -919,3 +922,67 @@ BattleManager 的 `OnUnitMove`/`OnUnitAttack`/`AIDoAttack`/`AIDoMove` 均通过 
 1. 在 `UnitView` 节点下添加 `Label`，默认 `Visible=false`
 2. 拖入 Inspector 的 `FloatLabel` 字段
 3. `FloatLifetime`（显示秒数，默认 1s）和 `FloatRise`（上飘像素，默认 28px）可在 Inspector 调节
+
+## 14. 装备系统
+
+装备 = 可逆属性加成 + 可选被动效果。一单位一件，重复装备**自动替换**（旧装备完整还原后再装新）。
+
+### 14.1 EquipmentData 字段
+
+| 字段 | 说明 |
+|---|---|
+| EquipmentID / EquipmentName / Description | 标识和文本 |
+| Icon | 装备图标（EquipmentView 显示，无图标时显示名字） |
+| AttackBonus | 攻击力加成 |
+| MaxHealthBonus | 生命上限加成（装备时当前 HP 随上限同步增加） |
+| AttackDistanceBonus | 攻击距离加成 |
+| StaminaBonus | 耐力上限加成 |
+| ActionPointBonus | 行动点数加成 |
+| OnApplyActions | 附加动作（装备时 Execute、移除时 Revert），与 bonus 字段**叠加** |
+| PassiveEffects | 装备期间被动效果（移除时自动取消订阅） |
+
+### 14.2 可逆性
+
+属性加成**走 ModifyStatAction 执行**（非 0 的 bonus 字段自动转换为 ModifyStatAction，随后执行 OnApplyActions）。移除装备时按施加同序 Revert：
+
+```
+Equip:  [bonus 非0 → ModifyStatAction...] + OnApplyActions → Execute
+Remove: 同一动作序列 → Revert（MaxHP 语义同 ModifyStatAction：卸下时当前 HP 不随上限减少，超出截断）
+```
+
+### 14.3 装备卡配置
+
+| 字段 | 值 |
+|---|---|
+| Type | Equipment |
+| Shape | SingleUnit |
+| Filter | Ally（推荐，装备给己方单位） |
+| Cost | 费用 |
+| Actions | `[EquipAction]`（给目标单位装备） |
+| EquipmentData | 拖入装备模板 |
+
+### 14.4 替换语义
+
+单位已有装备时再次使用装备卡 → 先完整移除旧装备（属性还原 + 取消被动 + 图标消失）→ 装上新装备。单位死亡时自动卸载装备。
+
+### 14.5 相关值源 / 条件
+
+| 类型 | 类 | 说明 |
+|---|---|---|
+| 值源 | EquipmentInfoValue | Info=HasEquipment / AttackBonus / MaxHealthBonus / AttackDistanceBonus / StaminaBonus / ActionPointBonus |
+| 条件 | HasEquipmentCondition | CheckTarget, EquipmentID（留空=任意装备）, Has |
+
+### 14.6 示例
+
+**长剑：** 攻击力+2
+```
+EquipmentData：EquipmentID=长剑, AttackBonus=2
+装备卡：Type=Equipment, Shape=SingleUnit, Filter=Ally, Cost=1, Actions=[EquipAction]
+```
+
+**护心镜：** 生命上限+3 且回合结束治疗 2
+```
+EquipmentData：EquipmentID=护心镜, MaxHealthBonus=3,
+  PassiveEffects=[EffectData{ TriggerEvent=RoundEnd, Target=Self,
+	Actions=[HealAction{Value=2}] }]
+```

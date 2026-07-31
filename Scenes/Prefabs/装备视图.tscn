@@ -1,0 +1,34 @@
+[gd_scene format=3 uid="uid://coqvtxojvdx33"]
+
+[ext_resource type="Script" uid="uid://d0665e1guisyc" path="res://Scripts/View/EquipmentView.cs" id="1_eq"]
+[ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="1_icon"]
+
+[node name="Equipment" type="Node2D" unique_id=775704894 node_paths=PackedStringArray("IconRect", "DescriptionPanel", "DescriptionLabel")]
+script = ExtResource("1_eq")
+IconRect = NodePath("TextureRect")
+DescriptionPanel = NodePath("Panel")
+DescriptionLabel = NodePath("Panel/Label")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=987748988]
+offset_right = 40.0
+offset_bottom = 40.0
+scale = Vector2(0.23999988, 0.23999988)
+texture = ExtResource("1_icon")
+
+[node name="Panel" type="Panel" parent="." unique_id=575700954]
+offset_left = -16.0
+offset_top = 30.0
+offset_right = 51.0
+offset_bottom = 52.0
+
+[node name="Label" type="Label" parent="Panel" unique_id=1173121997]
+layout_mode = 0
+offset_left = -0.99999905
+offset_top = -1.0000007
+offset_right = 245.42749
+offset_bottom = 81.14283
+scale = Vector2(0.28000122, 0.28000122)
+text = "装备描述装备描述装备描述装备描述装备描述装备描述装备描述装备描述"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 1

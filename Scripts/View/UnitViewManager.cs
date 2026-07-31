@@ -14,6 +14,9 @@ public partial class UnitViewManager : Node
     /// <summary>Buff 图标预制体，由用户在场景中创建并拖入</summary>
     [Export] public PackedScene BuffViewPrefab { get; set; }
 
+    /// <summary>装备图标预制体，由用户在场景中创建并拖入</summary>
+    [Export] public PackedScene EquipmentViewPrefab { get; set; }
+
     /// <summary>单位视图挂载层（BaseMapLayer）</summary>
     [Export] public Node UnitLayer { get; set; }
 
@@ -22,6 +25,9 @@ public partial class UnitViewManager : Node
 
     /// <summary>Buff → BuffView 映射，用于移除时销毁视觉</summary>
     private readonly Dictionary<Buff, BuffView> _buffViews = new();
+
+    /// <summary>Equipment → EquipmentView 映射，用于移除时销毁视觉</summary>
+    private readonly Dictionary<Equipment, EquipmentView> _equipmentViews = new();
 
     public override void _Ready()
     {
@@ -38,6 +44,11 @@ public partial class UnitViewManager : Node
             BuffManager.Instance.BuffApplied += OnBuffApplied;
             BuffManager.Instance.BuffRemoved += OnBuffRemoved;
         }
+        if (EquipmentManager.Instance != null)
+        {
+            EquipmentManager.Instance.EquipmentApplied += OnEquipmentApplied;
+            EquipmentManager.Instance.EquipmentRemoved += OnEquipmentRemoved;
+        }
     }
 
     public override void _ExitTree()
@@ -51,6 +62,11 @@ public partial class UnitViewManager : Node
         {
             BuffManager.Instance.BuffApplied -= OnBuffApplied;
             BuffManager.Instance.BuffRemoved -= OnBuffRemoved;
+        }
+        if (EquipmentManager.Instance != null)
+        {
+            EquipmentManager.Instance.EquipmentApplied -= OnEquipmentApplied;
+            EquipmentManager.Instance.EquipmentRemoved -= OnEquipmentRemoved;
         }
         if (Instance == this) Instance = null;
     }
@@ -131,6 +147,53 @@ public partial class UnitViewManager : Node
         {
             bv.QueueFree();
             _buffViews.Remove(buff);
+        }
+    }
+
+    // ======================================================================
+    // 装备图标
+    // ======================================================================
+
+    private void OnEquipmentApplied(Unit target, Equipment equip)
+    {
+        if (EquipmentViewPrefab == null) return;
+        var unitView = GetUnitView(target);
+        if (unitView == null) return;
+
+        var node = EquipmentViewPrefab.Instantiate<Node2D>();
+        var ev = node as EquipmentView;
+        if (ev == null)
+        {
+            GD.PrintErr("[UnitViewManager] EquipmentViewPrefab 根节点必须挂载 EquipmentView.cs 脚本");
+            node.QueueFree();
+            return;
+        }
+
+        ev.Setup(equip);
+
+        // 优先挂到 UnitView 下名为 EquipmentContainer 的子节点（若场景配置了），
+        // 否则挂 UnitView 根，固定位置避让 Buff 图标
+        var container = unitView.FindChild("EquipmentContainer", true, false);
+        if (container != null)
+        {
+            ev.Position = new Vector2(container.GetChildCount() * 30, 0);
+            container.AddChild(ev);
+        }
+        else
+        {
+            ev.Position = new Vector2(0, -20);
+            unitView.AddChild(ev);
+        }
+
+        _equipmentViews[equip] = ev;
+    }
+
+    private void OnEquipmentRemoved(Unit target, Equipment equip)
+    {
+        if (_equipmentViews.TryGetValue(equip, out var ev))
+        {
+            ev.QueueFree();
+            _equipmentViews.Remove(equip);
         }
     }
 }
