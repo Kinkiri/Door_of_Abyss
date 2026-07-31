@@ -17,6 +17,12 @@ public partial class SummonUnitAction : GameAction
     /// <summary>通用召唤：按 UnitID 从 UnitLibrary 查模板（亡语重生等循环引用场景用字符串规避）</summary>
     [Export] public string UnitID { get; set; } = "";
 
+    /// <summary>召唤成功后自动给新单位施加的 Buff（null = 不施加）</summary>
+    [Export] public BuffData SpawnBuff { get; set; }
+
+    /// <summary>SpawnBuff 的初始层数</summary>
+    [Export] public int SpawnBuffStacks { get; set; } = 1;
+
     protected override void Apply(Context ctx)
     {
         if (ctx.TargetCell == null) return;
@@ -48,7 +54,18 @@ public partial class SummonUnitAction : GameAction
         var spawned = UnitManager.Instance.SpawnUnit(
             unitData, ctx.TargetCell.GridPos, ctx.SourceTeam);
         if (spawned != null)
-            GD.Print($"[SummonUnitAction] 召唤 {unitData.UnitName} 于 {ctx.TargetCell.GridPos}");
+        {
+            if (SpawnBuff != null)
+            {
+                BuffManager.Instance?.ApplyBuff(spawned, SpawnBuff, ctx.SourceUnit, SpawnBuffStacks);
+                GD.Print($"[SummonUnitAction] 召唤 {unitData.UnitName} 于 {ctx.TargetCell.GridPos}" +
+                         $" +{SpawnBuffStacks}层{SpawnBuff.BuffName}");
+            }
+            else
+            {
+                GD.Print($"[SummonUnitAction] 召唤 {unitData.UnitName} 于 {ctx.TargetCell.GridPos}");
+            }
+        }
     }
 
     private static bool IsWithinRange(Vector2I pos, Vector2I doorPos, int range)

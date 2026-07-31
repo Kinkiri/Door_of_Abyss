@@ -359,7 +359,7 @@ OrCondition
 
 | 动作 | 说明 |
 |---|---|
-| SummonUnitAction | 通用召唤：配置 `UnitData`（Resource 引用）或 `UnitID`（字符串查 UnitLibrary，亡语重生等循环引用场景用字符串）可直接召唤任意单位（无部署范围限制，可用于法术/被动）；两者都未配置时回退到单位卡自身（`UnitCardData.UnitData`），且仅此路径保留"己方门部署范围内"检查 |
+| SummonUnitAction | 通用召唤：配置 `UnitData`（Resource 引用）或 `UnitID`（字符串查 UnitLibrary，亡语重生等循环引用场景用字符串）可直接召唤任意单位（无部署范围限制，可用于法术/被动）；两者都未配置时回退到单位卡自身（`UnitCardData.UnitData`），且仅此路径保留"己方门部署范围内"检查。可选 `SpawnBuff`/`SpawnBuffStacks`：召唤成功后自动给新单位施加 Buff（单位卡打出时带 Buff 的实现方式） |
 
 部署限制出牌前由 `SelectionManager.ValidateCardTarget` 拦截（范围外点击不出牌、不扣费），`SummonUnitAction` 内保留同检查作为双保险。
 
@@ -833,6 +833,7 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 | `设置:Stat={expr}` | 属性设置（不可逆） | `设置:攻击力=ATK*2` |
 | `消耗:{expr}` | 增减费用 | `消耗:-1` |
 | `召唤` | 召唤自身绑定的单位 | `召唤:小兵` |
+| `召唤:ID, Buff:ID#N`（单位卡动作列） | 召唤单位并自动施加 N 层 Buff（仅单位卡打出时生效，法术/亡语召唤不带） | `召唤:小兵, Buff:义肢#1` |
 | `?{条件} then :: else` | 条件分支 | `?{HP<50} 治疗:3 :: 伤害:2` |
 
 ### 12.6 值源表达式

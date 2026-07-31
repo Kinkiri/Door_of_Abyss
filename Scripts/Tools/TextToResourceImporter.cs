@@ -251,7 +251,10 @@ public partial class TextToResourceImporter : EditorScript
 
         if (type == CardType.Unit && card is UnitCardData unitCard)
         {
-            var unitId = ParseSummonUnitId(actionDsl);
+            // 动作列格式："召唤:ID" 或 "召唤:ID, Buff:BUFFID#N"（附加 Buff 在召唤后自动施加）
+            var summonSegs = SplitDslList(actionDsl);
+            var summonDsl = summonSegs.Count > 0 ? summonSegs[0].Trim() : actionDsl.Trim();
+            var unitId = ParseSummonUnitId(summonDsl);
             if (!string.IsNullOrEmpty(unitId))
             {
                 var unitPath = $"{UnitOutput}{unitId}.tres";
@@ -259,7 +262,30 @@ public partial class TextToResourceImporter : EditorScript
                 if (unitData != null)
                 {
                     unitCard.UnitData = unitData;
-                    unitCard.Actions = new GameAction[] { new SummonUnitAction() };
+                    var summon = new SummonUnitAction();
+
+                    // 附加段：Buff:BUFFID#N
+                    for (int i = 1; i < summonSegs.Count; i++)
+                    {
+                        var seg = summonSegs[i].Trim();
+                        if (seg.StartsWith("Buff:"))
+                        {
+                            var rest = seg[5..];
+                            var parts = rest.Split('#');
+                            var buffId = parts[0].Trim();
+                            var stacks = parts.Length > 1 && int.TryParse(parts[1], out var n) ? n : 1;
+                            summon.SpawnBuff = ResourceLoader.Load<BuffData>($"{BuffOutput}{buffId}.tres");
+                            summon.SpawnBuffStacks = stacks;
+                            if (summon.SpawnBuff == null)
+                                GD.PrintErr($"[卡牌 {card.CardID}] 找不到 Buff Resource: {buffId}");
+                        }
+                        else
+                        {
+                            GD.PrintErr($"[卡牌 {card.CardID}] 单位卡动作列仅支持 '召唤:ID[, Buff:ID#N]'，忽略: {seg}");
+                        }
+                    }
+
+                    unitCard.Actions = new GameAction[] { summon };
                 }
                 else
                     GD.PrintErr($"[卡牌 {card.CardID}] 找不到单位 Resource: {unitPath}");

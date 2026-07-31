@@ -65,7 +65,8 @@ public partial class Library
 
         foreach (string path in paths)
         {
-            var res = ResourceLoader.Load<DataType>(path);
+            // 用非泛型 Load + as 检查：类型不匹配的文件（误放入目录的无关 Resource）跳过并警告，而不是抛异常
+            var res = ResourceLoader.Load(path) as DataType;
             if (res != null)
             {
                 resources.Add(res);
@@ -73,7 +74,7 @@ public partial class Library
             }
             else
             {
-                GD.PushWarning($"  ✗ 加载失败: {path}");
+                GD.PushWarning($"  ✗ 跳过（非 {typeof(DataType).Name} 或加载失败）: {path}");
             }
         }
 

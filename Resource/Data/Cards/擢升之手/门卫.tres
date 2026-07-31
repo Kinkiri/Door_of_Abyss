@@ -20,6 +20,7 @@ Shape = 2
 World = 1
 Faction = 2
 Tags = Array[int]([0])
+Cost = 2
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_gfhjv")])
 metadata/_custom_type_script = "uid://p1hhkgy2pem"
