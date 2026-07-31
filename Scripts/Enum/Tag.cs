@@ -18,5 +18,9 @@ public enum Tag
     /// <summary>
     /// 使义肢额外增加行动点上限
     /// </summary>
-    行动义肢
+    行动义肢,
+    /// <summary>
+    /// 使义肢额外增加攻击范围
+    /// </summary>
+    距离义肢
 }

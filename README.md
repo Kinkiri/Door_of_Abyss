@@ -661,7 +661,8 @@ OnApplyActions = [
   ModifyStatAction(ATK,+1, RequiredTags=[攻击义肢]),        // Tag 额外：带 Tag 才生效
   ModifyStatAction(MaxHP,+1, RequiredTags=[生命义肢]),
   ModifyStatAction(体力,+1, RequiredTags=[体力义肢]),
-  ModifyStatAction(行动点,+1, RequiredTags=[行动义肢])
+  ModifyStatAction(行动点,+1, RequiredTags=[行动义肢]),
+  ModifyStatAction(射程,+1, RequiredTags=[距离义肢])
 ]
 PassiveEffects = [EffectData {
   TriggerEvent=OnUnitAct, MaxTriggerCount=1
@@ -669,7 +670,7 @@ PassiveEffects = [EffectData {
 }]
 ```
 
-**Tag → 额外加成映射：** `攻击义肢`→攻击力、`生命义肢`→生命上限、`体力义肢`→体力（移动范围）、`行动义肢`→行动点上限。单位带哪个 Tag，对应属性额外 +1（按层数倍数）。
+**Tag → 额外加成映射：** `攻击义肢`→攻击力、`生命义肢`→生命上限、`体力义肢`→体力（移动范围）、`行动义肢`→行动点上限、`距离义肢`→攻击范围。单位带哪个 Tag，对应属性额外 +1（按层数倍数）。
 
 **卡牌：** `ApplyBuffAction { BuffData=<义肢.tres>, InitialStacks=2 }`
 
