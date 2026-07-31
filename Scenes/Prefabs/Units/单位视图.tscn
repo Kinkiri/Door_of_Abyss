@@ -1,0 +1,142 @@
+[gd_scene format=3 uid="uid://j7avdpvfsp32"]
+
+[ext_resource type="Script" uid="uid://d7gvkpac4jmr" path="res://Scripts/View/UnitView.cs" id="1_i0h1d"]
+[ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="2_ixqmk"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fw11u"]
+size = Vector2(108, 107)
+
+[node name="DefaultUnit" type="Node2D" unique_id=918862661 node_paths=PackedStringArray("NameLabel", "HPLabel", "ATKLabel", "DescriptionPanel", "DescriptionLabel", "EnemyIndicator", "FloatLabel")]
+script = ExtResource("1_i0h1d")
+NameLabel = NodePath("Control/Name")
+HPLabel = NodePath("Control/HP")
+ATKLabel = NodePath("Control/ATK")
+DescriptionPanel = NodePath("Panel")
+DescriptionLabel = NodePath("Panel/Label")
+EnemyIndicator = NodePath("ColorRect")
+DamageFlashDuration = 0.3
+HealFlashDuration = 0.3
+DeathFadeDuration = 0.5
+AttackFlashIn = 0.01
+AttackFlashOut = 0.6
+FloatLabel = NodePath("FLN")
+
+[node name="Area2D" type="Area2D" parent="." unique_id=421000204]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=653882582]
+position = Vector2(0, -0.5)
+shape = SubResource("RectangleShape2D_fw11u")
+debug_color = Color(0, 0.60705024, 0.65952575, 0.41960785)
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=474160985]
+offset_left = -63.959984
+offset_top = -65.03999
+offset_right = 64.30085
+offset_bottom = 65.39476
+scale = Vector2(0.9200002, 0.9200002)
+pivot_offset = Vector2(62, 63)
+mouse_filter = 2
+color = Color(0.7768705, 0.09762501, 0.20975986, 1)
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=249111711]
+scale = Vector2(0.931094, 0.931094)
+texture = ExtResource("2_ixqmk")
+
+[node name="Control" type="Control" parent="." unique_id=336620384]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="Control" unique_id=148693596]
+layout_mode = 0
+offset_left = -51.0
+offset_top = -60.0
+offset_right = 51.0
+offset_bottom = -37.0
+text = "名字"
+horizontal_alignment = 1
+
+[node name="HPico" type="Label" parent="Control" unique_id=511339566]
+modulate = Color(1, 0.14117648, 0, 1)
+layout_mode = 0
+offset_left = 8.0
+offset_top = 36.0
+offset_right = 41.0
+offset_bottom = 59.0
+text = "❤️"
+horizontal_alignment = 1
+
+[node name="HP" type="Label" parent="Control" unique_id=1543809364]
+modulate = Color(1, 0.14117648, 0, 1)
+layout_mode = 0
+offset_left = 28.0
+offset_top = 36.0
+offset_right = 61.0
+offset_bottom = 59.0
+text = "0"
+horizontal_alignment = 1
+
+[node name="ATKico" type="Label" parent="Control" unique_id=1397139365]
+layout_mode = 0
+offset_left = -61.0
+offset_top = 33.0
+offset_right = -28.0
+offset_bottom = 56.0
+text = "🤺"
+horizontal_alignment = 1
+
+[node name="ATK" type="Label" parent="Control" unique_id=594771906]
+layout_mode = 0
+offset_left = -40.0
+offset_top = 36.0
+offset_right = -7.0
+offset_bottom = 59.0
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9607843)
+text = "0"
+horizontal_alignment = 1
+
+[node name="BuffContainer" type="HBoxContainer" parent="." unique_id=259459456]
+offset_left = -64.0
+offset_top = 46.0
+offset_right = 65.0
+offset_bottom = 94.0
+
+[node name="Panel" type="Panel" parent="." unique_id=710251118]
+visible = false
+offset_left = -119.0
+offset_top = -195.0
+offset_right = 119.0
+offset_bottom = -74.0
+
+[node name="Label" type="Label" parent="Panel" unique_id=2088603210]
+layout_mode = 0
+offset_left = -1.0
+offset_top = 11.0
+offset_right = 237.0
+offset_bottom = 103.0
+theme_override_font_sizes/font_size = 22
+text = "??"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FLN" type="Label" parent="." unique_id=1231976500]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -56.0
+offset_top = -90.0
+offset_right = 52.0
+offset_bottom = 76.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(5, 11.5)
+theme_override_font_sizes/font_size = 121
+text = "-1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[connection signal="mouse_entered" from="Area2D" to="." method="OnMouseEntered"]
+[connection signal="mouse_exited" from="Area2D" to="." method="OnMouseExited"]

@@ -24,6 +24,8 @@ public partial class ActionQueue : Node
     /// <summary>排到队尾（批量动作）</summary>
     public void Enqueue(GameAction[] actions, Context ctx, Callable onComplete = default)
     {
+        PopulateBattleData(ctx);
+
         foreach (var a in actions)
         {
             if (a == null) continue;
@@ -43,6 +45,7 @@ public partial class ActionQueue : Node
     public void EnqueueFront(GameAction action, Context ctx)
     {
         if (action == null) return;
+        PopulateBattleData(ctx);
         var temp = new List<QueuedAction> { new QueuedAction { Action = action, Context = CloneContext(ctx) } };
         temp.AddRange(_queue);
         _queue.Clear();
@@ -92,6 +95,17 @@ public partial class ActionQueue : Node
     }
 
     /// <summary>
+    /// 填充上下文的战场数据（Map/ActiveUnits），供 TargetResolver 纯函数使用。
+    /// 未填充时从 Manager 单例读取，调用方显式传入时优先保留。
+    /// </summary>
+    private static void PopulateBattleData(Context ctx)
+    {
+        if (ctx == null) return;
+        ctx.Map ??= MapManager.Instance?.Map;
+        ctx.ActiveUnits ??= UnitManager.Instance?.ActiveUnits;
+    }
+
+    /// <summary>
     /// 浅拷贝 Context（值类型字段拷贝，引用类型字段共享）。
     /// 避免队列中多个 QueuedAction 持同一 Context 引用导致后续覆盖。
     /// </summary>
@@ -100,6 +114,8 @@ public partial class ActionQueue : Node
         if (src == null) return null;
         return new Context
         {
+            Map = src.Map,
+            ActiveUnits = src.ActiveUnits,
             SourceUnit = src.SourceUnit,
             TargetUnit = src.TargetUnit,
             TargetUnits = src.TargetUnits,

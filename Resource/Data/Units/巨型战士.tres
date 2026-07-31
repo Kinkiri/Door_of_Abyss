@@ -1,13 +1,14 @@
 [gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://casbp4wx7562d"]
 
-[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_882vt"]
-[ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/单位视图.tscn" id="1_x3b4b"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_x3b4b"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="2_072dg"]
 
 [resource]
-script = ExtResource("1_882vt")
+script = ExtResource("2_072dg")
 UnitID = "巨型战士"
 UnitName = "巨型战士"
 AttackPower = 4
 HealthPoints = 5
 UnitPrefab = ExtResource("1_x3b4b")
+PassiveEffects = null
 metadata/_custom_type_script = "uid://cthrvfilibvfl"

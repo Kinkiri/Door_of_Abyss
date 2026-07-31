@@ -1,10 +1,10 @@
 [gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://bn23m0b6t8tvw"]
 
-[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_2lyw0"]
-[ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/单位视图.tscn" id="1_lxycb"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_lxycb"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="2_stequ"]
 
 [resource]
-script = ExtResource("1_2lyw0")
+script = ExtResource("2_stequ")
 UnitID = "弓手"
 UnitName = "弓手"
 HealthPoints = 1

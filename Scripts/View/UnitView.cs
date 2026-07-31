@@ -89,22 +89,6 @@ public partial class UnitView : Node2D
         if (Unit != null) Unit.OnUnitUpdate -= UpdateView;
     }
 
-    public override void _Process(double delta)
-    {
-        // 死亡动画：检测到死亡后播放一次，之后不再处理
-        if (!_isDying && Unit != null && (Unit.IsDead || !Unit.IsAlive))
-        {
-            _isDying = true;
-            PlayDeathAnimation();
-            return;
-        }
-        // 死亡动画播放中，什么都不做等动画结束
-        if (_isDying) return;
-
-        // 正常存活时的安全检测
-        if (Unit == null) { QueueFree(); }
-    }
-
     /// <summary>响应 ActionQueue：自己是攻击者时闪白，自己被施加/移除 Buff 时弹跳</summary>
     private void OnActionExecuted(GameAction action, Context ctx)
     {
@@ -137,11 +121,21 @@ public partial class UnitView : Node2D
     }
 
     /// <summary>
-    /// Unit 数据变化时调用：更新标签 + 检测 HP/位置变化触发动画
+    /// Unit 数据变化时调用：更新标签 + 检测 HP/位置变化触发动画。
+    /// 死亡检测也在此完成（UnitManager.RemoveUnit 设置 IsDead 后调用 UpdateUnit），
+    /// 替代原先 _Process 的每帧轮询。
     /// </summary>
     public void UpdateView()
     {
         if (UnitData == null) return;
+
+        // 死亡检测：触发一次死亡动画，之后不再更新
+        if (!_isDying && (Unit.IsDead || !Unit.IsAlive))
+        {
+            _isDying = true;
+            PlayDeathAnimation();
+            return;
+        }
 
         // 标签更新
         if (NameLabel != null) NameLabel.Text = UnitData.UnitName;

@@ -10,14 +10,14 @@ public partial class BuffManager : Node
 {
     public static BuffManager Instance { get; private set; }
 
-    /// <summary>Buff 图标预制体，由用户在场景中创建并拖入</summary>
-    [Export] public PackedScene BuffViewPrefab { get; set; }
-
     /// <summary>单位 → 其活跃 Buff 列表</summary>
     private Dictionary<Unit, List<Buff>> _activeBuffs = new();
 
-    /// <summary>Buff → BuffView 映射，用于移除时销毁视觉</summary>
-    private Dictionary<Buff, BuffView> _buffViews = new();
+    /// <summary>Buff 施加事件（View 层订阅，创建 BuffView 图标）</summary>
+    public event System.Action<Unit, Buff> BuffApplied;
+
+    /// <summary>Buff 移除事件（View 层订阅，销毁 BuffView 图标）</summary>
+    public event System.Action<Unit, Buff> BuffRemoved;
 
     public override void _Ready()
     {
@@ -110,8 +110,8 @@ public partial class BuffManager : Node
         EventBus.Instance?.Fire(EventType.OnBuffApplied,
             new Context { TargetUnit = target }, subject: target);
 
-        // 创建 Buff 图标（挂在 UnitView 下）
-        CreateBuffView(target, buff);
+        // 通知 View 层创建 Buff 图标（事件驱动）
+        BuffApplied?.Invoke(target, buff);
 
         GD.Print($"[BuffManager] 施加: {buffData.BuffName} 于 {target.UnitData?.UnitName} " +
                  $"持续{buffData.Duration}回合 叠层上限{buffData.MaxStack}");
@@ -159,8 +159,8 @@ public partial class BuffManager : Node
         EventBus.Instance?.Fire(EventType.OnBuffRemoved,
             new Context { TargetUnit = target }, subject: target);
 
-        // ── 销毁 Buff 图标 ──────────────────────────────────────────
-        DestroyBuffView(buff);
+        // ── 通知 View 层销毁 Buff 图标（事件驱动）──────────────────
+        BuffRemoved?.Invoke(target, buff);
 
         // ── 清理 BuffManager 记录 ────────────────────────────────
         if (_activeBuffs.TryGetValue(target, out var buffList))
@@ -213,8 +213,8 @@ public partial class BuffManager : Node
             string tag = $"buff_{buff.Data.BuffID}";
             EventBus.Instance?.UnsubscribeByTag(tag);
 
-            // 销毁 Buff 图标
-            DestroyBuffView(buff);
+            // 通知 View 层销毁 Buff 图标（事件驱动）
+            BuffRemoved?.Invoke(unit, buff);
 
             // 不执行 OnExpireActions
         }
@@ -286,50 +286,6 @@ public partial class BuffManager : Node
 
         foreach (var (target, buff) in toRemove)
             RemoveBuff(target, buff);
-    }
-
-    // ======================================================================
-    // Buff 图标管理
-    // ======================================================================
-
-    private void CreateBuffView(Unit target, Buff buff)
-    {
-        if (BuffViewPrefab == null) return;
-        var unitView = UnitManager.Instance?.GetUnitView(target);
-        if (unitView == null) return;
-
-        // 挂到 UnitView 下名为 BuffContainer 的子节点上（HBoxContainer）
-        var container = unitView.FindChild("BuffContainer", true, false);
-        if (container == null)
-        {
-            GD.Print($"[BuffManager] UnitView 下未找到 BuffContainer，跳过图标创建");
-            return;
-        }
-
-        var node = BuffViewPrefab.Instantiate<Node2D>();
-        var bv = node as BuffView;
-        if (bv == null)
-        {
-            GD.PrintErr($"[BuffManager] BuffViewPrefab 根节点必须挂载 BuffView.cs 脚本");
-            node.QueueFree();
-            return;
-        }
-
-        bv.Setup(buff);
-        // Node2D 子节点不被 HBoxContainer 自动布局，手动设置位置避免重叠
-        bv.Position = new Vector2(container.GetChildCount() * 30, 0);
-        container.AddChild(bv);
-        _buffViews[buff] = bv;
-        GD.Print($"[BuffManager] BuffView 创建: {buff.Data.BuffName} → {target.UnitData?.UnitName}");
-    }
-
-    private void DestroyBuffView(Buff buff)
-    {
-        if (_buffViews.TryGetValue(buff, out var bv))
-        {
-            bv.QueueFree();
-            _buffViews.Remove(buff);
-        }
     }
 
     // ======================================================================

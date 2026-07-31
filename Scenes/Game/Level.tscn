@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://ca7kq5v3k0av2" path="res://Scripts/View/DragCamera2D.cs" id="1_edprt"]
 [ext_resource type="Script" uid="uid://7iryg60hqk8k" path="res://Scripts/Manager/BattleManager.cs" id="2_22vck"]
-[ext_resource type="Resource" uid="uid://24v55ttqt4ks" path="res://Resource/Data/Levels/中东小伙.tres" id="3_edprt"]
+[ext_resource type="Resource" uid="uid://dr5crh4jdw3kf" path="res://Resource/Data/Levels/格调.tres" id="3_edprt"]
 [ext_resource type="Resource" uid="uid://bjvfgqjisq7sy" path="res://Resource/Data/测试玩家.tres" id="4_llcsm"]
 [ext_resource type="Script" uid="uid://cjfnh45i7txbs" path="res://Scripts/Manager/SelectionManager.cs" id="5_73o0s"]
 [ext_resource type="Script" uid="uid://07iqkkc7rmnd" path="res://Scripts/Manager/MapManager.cs" id="6_5eta3"]
@@ -10,7 +10,7 @@
 [ext_resource type="Script" uid="uid://b0wdaitldlks7" path="res://Scripts/Manager/CardManager.cs" id="8_s72d7"]
 [ext_resource type="Script" uid="uid://gxocd4mixdqr" path="res://Scripts/Manager/EnemyAI.cs" id="9_avor6"]
 [ext_resource type="Script" uid="uid://b50d8crkeogim" path="res://Scripts/Utils/MapExporter.cs" id="10_g78sk"]
-[ext_resource type="Script" uid="uid://cytnivw5i638w" path="res://Scripts/Instance/EventBus.cs" id="11_fh8wi"]
+[ext_resource type="Script" uid="uid://cytnivw5i638w" path="res://Scripts/Manager/EventBus.cs" id="11_fh8wi"]
 [ext_resource type="Script" uid="uid://cfmctaemffutt" path="res://Scripts/Manager/InitManager.cs" id="12_3e6uc"]
 [ext_resource type="Script" uid="uid://uxcmexwkqapj" path="res://Scripts/Manager/BuffManager.cs" id="13_agiwf"]
 [ext_resource type="PackedScene" uid="uid://c0jkh2ny483rk" path="res://Scenes/Prefabs/buff视图.tscn" id="14_8vj8p"]
@@ -23,6 +23,7 @@
 [ext_resource type="Script" uid="uid://bg5vgujssuhmn" path="res://Scripts/View/HandPanel.cs" id="21_f2v14"]
 [ext_resource type="PackedScene" uid="uid://mwok0rnckmre" path="res://Scenes/Prefabs/卡牌视图.tscn" id="22_w3f5c"]
 [ext_resource type="Script" uid="uid://b66ib2kt0kmcv" path="res://Scripts/View/RoundView.cs" id="23_byf6f"]
+[ext_resource type="Script" uid="uid://cky1dniflsd46" path="res://Scripts/View/UnitViewManager.cs" id="24_v8m9n"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8od7v"]
 texture = ExtResource("19_pu45w")
@@ -82,7 +83,6 @@ script = ExtResource("12_3e6uc")
 
 [node name="Buff" type="Node" parent="Manager" unique_id=392923204]
 script = ExtResource("13_agiwf")
-BuffViewPrefab = ExtResource("14_8vj8p")
 
 [node name="ActionQueue" type="Node" parent="Manager" unique_id=930070617]
 script = ExtResource("15_vmp7b")
@@ -93,6 +93,11 @@ BaseTerrainLayer = NodePath("BaseMapLayer")
 MoveMapLayer = NodePath("UILayer/MoveMapLayer")
 AttackMapLayer = NodePath("UILayer/AttackMapLayer")
 CardPreviewLayer = NodePath("UILayer/PreviewMapLayer")
+
+[node name="UnitViewManager" type="Node" parent="Map" unique_id=1266638464 node_paths=PackedStringArray("UnitLayer")]
+script = ExtResource("24_v8m9n")
+BuffViewPrefab = ExtResource("14_8vj8p")
+UnitLayer = NodePath("../BaseMapLayer")
 
 [node name="BaseMapLayer" type="TileMapLayer" parent="Map" unique_id=795475500]
 tile_map_data = PackedByteArray("AAAAAAAAAgAAAAAAAAABAAAAAgAIAAAAAAACAAAAAgAAAAAAAAADAAAAAgAIAAAAAAAFAAAAAgAIAAAAAAAGAAAAAgAAAAAAAAAEAAAAAgAAAAAAAAAAAAEAAgAIAAAAAAADAAEAAgAAAAAAAAACAAIAAgAAAAAAAAACAAEAAgAIAAAAAAABAAIAAgAIAAAAAAAFAAEAAgAAAAAAAAAEAAIAAgAAAAAAAAAEAAEAAgAIAAAAAAADAAIAAgAIAAAAAAAGAAEAAgAIAAAAAAAFAAIAAgAIAAAAAAAGAAIAAgAAAAAAAAABAAEAAgAAAAAAAAAAAAIAAgAAAAAAAAAAAAMAAgAIAAAAAAACAAMAAgAIAAAAAAABAAQAAgAIAAAAAAAAAAUAAgAIAAAAAAAEAAMAAgAIAAAAAAADAAQAAgAIAAAAAAACAAUAAgAIAAAAAAAGAAMAAgAIAAAAAAAFAAQAAgAIAAAAAAAEAAUAAgAIAAAAAAAGAAUAAgAIAAAAAAAFAAYAAgAIAAAAAAADAAYAAgAIAAAAAAABAAYAAgAIAAAAAAAAAAYAAgAAAAAAAAAGAAYAAgAAAAAAAAAEAAYAAgAAAAAAAAACAAYAAgAAAAAAAAABAAUAAgAAAAAAAAAAAAQAAgAAAAAAAAABAAMAAgAAAAAAAAACAAQAAgAAAAAAAAADAAMAAgAAAAAAAAADAAUAAgAAAAAAAAAEAAQAAgAAAAAAAAAFAAMAAgAAAAAAAAAFAAUAAgAAAAAAAAAGAAQAAgAAAAAAAAA=")
@@ -113,10 +118,10 @@ tile_set = ExtResource("20_y0p6s")
 
 [node name="Button" type="Button" parent="CanvasLayer" unique_id=1167496402]
 offset_top = 1.0
-offset_right = 72.0
-offset_bottom = 32.0
-scale = Vector2(3.2933514, 3.2933514)
-text = "推进阶段"
+offset_right = 385.0
+offset_bottom = 130.0
+theme_override_font_sizes/font_size = 88
+text = "结束回合"
 
 [node name="Hand" type="Container" parent="CanvasLayer" unique_id=468035005]
 offset_left = 943.0
@@ -139,35 +144,35 @@ CostLabel = NodePath("Cost")
 
 [node name="Phase" type="Label" parent="CanvasLayer/Round" unique_id=2105181519]
 layout_mode = 0
-offset_left = 1637.0
-offset_top = -4.0
-offset_right = 1723.0
-offset_bottom = 19.0
-scale = Vector2(3.5409374, 3.5409374)
+offset_left = 1434.0
+offset_top = 2.0
+offset_right = 1918.0
+offset_bottom = 158.0
+theme_override_font_sizes/font_size = 113
 text = "阶段"
 
 [node name="Team" type="Label" parent="CanvasLayer/Round" unique_id=769133364]
 layout_mode = 0
-offset_left = 1585.0001
-offset_top = 190.00002
-offset_right = 1625.0001
-offset_bottom = 213.00002
-scale = Vector2(4.2961884, 4.2961884)
+offset_left = 1442.0
+offset_top = 163.0
+offset_right = 1914.0
+offset_bottom = 287.0
+theme_override_font_sizes/font_size = 71
 
 [node name="RC" type="Label" parent="CanvasLayer/Round" unique_id=878459376]
 layout_mode = 0
-offset_left = 1640.0
-offset_top = 91.0
-offset_right = 1680.0
-offset_bottom = 114.0
-scale = Vector2(3.2782588, 3.2782588)
+offset_left = 1438.0
+offset_top = 294.0
+offset_right = 1915.0
+offset_bottom = 418.0
+theme_override_font_sizes/font_size = 90
 
 [node name="Cost" type="Label" parent="CanvasLayer/Round" unique_id=1233241100]
 layout_mode = 0
-offset_left = 1630.0
+offset_left = 1442.0
 offset_top = 392.0
-offset_right = 1670.0
-offset_bottom = 415.0
-scale = Vector2(2.9098547, 2.9098547)
+offset_right = 1920.0
+offset_bottom = 544.0
+theme_override_font_sizes/font_size = 81
 
-[connection signal="button_down" from="CanvasLayer/Button" to="Camera2D" method="_on_button_button_down"]
+[connection signal="button_down" from="CanvasLayer/Button" to="CanvasLayer/Round" method="_on_button_button_down"]

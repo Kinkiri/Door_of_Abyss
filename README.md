@@ -19,8 +19,11 @@
   - [6. 被动效果](#6-被动效果)
   - [7. 卡牌配置](#7-卡牌配置)
   - [8. 目标系统](#8-目标系统)
-  - [9. 测试系统](#9-测试系统)
-  - [10. 常见配置示例](#10-常见配置示例)
+  - [9. 部署与门经济系统](#9-部署与门经济系统)
+  - [10. 测试系统](#10-测试系统)
+  - [11. 常见配置示例](#11-常见配置示例)
+  - [12. 文本转 .tres 工具（策划友好）](#12-文本转-tres-工具策划友好)
+  - [13. 动画系统](#13-动画系统)
 
 ---
 
@@ -39,16 +42,16 @@
 ## 项目结构（程序员）
 
 ```
-Scripts/                         ~5500 行 C#
-├── Data/                        数据模板层（Resource）
-│   ├── Actions/                 效果系统（多态子类）
+Scripts/                         ~7300 行 C#
+├── Data/                        数据模板层（Resource，编辑期零依赖）
+│   ├── Actions/                 效果系统（多态子类，运行期经服务定位器访问 Manager）
 │   │   ├── GameAction.cs        抽象基类：Execute(模板) + Revert(虚) + AnimationDuration
-│   │   ├── DamageAction.cs      伤害
+│   │   ├── DamageAction.cs      伤害（触发战斗被动）
 │   │   ├── HealAction.cs        治疗
 │   │   ├── SummonUnitAction.cs  召唤
 │   │   ├── DrawCardAction.cs    抽牌
 │   │   ├── AutoAttackAction.cs  自动攻击
-│   │   ├── ModifyStatAction.cs  属性修改（5 种 StatType）
+│   │   ├── ModifyStatAction.cs  属性修改（可逆）
 │   │   ├── ModifyCostAction.cs  增减费用
 │   │   ├── ApplyBuffAction.cs   施加 Buff
 │   │   ├── ModifyBuffAction.cs  修改 Buff 回合/叠层
@@ -76,77 +79,82 @@ Scripts/                         ~5500 行 C#
 │   │   ├── UnitCountValue.cs    场上单位数量
 │   │   ├── DistanceValue.cs     曼哈顿距离
 │   │   └── BattleCostValue.cs   费用
-│   ├── BuffData.cs              Buff 模板
-│   ├── BlockData.cs             地形模板
 │   ├── Card/
 │   │   ├── CardData.cs          卡牌基类（Shape/Filter/AreaRange/Conditions）
 │   │   ├── DeckData.cs          卡组
 │   │   ├── SpellCardData.cs     法术
-│   │   └── UnitCardData.cs      单位卡（含 UnitData）
+│   │   ├── UnitCardData.cs      单位卡（含 UnitData）
+│   │   └── EquipmentCardData.cs 装备卡
+│   ├── Levels/
+│   │   ├── LevelData.cs         关卡配置
+│   │   └── WaveData.cs          波次配置
+│   ├── Map/
+│   │   ├── BlockData.cs         地形模板
+│   │   └── MapData.cs           地图数据
 │   ├── Units/
 │   │   ├── UnitData.cs          单位模板
-│   │   └── DoorData.cs          门（水晶）数据模板，含 DeployRange
+│   │   ├── DoorData.cs          门（水晶）数据模板，含 DeployRange
+│   │   └── EquipmentData.cs     装备数据
+│   ├── Library/
+│   │   ├── Library.cs           库基类（按 ID 查找模板）
+│   │   ├── CardLibrary.cs       卡牌库（含 ValidateAll 启动校验）
+│   │   ├── UnitLibrary.cs       单位库
+│   │   └── LevelLibrary.cs      关卡库
+│   ├── BuffData.cs              Buff 模板
 │   ├── EffectData.cs            被动效果模板
-│   ├── LevelData.cs             关卡配置
-│   ├── MapData.cs               地图数据
-│   ├── PlayerData.cs            玩家全局数据
-│   ├── TargetResolver.cs        目标解析器
-│   ├── UnitData.cs              单位模板
-│   └── WaveData.cs              波次配置
-├── Enum/
+│   └── PlayerData.cs            玩家全局数据（含门列表）
+├── Enum/                        枚举定义（含 World/Faction/Rarity/Tag 等世界观数据）
 │   ├── BattlePhase.cs           BattlePhase + Team
 │   ├── BuffInfoType.cs          BuffInfoType
 │   ├── CardType.cs              CardType
 │   ├── CompareOp.cs             CompareOp
 │   ├── ConditionTarget.cs       ConditionTarget
 │   ├── EventType.cs             事件枚举（12 种）
+│   ├── Faction.cs               Faction（势力）
 │   ├── FormulaOp.cs             FormulaOp
 │   ├── ModifyStatType.cs        ModifyStatType
 │   ├── PassiveTarget.cs         PassiveTarget
+│   ├── Rarity.cs                Rarity（稀有度）
+│   ├── Tag.cs                   Tag（标签）
 │   ├── TargetFilter.cs          TargetFilter
 │   ├── TargetShape.cs           TargetShape
 │   ├── UnitTybe.cs              UnitType
-│   └── ValueTarget.cs           ValueTarget
+│   ├── ValueTarget.cs           ValueTarget
+│   └── World.cs                 World（世界观）
 ├── Instance/                    运行时实例层（纯 C# class，不继承 Godot 类型）
 │   ├── Buff.cs                  Buff 运行时
 │   ├── Card.cs                  卡牌运行时
 │   ├── Cell.cs                  格子运行时
-│   ├── Context.cs               ECA 上下文 DTO
-│   ├── EventBus.cs              事件总线（Tag 支持）
+│   ├── Context.cs               ECA 上下文 DTO（含 Map/ActiveUnits 战场数据）
 │   └── Unit.cs                  单位运行时
-├── Manager/                     逻辑层
+├── Manager/                     逻辑层（Godot Node 单例，服务定位器）
 │   ├── ActionQueue.cs           动作序列器（逐个执行 + 动画间隔 + 插队）
 │   ├── BattleManager.cs         战斗阶段 + 费用 + 胜利 + 行为执行 + 波次
-│   ├── BuffManager.cs           Buff 生命周期 + BuffView 创建/销毁
-│   ├── CardManager.cs           牌库/手牌/弃牌
+│   ├── BuffManager.cs           Buff 生命周期（发事件驱动视图）
+│   ├── CardManager.cs           牌库/手牌/弃牌（发事件驱动视图）
 │   ├── EnemyAI.cs               敌方 AI（按距玩家门排序 + 最短路径寻路 + 被堵留AP）
+│   ├── EventBus.cs              事件总线（被动效果订阅/触发，Tag 支持）
 │   ├── InitManager.cs           初始化调度
 │   ├── MapManager.cs            地图管理
 │   ├── SelectionManager.cs      输入 + 选中 + 范围 + 卡牌流程
-│   └── UnitManager.cs           单位生命周期
-├── View/                        视图层
+│   └── UnitManager.cs           单位生命周期（发事件驱动视图）
+├── View/                        视图层（事件驱动渲染）
 │   ├── BuffView.cs              Buff 图标（Node2D，内含 TextureRect + Label）
 │   ├── CardView.cs              卡牌展示
 │   ├── DragCamera2D.cs          拖拽摄像机
-│   ├── HandPanel.cs             手牌面板
+│   ├── HandPanel.cs             手牌面板（订阅 CardManager 事件）
 │   ├── MapView.cs               地图渲染 + 高亮
-│   ├── RoundView.cs             回合面板
-│   └── UnitView.cs              单位视觉 + 内建动画（入场/受伤/治疗/死亡/移动/Buff）
+│   ├── RoundView.cs             回合面板 + 结束回合按钮
+│   ├── UnitView.cs              单位视觉 + 内建动画（入场/受伤/治疗/死亡/移动/Buff）
+│   └── UnitViewManager.cs       订阅 UnitManager/BuffManager 事件，创建/销毁 UnitView 与 BuffView
 ├── Tests/
-│   └── TestRunner.cs            全面系统性测试（45+ 用例，内置运行器）
+│   └── TestRunner.cs            全面系统性测试（45+ 用例，场景内集成运行）
 ├── Tools/
-│   └── MapExporter.cs           地图导出工具
-├── UI/
-│   └── DragCamera2D.cs          摄像机 + 阶段推进
-├── Utils/
-│   └── PathFinder.cs            BFS 寻路
-└── View/
-	├── BuffView.cs              单 Buff 图标（图标/数字/悬停描述）
-	├── CardView.cs              卡牌视觉
-	├── HandPanel.cs             手牌面板
-	├── MapView.cs               地形 + 高亮
-	├── RoundView.cs             阶段 UI
-	└── UnitView.cs              单位视觉 + 敌方标志 + 名字着色 + 悬停描述
+│   └── TextToResourceImporter.cs  文本转 .tres 工具（EditorScript）
+└── Utils/
+	├── MapExporter.cs           地图导出工具
+	├── PathFinder.cs            BFS 寻路（纯算法）
+	└── TargetResolver.cs        目标解析器（纯函数，战场数据由调用方经 Context 传入）
 ```
 
 ## 架构概览（程序员）
@@ -154,18 +162,18 @@ Scripts/                         ~5500 行 C#
 ### 三层架构
 
 ```
-Data（Resource 层）         ← 零依赖，编辑器配置
+Data（Resource 层）         ← 编辑期零依赖（编辑器配置）；运行期经服务定位器访问 Manager（设计如此）
   BlockData / UnitData / CardData / BuffData / EffectData / GameAction 子类
   Condition 子类 / ValueSource 子类
 	  ↑
 Instance（纯 C# class）     ← 不继承 Godot 类型，不含管理器引用
-  Cell / Unit / Card / Buff / Context / EventBus
+  Cell / Unit / Card / Buff / Context
 	  ↑
 Manager（Godot Node）       ← 逻辑枢纽，InitManager 统一调度 Init 顺序
-  InitManager → 所有 Manager.Init()
+  InitManager → 所有 Manager.Init()；EventBus 亦属本层
 	  ↑
-View（Node/Control）        ← 事件驱动渲染
-  MapView / UnitView / BuffView / RoundView / HandPanel
+View（Node/Control）        ← 事件驱动渲染，订阅 Manager 事件自建视图
+  UnitViewManager / MapView / UnitView / BuffView / RoundView / HandPanel / CardView
 ```
 
 ### ECA 执行流程
@@ -195,15 +203,16 @@ BattleManager.OnCardPlay
 ### Buff 生命周期
 
 ```
-ApplyBuff → CreateBuffView（挂在 UnitView.BuffContainer 下）
+ApplyBuff → 发 BuffApplied 事件 → UnitViewManager 创建 BuffView（挂在 UnitView.BuffContainer 下）
   → TickAllBuffs（RoundEnd，倒计时 + OnRoundEndActions）
-  → RemoveBuff（Revert x StackCount → 取消被动 → OnExpireActions → DestroyBuffView）
+  → RemoveBuff（Revert x StackCount → 取消被动 → OnExpireActions → 发 BuffRemoved 事件销毁图标）
 ```
 
 ### 设计约定
 
 - `InitManager` 统一调度所有 `Manager.Init()`，杜绝 `_Ready` 执行顺序竞态
 - Manager 之间通过事件解耦：`SelectionManager` 发请求，`BattleManager` 订阅执行
+- Manager 只发事件不碰视图：`UnitManager.OnUnitSpawned` / `BuffManager.BuffApplied` → `UnitViewManager` 创建 UnitView/BuffView（对齐 CardManager → HandPanel）
 - `EventBus` 是单向调用：Manager 调 `Fire()`，EventBus 不反向依赖 Manager
 - `EventBus.Subscribe` 支持 `tag` 参数，用于 Buff 到期时 `UnsubscribeByTag` 单独清理
 - `UnitView` 显示运行时值（`Unit.AttackPower` / `Unit.MaxHP`），非模板值，Buff 修改即时可见
@@ -621,9 +630,9 @@ OnEnterGameStart
 
 测试完毕自动 `QueueFree()`，不影响游戏。
 
-## 10. 常见配置示例
+## 11. 常见配置示例
 
-### 10.1 强力击 - 造成"自身攻击力 x 2"伤害
+### 11.1 强力击 - 造成"自身攻击力 x 2"伤害
 
 ```
 DamageAction {
@@ -633,7 +642,7 @@ DamageAction {
 }
 ```
 
-### 10.2 义肢3 - ATK+3, MaxHP+3, 行动后减层
+### 11.2 义肢3 - ATK+3, MaxHP+3, 行动后减层
 
 **BuffData：** Duration=-1, MaxStack=-1
 ```
@@ -649,7 +658,7 @@ PassiveEffects = [EffectData {
 
 **卡牌：** `ApplyBuffAction { BuffData=<义肢.tres>, InitialStacks=3 }`
 
-### 10.3 50% 概率回合结束治疗 2 点（被动）
+### 11.3 50% 概率回合结束治疗 2 点（被动）
 
 ```
 TriggerEvent=RoundEnd, Target=Self
@@ -657,21 +666,21 @@ Conditions=[RandomCondition{Probability=0.5}]
 Actions=[HealAction{Value=2}]
 ```
 
-### 10.4 范围献祭 - 菱形 2 格所有敌方 3 伤
+### 11.4 范围献祭 - 菱形 2 格所有敌方 3 伤
 
 ```
 TriggerEvent=RoundEnd, Shape=AreaDiamond, Filter=Enemy, AreaRange=2
 Actions=[DamageAction{Value=3}]
 ```
 
-### 10.5 意外之财 - 获得 3 费
+### 11.5 意外之财 - 获得 3 费
 
 ```
 Type=Spell, Shape=None, Cost=0
 Actions=[ModifyCostAction{Value=3}]
 ```
 
-### 10.6 抽取等于场上敌人数的牌
+### 11.6 抽取等于场上敌人数的牌
 
 ```
 Actions=[DrawCardAction{
@@ -679,7 +688,7 @@ Actions=[DrawCardAction{
 }]
 ```
 
-### 10.7 处决 - HP<30% 才造成 5 伤害
+### 11.7 处决 - HP<30% 才造成 5 伤害
 
 ```
 Conditions=[CompareCondition{
@@ -690,7 +699,7 @@ Conditions=[CompareCondition{
 Actions=[DamageAction{Value=5}]
 ```
 
-### 10.8 连击 - 造成"目标攻击力"次 1 伤
+### 11.8 连击 - 造成"目标攻击力"次 1 伤
 
 ```
 Actions=[RepeatAction{
@@ -700,7 +709,7 @@ Actions=[RepeatAction{
 }]
 ```
 
-### 10.9 亡语 - 死亡时对击杀者造成 3 伤
+### 11.9 亡语 - 死亡时对击杀者造成 3 伤
 
 ```
 UnitData PassiveEffects=[EffectData{
@@ -711,14 +720,14 @@ UnitData PassiveEffects=[EffectData{
 
 > 注意：`OnUnitDeath` 允许死者触发自身被动，EventBus 不拦截已死单位的亡语订阅。
 
-### 10.10 强风术 - 击退 2 格
+### 11.10 强风术 - 击退 2 格
 
 ```
 Shape=SingleUnit, Filter=Enemy, Cost=1
 Actions=[MoveUnitAction{Mode=Push, Distance=2}]
 ```
 
-### 10.11 吸取 - 造成等于两单位距离的伤害
+### 11.11 吸取 - 造成等于两单位距离的伤害
 
 ```
 Actions=[DamageAction{
@@ -726,18 +735,18 @@ Actions=[DamageAction{
 }]
 ```
 
-### 10.12 整齐划一 - 全体友方攻击力设为 5
+### 11.12 整齐划一 - 全体友方攻击力设为 5
 
 ```
 Shape=All, Filter=Ally, Cost=2
 Actions=[SetStatAction{TargetStat=AttackPower, Value=5}]
 ```
 
-## 11. 文本转 .tres 工具（策划友好）
+## 12. 文本转 .tres 工具（策划友好）
 
 策划在 Excel 中填中文文本，在 Godot 中运行一次 EditorScript 即可生成游戏资源。
 
-### 11.1 文件
+### 12.1 文件
 
 | 文件 | 说明 |
 |---|---|
@@ -747,7 +756,7 @@ Actions=[SetStatAction{TargetStat=AttackPower, Value=5}]
 | `Resource/DataConfigs/buffs.txt` | Buff 文本 |
 | `Resource/DataConfigs/策划填写规范.csv` | Excel 模板（含完整说明和示例） |
 
-### 11.2 卡牌格式
+### 12.2 卡牌格式
 
 ```
 ID | 类型 | 目标形状 | 过滤 | 费用 | 范围 | 世界观 | 势力 | 标签 | 稀有度 | 描述 | 条件 | 动作
@@ -767,7 +776,7 @@ ID | 类型 | 目标形状 | 过滤 | 费用 | 范围 | 世界观 | 势力 | 标
 | 条件 | 条件 DSL（可选，留空=无限制） | HP>50 |
 | 动作 | 动作 DSL | 伤害:2 |
 
-### 11.3 单位格式
+### 12.3 单位格式
 
 ```
 ID | 名称 | HP | ATK | AP | 体力 | 射程 | 类型 | 世界观 | 势力 | 标签 | 稀有度 | 描述 | 被动
@@ -775,7 +784,7 @@ ID | 名称 | HP | ATK | AP | 体力 | 射程 | 类型 | 世界观 | 势力 | �
 
 所有数值列纯数字。类型：小队, 建筑, 门, 障碍, 召唤, 特殊。
 
-### 11.4 Buff 格式
+### 12.4 Buff 格式
 
 ```
 ID | 名称 | 持续 | 最大层数 | 描述 | 动作
@@ -783,7 +792,7 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 
 持续：数字+"回合"（1回合），或"永久"。最大层数："无限叠" 或数字。
 
-### 11.5 动作 DSL
+### 12.5 动作 DSL
 
 | DSL | 说明 | 示例 |
 |---|---|---|
@@ -799,7 +808,7 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 | `召唤` | 召唤自身绑定的单位 | `召唤:小兵` |
 | `?{条件} then :: else` | 条件分支 | `?{HP<50} 治疗:3 :: 伤害:2` |
 
-### 11.6 值源表达式
+### 12.6 值源表达式
 
 | 写法 | 类型 | 例 |
 |---|---|---|
@@ -821,7 +830,7 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 | `Buff回合(ID)` | 目标 Buff 剩余回合 | `Buff回合(中毒)` |
 | `距离(来源,目标)` | 曼哈顿距离 | |
 
-### 11.7 条件 DSL
+### 12.7 条件 DSL
 
 | 写法 | 说明 | 例 |
 |---|---|---|
@@ -832,7 +841,7 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 | `(...)` | 分组 | `(HP<30 OR 有Buff(免疫)) AND 回合数>3` |
 | `;` | 多条件分隔（自动 AND） | `HP>50 ; 有Buff(强壮) ; 概率:0.5` |
 
-### 11.8 被动效果 DSL（用于单位被动列）
+### 12.8 被动效果 DSL（用于单位被动列）
 
 | 事件 | 说明 | 示例 |
 |---|---|---|
@@ -848,7 +857,7 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 无范围格式：`事件:动作`（如 `生成时:属性:攻击力+1`）
 多个被动用逗号分隔。
 
-### 11.9 策划工作流
+### 12.9 策划工作流
 
 ```
 1. 打开 Excel 模板（策划填写规范.csv） → 看到说明和示例
@@ -858,38 +867,37 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 5. .tres 文件自动生成到 Resource/Data/ 下
 ```
 
-## 12. 动画系统
+## 13. 动画系统
 
 所有视觉动画内建于 `UnitView`，无需额外节点。
 
-### 12.1 动画一览
+### 13.1 动画一览
 
 | 动画 | 触发方式 | 实现位置 |
 |---|---|---|
 | 召唤入场 | `_Ready` | `Scale=0` → `Back.Out` 弹到 1 |
 | 受伤闪红 | `UpdateView` 检测 HP 下降 | `modulate` 闪红 0.12s → 恢复白 |
 | 治疗闪绿 | `UpdateView` 检测 HP 上升 | `modulate` 闪绿 0.12s → 恢复白 |
-| 死亡消散 | `_Process` 检测 `IsDead` | 缩放 0 + 淡出 0.35s → `QueueFree` |
+| 死亡消散 | `UpdateView` 检测 `IsDead` | 缩放 0 + 淡出 0.35s → `QueueFree` |
 | 移动着陆 | `UpdateView` 检测 GridPos 变化 | `Back.Out` 缩放弹跳 1.15→1 |
 | Buff 弹跳 | `ActionQueue.OnActionExecuted` | `PlayBuffBounce()` 缩放 1.25→1 |
 | 攻击闪白 | `ActionQueue.OnActionExecuted` | `modulate` 亮白 0.05s + 恢复 0.08s |
 | 浮动数字 | `UpdateView` 检测 HP 变化 | 预制体 `FloatLabel` 显示 1s 后隐藏 |
 
-### 12.2 死亡动画流程
+### 13.2 死亡动画流程
 
 ```
 DamageUnit → DestroyUnit → RemoveUnit
   ├─ IsDead=true
-  ├─ UpdateUnit() → UpdateView()（跳过 HP 动画，_isDying 守卫）
-  └─ _unitViews.Remove(unit)          ← 字典清理，不 QueueFree
+  ├─ UpdateUnit() → UpdateView() 检测 IsDead → PlayDeathAnimation()（事件驱动，不再每帧轮询）
+  └─ 发 OnUnitRemoved 事件 → UnitViewManager 清理视图引用（不 QueueFree）
 
-UnitView._Process 检测 IsDead
-  → PlayDeathAnimation()
-    → Tween: scale 0 + modulate 淡出
-    → TweenCallback: QueueFree         ← 动画播完才销毁
+UnitView.PlayDeathAnimation()
+  → Tween: scale 0 + modulate 淡出
+  → TweenCallback: QueueFree         ← 动画播完才销毁
 ```
 
-### 12.3 攻击走 ActionQueue
+### 13.3 攻击走 ActionQueue
 
 玩家攻击 / AI 攻击不再直接调用 `DamageUnit`，改为通过 `DamageAction` + `ActionQueue`：
 
@@ -897,17 +905,17 @@ UnitView._Process 检测 IsDead
 OnUnitAttack / AIDoAttack
   → AP--（即时扣减）
   → ActionQueue.Enqueue([DamageAction])
-    → Execute → DamageUnit（伤害即时生效）
-    → OnActionExecuted → UnitView 攻击者闪白 + 目标闪红
-    → 等待 AnimationDuration
-    → 回调: CheckVictory, OnUnitAct
+	→ Execute → DamageUnit（伤害即时生效）
+	→ OnActionExecuted → UnitView 攻击者闪白 + 目标闪红
+	→ 等待 AnimationDuration
+	→ 回调: CheckVictory, OnUnitAct
 ```
 
 BattleManager 的 `OnUnitMove`/`OnUnitAttack`/`AIDoAttack`/`AIDoMove` 均通过 ActionQueue 执行，确保动画时序一致。
 
-### 12.4 浮动数字配置
+### 13.4 浮动数字配置
 
-在单位预制体 `单位视图.tscn` 中：
+在单位预制体 `Scenes/Prefabs/Units/单位视图.tscn` 中：
 1. 在 `UnitView` 节点下添加 `Label`，默认 `Visible=false`
 2. 拖入 Inspector 的 `FloatLabel` 字段
 3. `FloatLifetime`（显示秒数，默认 1s）和 `FloatRise`（上飘像素，默认 28px）可在 Inspector 调节

@@ -38,7 +38,8 @@ public abstract partial class GameAction : Resource
             ctx.TargetUnits = TargetResolver.Resolve(
                 ctx.SourceCard.Shape, ctx.SourceCard.Filter,
                 ctx.SourceUnit, ctx.TargetUnit, ctx.TargetCell,
-                ctx.SourceTeam, ctx.SourceCard.CardData?.AreaRange ?? 1);
+                ctx.SourceTeam, ctx.SourceCard.CardData?.AreaRange ?? 1,
+                ctx.Map, ctx.ActiveUnits);
         }
 
         // 被动/非卡牌路径：单目标包装为数组

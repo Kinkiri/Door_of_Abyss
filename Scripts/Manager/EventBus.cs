@@ -198,7 +198,8 @@ public partial class EventBus : Node
 
                 var targets = TargetResolver.Resolve(
                     entry.Shape, entry.Filter,
-                    owner, null, centerCell, owner.Team, entry.AreaRange);
+                    owner, null, centerCell, owner.Team, entry.AreaRange,
+                    map, UnitManager.Instance?.ActiveUnits);
 
                 GD.Print($"[EventBus]   -> 触发: {owner.UnitData?.UnitName} ID={owner.ID} " +
                          $"shape={entry.Shape} filter={entry.Filter} 找到目标={targets?.Length ?? 0}");

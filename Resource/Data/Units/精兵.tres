@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://dsqfv7ael8av5"]
 
-[ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/单位视图.tscn" id="1_0mro6"]
 [ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="1_jwh15"]
 [ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_j3k15"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="3_jwh15"]
 [ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="4_hi8lt"]
 
 [sub_resource type="Resource" id="Resource_giepe"]
@@ -27,6 +27,6 @@ AttackPower = 3
 HealthPoints = 4
 Stamina = 2
 ActionPoints = 2
-UnitPrefab = ExtResource("1_0mro6")
+UnitPrefab = ExtResource("3_jwh15")
 PassiveEffects = Array[Object]([SubResource("Resource_nw7r0")])
 metadata/_custom_type_script = "uid://cthrvfilibvfl"

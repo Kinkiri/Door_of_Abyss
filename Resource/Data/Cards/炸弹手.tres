@@ -15,6 +15,7 @@ CardName = "炸弹手"
 Description = "中东小伙能量大"
 Type = 0
 Shape = 2
+Tags = null
 Cost = 2
 Conditions = Array[Object]([])
 Actions = Array[Object]([SubResource("Resource_nthp5")])

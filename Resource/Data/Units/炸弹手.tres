@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://bqf677fitv6wi"]
 
 [ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="1_4wbxk"]
-[ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/单位视图.tscn" id="1_xfodj"]
+[ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/Units/中东小伙.tscn" id="1_xfodj"]
 [ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_fggy3"]
 [ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="4_ga3er"]
 
@@ -25,7 +25,7 @@ script = ExtResource("4_ga3er")
 UnitID = "炸弹手"
 UnitName = "炸弹手"
 HealthPoints = 3
-Description = "死后自爆，周围八格3点伤害"
+Description = "死后自爆，对周围八格的敌人造成3点伤害"
 UnitPrefab = ExtResource("1_xfodj")
 PassiveEffects = Array[Object]([SubResource("Resource_0v6ps")])
 metadata/_custom_type_script = "uid://cthrvfilibvfl"

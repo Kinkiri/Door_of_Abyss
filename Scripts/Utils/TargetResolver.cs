@@ -16,7 +16,10 @@ public static class TargetResolver
     /// <param name="source">效果来源单位（用于位置/阵营参考）</param>
     /// <param name="singleTarget">玩家点选的单个单位</param>
     /// <param name="centerCell">范围攻击的中心格子</param>
+    /// <param name="sourceTeam">来源阵营</param>
     /// <param name="areaRange">AreaDiamond/AreaSquare 扩散半径</param>
+    /// <param name="map">战场地图（格子字典），由调用方传入</param>
+    /// <param name="activeUnits">战场活跃单位列表，由调用方传入</param>
     /// <returns>目标单位数组，无目标返回空数组</returns>
     public static Unit[] Resolve(
         TargetShape shape,
@@ -25,7 +28,9 @@ public static class TargetResolver
         Unit singleTarget,
         Cell centerCell,
         Team sourceTeam,
-        int areaRange = 1)
+        int areaRange = 1,
+        Dictionary<Vector2I, Cell> map = null,
+        List<Unit> activeUnits = null)
     {
         Team? teamFilter = filter switch
         {
@@ -47,13 +52,13 @@ public static class TargetResolver
                 return singleTarget != null ? new[] { singleTarget } : null;
 
             case TargetShape.AreaDiamond:
-                return ResolveCellArea(centerCell, areaRange, teamFilter, isDiamond: true);
+                return ResolveCellArea(centerCell, areaRange, teamFilter, isDiamond: true, map);
 
             case TargetShape.AreaSquare:
-                return ResolveCellArea(centerCell, areaRange, teamFilter, isDiamond: false);
+                return ResolveCellArea(centerCell, areaRange, teamFilter, isDiamond: false, map);
 
             case TargetShape.All:
-                return FilterTeam(teamFilter);
+                return FilterTeam(teamFilter, activeUnits);
 
             default:
                 return singleTarget != null ? new[] { singleTarget } : null;
@@ -61,11 +66,12 @@ public static class TargetResolver
     }
 
     /// <summary>按阵营筛选存活单位</summary>
-    private static Unit[] FilterTeam(Team? team)
+    private static Unit[] FilterTeam(Team? team, List<Unit> activeUnits)
     {
-        var units = UnitManager.Instance.ActiveUnits;
-        var list = new List<Unit>(units.Count);
-        foreach (var u in units)
+        if (activeUnits == null) return Array.Empty<Unit>();
+
+        var list = new List<Unit>(activeUnits.Count);
+        foreach (var u in activeUnits)
         {
             if (!u.IsAlive || u.IsDead) continue;
             if (team != null && u.Team != team) continue;
@@ -75,12 +81,9 @@ public static class TargetResolver
     }
 
     /// <summary>格子范围扩散，找格子上的单位，可选按阵营过滤</summary>
-    private static Unit[] ResolveCellArea(Cell center, int range, Team? teamFilter, bool isDiamond)
+    private static Unit[] ResolveCellArea(Cell center, int range, Team? teamFilter, bool isDiamond, Dictionary<Vector2I, Cell> map)
     {
-        if (center == null) return null;
-
-        var map = MapManager.Instance?.Map;
-        if (map == null) return null;
+        if (center == null || map == null) return null;
 
         var list = new List<Unit>();
         for (int dx = -range; dx <= range; dx++)

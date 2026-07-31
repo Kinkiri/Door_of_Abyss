@@ -21,7 +21,7 @@ public partial class Unit
     public bool CanSelect { get; set; } = true;
 
     /// <summary>所属阵营</summary>
-    [Export] public Team Team { get; set; } = Team.Neutral;
+    public Team Team { get; set; } = Team.Neutral;
 
     /// <summary>从 UnitData 拷贝过来的运行时属性</summary>
     public int AttackPower { get; set; }

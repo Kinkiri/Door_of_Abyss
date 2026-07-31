@@ -13,6 +13,7 @@ CardID = "无中生有"
 CardName = "无中生有"
 Description = "抽两张牌"
 Type = 1
+Tags = null
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_0v6ps")])
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

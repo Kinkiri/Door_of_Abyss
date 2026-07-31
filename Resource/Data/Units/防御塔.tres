@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://b327xsmybu8k6"]
 
 [ext_resource type="Script" uid="uid://c6euywspbjyd" path="res://Scripts/Data/Actions/AutoAttackAction.cs" id="1_action"]
-[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_data"]
 [ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="1_effect"]
-[ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/单位视图.tscn" id="1_prefab"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="3_3b85t"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="4_d7dqr"]
 
 [sub_resource type="Resource" id="Resource_3b85t"]
 script = ExtResource("1_action")
@@ -16,7 +16,7 @@ Actions = Array[Object]([SubResource("Resource_3b85t")])
 Conditions = null
 
 [resource]
-script = ExtResource("1_data")
+script = ExtResource("4_d7dqr")
 UnitID = "防御塔"
 UnitName = "防御塔"
 AttackPower = 2
@@ -26,6 +26,6 @@ AttackDistance = 2
 Type = 1
 ActionPoints = 0
 Description = "自动攻击"
-UnitPrefab = ExtResource("1_prefab")
+UnitPrefab = ExtResource("3_3b85t")
 PassiveEffects = Array[Object]([SubResource("Resource_iv3e7")])
 metadata/_custom_type_script = "uid://cthrvfilibvfl"

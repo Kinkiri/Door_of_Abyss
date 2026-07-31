@@ -106,13 +106,4 @@ public partial class DragCamera2D : Camera2D
         GlobalPosition = _dragStartCameraPos - screenDelta * DragSensitivity / Zoom;
         GetViewport().SetInputAsHandled();
     }
-
-    /// <summary>
-    /// 手动推进战斗到下一阶段。绑定到 UI 按钮（"推进阶段"），
-    /// 在 PlayerAction 阶段由玩家主动触发 AdvancePhase。
-    /// </summary>
-    public void _on_button_button_down()
-    {
-        BattleManager.Instance.AdvancePhase();
-    }
 }

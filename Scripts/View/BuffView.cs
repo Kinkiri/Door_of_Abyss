@@ -1,8 +1,8 @@
 using Godot;
 
 /// <summary>
-/// 单个 Buff 图标，由 BuffManager 在 ApplyBuff/RemoveBuff 时创建/销毁。
-/// 需要用户创建预制体并拖入 BuffManager.BuffViewPrefab，内含：
+/// 单个 Buff 图标，由 UnitViewManager 在 BuffApplied/BuffRemoved 事件时创建/销毁。
+/// 需要用户创建预制体并拖入 UnitViewManager.BuffViewPrefab，内含：
 ///   - TextureRect（图标）
 ///   - Label（数字，可选）
 ///   - Panel + Label（描述，鼠标悬停显示）

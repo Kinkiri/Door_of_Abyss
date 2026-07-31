@@ -49,3 +49,13 @@ text = "1"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 1
+
+[node name="Emoji" type="Label" parent="." unique_id=1803793165]
+visible = false
+layout_mode = 0
+offset_left = -3.0
+offset_top = -20.0
+offset_right = 130.0
+offset_bottom = 136.0
+theme_override_font_sizes/font_size = 114
+text = "💂‍♂️"

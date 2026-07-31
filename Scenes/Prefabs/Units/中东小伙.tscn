@@ -1,13 +1,13 @@
 [gd_scene format=3 uid="uid://n2lf7klphtj5"]
 
-[ext_resource type="Script" uid="uid://d7gvkpac4jmr" path="res://Scripts/View/UnitView.cs" id="1_nw7r0"]
-[ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="2_giepe"]
+[ext_resource type="Script" uid="uid://d7gvkpac4jmr" path="res://Scripts/View/UnitView.cs" id="1_i0h1d"]
+[ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="2_ixqmk"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fw11u"]
 size = Vector2(118, 120)
 
 [node name="DefaultUnit" type="Node2D" unique_id=918862661 node_paths=PackedStringArray("NameLabel", "HPLabel", "ATKLabel", "DescriptionPanel", "DescriptionLabel", "EnemyIndicator", "FloatLabel")]
-script = ExtResource("1_nw7r0")
+script = ExtResource("1_i0h1d")
 NameLabel = NodePath("Control/Name")
 HPLabel = NodePath("Control/HP")
 ATKLabel = NodePath("Control/ATK")
@@ -21,23 +21,65 @@ AttackFlashIn = 0.01
 AttackFlashOut = 0.6
 FloatLabel = NodePath("FLN")
 
+[node name="ColorRect" type="ColorRect" parent="." unique_id=474160985]
+offset_left = -49.340065
+offset_top = -49.393936
+offset_right = 46.841423
+offset_bottom = 38.332047
+scale = Vector2(0.946128, 0.946128)
+pivot_offset = Vector2(62, 63)
+mouse_filter = 2
+color = Color(0.7768705, 0.09762501, 0.20975986, 1)
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=249111711]
+visible = false
+scale = Vector2(0.931094, 0.931094)
+texture = ExtResource("2_ixqmk")
+
+[node name="Emojis" type="Control" parent="." unique_id=638043015]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Emoji" type="Label" parent="Emojis" unique_id=1395468568]
+layout_mode = 0
+offset_left = -78.00001
+offset_top = -95.00001
+offset_right = 71.99999
+offset_bottom = 53.999992
+scale = Vector2(0.6141216, 0.6141216)
+pivot_offset = Vector2(76.00001, 79.00001)
+theme_override_font_sizes/font_size = 109
+text = "👳🏽‍♂️"
+
+[node name="Emoji2" type="Label" parent="Emojis" unique_id=743025185]
+layout_mode = 0
+offset_left = -44.526943
+offset_top = -50.28458
+offset_right = 105.47305
+offset_bottom = 98.71542
+scale = Vector2(0.41411927, 0.41411927)
+pivot_offset = Vector2(76.00001, 79.00001)
+theme_override_font_sizes/font_size = 109
+text = "💣"
+
+[node name="Emoji3" type="Label" parent="Emojis" unique_id=662819940]
+layout_mode = 0
+offset_left = -100.52694
+offset_top = -51.28458
+offset_right = 49.47306
+offset_bottom = 97.71542
+scale = Vector2(0.41411927, 0.41411927)
+pivot_offset = Vector2(76.00001, 79.00001)
+theme_override_font_sizes/font_size = 109
+text = "💣"
+
 [node name="Area2D" type="Area2D" parent="." unique_id=421000204]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=653882582]
 shape = SubResource("RectangleShape2D_fw11u")
 debug_color = Color(0, 0.60705024, 0.65952575, 0.41960785)
-
-[node name="ColorRect" type="ColorRect" parent="." unique_id=474160985]
-offset_left = -62.0
-offset_top = -63.0
-offset_right = 62.0
-offset_bottom = 63.0
-mouse_filter = 2
-color = Color(0.7768705, 0.09762501, 0.20975986, 1)
-
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=249111711]
-scale = Vector2(0.931094, 0.931094)
-texture = ExtResource("2_giepe")
 
 [node name="Control" type="Control" parent="." unique_id=336620384]
 layout_mode = 3
@@ -52,7 +94,9 @@ offset_left = -51.0
 offset_top = -60.0
 offset_right = 51.0
 offset_bottom = -37.0
-text = "名字"
+theme_override_colors/font_color = Color(0.8729189, 0.99999994, 0.94781655, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+text = "Name"
 horizontal_alignment = 1
 
 [node name="HPico" type="Label" parent="Control" unique_id=511339566]
@@ -72,6 +116,9 @@ offset_left = 28.0
 offset_top = 36.0
 offset_right = 61.0
 offset_bottom = 59.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85490197)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 text = "0"
 horizontal_alignment = 1
 
@@ -121,14 +168,14 @@ visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -5.0
-offset_top = -11.5
-offset_right = 5.0
-offset_bottom = 11.5
+offset_left = -48.0
+offset_top = -101.0
+offset_right = 37.0
+offset_bottom = 103.0
 grow_horizontal = 2
 grow_vertical = 2
-scale = Vector2(6.5599995, 6.5599995)
 pivot_offset = Vector2(5, 11.5)
+theme_override_font_sizes/font_size = 149
 text = "1"
 horizontal_alignment = 1
 vertical_alignment = 1

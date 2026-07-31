@@ -15,6 +15,7 @@ CardName = "吸血鬼"
 Description = "吸血鬼为什么能吸机器人？"
 Type = 0
 Shape = 2
+Tags = null
 Cost = 2
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_nthp5")])

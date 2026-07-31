@@ -14,15 +14,11 @@ public partial class UnitManager : Node
     /// <summary>当前战场上所有活跃的单位列表</summary>
     public List<Unit> ActiveUnits { get; private set; } = new();
 
-    /// <summary>Unit → UnitView 映射，用于销毁时清理视觉节点</summary>
-    private Dictionary<Unit, UnitView> _unitViews = new();
+    /// <summary>单位生成事件（View 层订阅，负责创建 UnitView）</summary>
+    public event System.Action<Unit> OnUnitSpawned;
 
-    /// <summary>获取单位的视觉节点</summary>
-    public UnitView GetUnitView(Unit unit)
-    {
-        _unitViews.TryGetValue(unit, out var view);
-        return view;
-    }
+    /// <summary>单位移除事件（View 层订阅，负责清理 UnitView 引用）</summary>
+    public event System.Action<Unit> OnUnitRemoved;
 
     /// <summary>获取指定阵营的所有存活门</summary>
     public static IEnumerable<Unit> GetDoors(Team team)
@@ -80,18 +76,8 @@ public partial class UnitManager : Node
         cell.CanStand = false;  // 单位占据，不可站立
         ActiveUnits.Add(unit);
 
-        // 创建视觉实体
-        var view = unitData.UnitPrefab.Instantiate<UnitView>();
-        view.UnitData = unitData;
-        view.Unit = unit;
-        view.Position = cell.WorldPos;
-
-        // 注册视图映射
-        _unitViews[unit] = view;
-
-        // 敌方标志由 UnitView 的 EnemyIndicator 自己判断显示
-
-        MapManager.Instance.BaseMapLayer.AddChild(view);
+        // 通知 View 层创建单位视图（事件驱动；无订阅者则无视图——逻辑层不依赖 View 层）
+        OnUnitSpawned?.Invoke(unit);
 
         unit.UpdateUnit();
 
@@ -191,9 +177,8 @@ public partial class UnitManager : Node
         unit.IsDead = true;
         unit.UpdateUnit();
 
-        // 清理视觉节点引用（不 QueueFree——UnitView 自己播完死亡动画后销毁）
-        if (_unitViews.TryGetValue(unit, out var view))
-            _unitViews.Remove(unit);
+        // 通知 View 层清理视图引用（不 QueueFree——UnitView 自己播完死亡动画后销毁）
+        OnUnitRemoved?.Invoke(unit);
 
         // 取消被动效果订阅
         EventBus.Instance?.Unsubscribe(unit);

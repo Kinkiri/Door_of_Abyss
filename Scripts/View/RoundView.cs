@@ -88,4 +88,13 @@ public partial class RoundView : Node
         Team.Enemy  => "敌方",
         _           => "无",
     };
+
+    /// <summary>
+    /// 手动推进战斗到下一阶段。绑定到 UI 按钮（"结束回合"），
+    /// 在 PlayerAction 阶段由玩家主动触发 AdvancePhase。
+    /// </summary>
+    public void _on_button_button_down()
+    {
+        BattleManager.Instance?.AdvancePhase();
+    }
 }
