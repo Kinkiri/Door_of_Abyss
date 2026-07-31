@@ -54,31 +54,28 @@ public partial class BuffManager : Node
             var existing = buffList.Find(b => b.Data.BuffID == buffData.BuffID);
             if (existing != null)
             {
-                // 先按旧层数还原，再按新层数重新施加
-                {
-                    var ctx = new Context { TargetUnit = target };
-                    for (int i = 0; i < existing.StackCount; i++)
-                        foreach (var action in buffData.OnApplyActions)
-                            action.Revert(ctx);
-                }
-
                 // 叠层：-1 = 无限叠，>0 不超过上限，0 不应出现
                 // 此处用 initialStacks（例如卡牌定义的初始层数），而非固定 +1
+                int oldStack = existing.StackCount;
                 if (buffData.MaxStack == -1)
                     existing.StackCount += initialStacks;
                 else if (buffData.MaxStack > 0)
                     existing.StackCount = System.Math.Min(existing.StackCount + initialStacks, buffData.MaxStack);
                 existing.RemainingTurns = buffData.Duration;
 
+                // 只对实际新增层数执行施加（不先还原旧层——还原不扣当前 HP，
+                // 旧实现"先全量还原再全量施加"会让 CurrentHP 虚增旧层数+新层数）
+                int added = existing.StackCount - oldStack;
+                if (added > 0 && buffData.OnApplyActions != null)
                 {
                     var ctx = new Context { TargetUnit = target, SourceUnit = sourceUnit };
-                    for (int i = 0; i < existing.StackCount; i++)
+                    for (int i = 0; i < added; i++)
                         foreach (var action in buffData.OnApplyActions)
                             action.Execute(ctx);
                 }
 
                 GD.Print($"[BuffManager] 刷新+叠层: {buffData.BuffName} ×{existing.StackCount} " +
-                         $"剩余{existing.RemainingTurns}回合 目标={target.UnitData?.UnitName}");
+                         $"(新增{added}层) 剩余{existing.RemainingTurns}回合 目标={target.UnitData?.UnitName}");
                 return;
             }
         }
@@ -98,10 +95,10 @@ public partial class BuffManager : Node
                     action.Execute(ctx);
         }
 
-        // 注册被动效果（带 tag 以便到期单独清理）
+        // 注册被动效果（带 tag 以便到期单独清理；tag 含单位 ID，避免多单位同名 Buff 互相误删订阅）
         if (buffData.PassiveEffects != null && buffData.PassiveEffects.Length > 0)
         {
-            string tag = $"buff_{buffData.BuffID}";
+            string tag = $"buff_{buffData.BuffID}_{target.ID}";
             EventBus.Instance?.Subscribe(target, buffData.PassiveEffects, tag);
         }
 
@@ -143,7 +140,7 @@ public partial class BuffManager : Node
         }
 
         // ── 取消被动效果订阅 ──────────────────────────────────────
-        string tag = $"buff_{buff.Data.BuffID}";
+        string tag = $"buff_{buff.Data.BuffID}_{target.ID}";
         EventBus.Instance?.UnsubscribeByTag(tag);
 
         // ── 执行到期动作 ──────────────────────────────────────────
@@ -210,7 +207,7 @@ public partial class BuffManager : Node
             }
 
             // 取消被动效果订阅
-            string tag = $"buff_{buff.Data.BuffID}";
+            string tag = $"buff_{buff.Data.BuffID}_{unit.ID}";
             EventBus.Instance?.UnsubscribeByTag(tag);
 
             // 通知 View 层销毁 Buff 图标（事件驱动）

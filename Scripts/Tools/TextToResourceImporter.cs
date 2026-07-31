@@ -154,7 +154,7 @@ public partial class TextToResourceImporter : EditorScript
         unit.Type = ParseUnitType(cols[7]);
         unit.World = ParseEnum<World>(cols[8]);
         unit.Faction = ParseEnum<Faction>(cols[9]);
-        unit.Tag = ParseEnum<Tag>(cols[10]);
+        //unit.Tags = ParseEnum<Tag>(cols[10]);
         unit.Rarity = ParseEnum<Rarity>(cols[11]);
         unit.Description = cols[12];
         unit.UnitPrefab = ResourceLoader.Load<PackedScene>(DefaultUnitPrefab);

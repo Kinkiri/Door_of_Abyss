@@ -14,7 +14,7 @@
 
 [sub_resource type="Resource" id="Resource_ij2mw"]
 script = ExtResource("3_nk2b2")
-UnitDatas = Array[Object]([ExtResource("2_ao2qh"), ExtResource("2_ao2qh"), ExtResource("2_ao2qh")])
+UnitDatas = Array[Object]([ExtResource("2_ao2qh"), ExtResource("5_cq6hx"), ExtResource("5_cq6hx"), ExtResource("5_cq6hx")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_vikhu"]

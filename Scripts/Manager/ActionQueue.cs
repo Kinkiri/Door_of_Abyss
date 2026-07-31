@@ -32,7 +32,9 @@ public partial class ActionQueue : Node
             _queue.Enqueue(new QueuedAction { Action = a, Context = CloneContext(ctx) });
         }
 
-        if (onComplete.Method != null)
+        // Godot 4.7 中 Callable.Method 是 StringName（方法名），委托封装的 Callable（Callable.From）
+        // 构造时 _method 为 null 而 _delegate 非空——两种封装都要识别，否则攻击等 lambda 回调会静默丢失
+        if (onComplete.Method != null || onComplete.Delegate != null)
         {
             // 队列尾部标记一个空动作，携带回调
             _queue.Enqueue(new QueuedAction { Action = null, Context = null, OnComplete = onComplete });
@@ -75,7 +77,8 @@ public partial class ActionQueue : Node
         // 空动作只携带回调（队列末尾标记）
         if (item.Action == null)
         {
-            if (item.OnComplete.Method != null)
+            // 同 Enqueue：委托封装（Callable.From）的 Method 为 null，需同时检查 Delegate
+            if (item.OnComplete.Method != null || item.OnComplete.Delegate != null)
                 item.OnComplete.CallDeferred();
             ProcessNext();
             return;

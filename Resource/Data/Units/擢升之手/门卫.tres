@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://f8jwdartjjfi"]
+
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="1_5ehkf"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_elj16"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_fpyoc"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="3_bpiqf"]
+
+[sub_resource type="Resource" id="Resource_l2avd"]
+script = ExtResource("1_5ehkf")
+InitialStacks = 2
+AnimationDuration = 0.3
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_5jjgn"]
+script = ExtResource("2_fpyoc")
+Actions = Array[Object]([SubResource("Resource_l2avd")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("1_elj16")
+UnitID = "门卫"
+UnitName = "门卫"
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+AttackPower = 2
+HealthPoints = 3
+Description = "回合开始：获得义肢2"
+UnitPrefab = ExtResource("3_bpiqf")
+PassiveEffects = Array[Object]([SubResource("Resource_5jjgn")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

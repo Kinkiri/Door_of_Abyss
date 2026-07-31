@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://do4vvklkek6hx"]
+
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_13xvd"]
+[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="1_vvoc6"]
+[ext_resource type="Resource" uid="uid://bkw4f7fjiykxq" path="res://Resource/Data/Units/擢升之手/闲散员工.tres" id="2_1sx61"]
+
+[sub_resource type="Resource" id="Resource_gfhjv"]
+script = ExtResource("1_13xvd")
+AnimationDuration = 0.3
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[resource]
+script = ExtResource("1_vvoc6")
+UnitData = ExtResource("2_1sx61")
+CardID = "闲散员工"
+CardName = "闲散员工"
+Description = "他们…真的很游“手”好闲"
+Type = 0
+Shape = 2
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_gfhjv")])
+metadata/_custom_type_script = "uid://p1hhkgy2pem"

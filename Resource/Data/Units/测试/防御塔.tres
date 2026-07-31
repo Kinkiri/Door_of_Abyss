@@ -19,6 +19,7 @@ Conditions = null
 script = ExtResource("4_d7dqr")
 UnitID = "防御塔"
 UnitName = "防御塔"
+Tags = null
 AttackPower = 2
 HealthPoints = 4
 Stamina = 0

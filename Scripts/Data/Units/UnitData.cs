@@ -1,4 +1,5 @@
 using Godot;
+using Godot.Collections;
 
 /// <summary>
 /// 单位数据类，定义战斗中一个单位（角色/敌人）的基础属性模板
@@ -17,7 +18,7 @@ public partial class UnitData : Resource
     [Export] public Faction Faction { get; set; } = Faction.测试;
 
     /// <summary>普通标签</summary>
-    [Export] public Tag Tag { get; set; }
+    [Export] public Array<Tag> Tags { get; set; }
 
     /// <summary>稀有度</summary>
     [Export] public Rarity Rarity { get; set; } = Rarity.Basic;

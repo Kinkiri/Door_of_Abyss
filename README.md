@@ -375,12 +375,14 @@ OrCondition
 
 MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不减）；还原时上限减回、当前 HP **不随上限减少**，仅超出新上限时截断。
 
+**叠层刷新**：已有 Buff 再次施加时，只对**新增层数**执行 OnApplyActions（旧层效果保留，不先还原旧层）——避免"还原不扣当前 HP + 全量重施"导致的血量虚增（如 2 层义肢 3/6 血再上 2 层 → 5/8，而非错误的 7/8）。
+
 ### 3.5 Buff 动作
 
 | 动作 | 字段 | 说明 |
 |---|---|---|
 | ApplyBuffAction | BuffData, InitialStacks | 施加 Buff。**遍历 `TargetUnits` 支持多目标**（如 Shape=All）。
-| ModifyBuffAction | BuffID, TurnsDelta, StacksDelta | 修改回合/叠层。**减层逐层还原**，归零移除 |
+| ModifyBuffAction | BuffID, TurnsDelta, StacksDelta | 修改回合/叠层。**回合/叠层最小减到 0，不能为负**；`RemainingTurns=-1`（永久 Buff）忽略回合修改，其他非法负值警告并按 0 处理；叠层归零移除 |
 | RemoveBuffAction | BuffID | 无条件整个移除（驱散） |
 
 ### 3.6 控制流
@@ -461,7 +463,7 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 ### 叠层 = 效果倍率
 
 InitialStacks=2 + ModifyStatAction(ATK,+1) -> ATK+2。
-已有 Buff 时再次施加，叠层数按 `InitialStacks` 增长（不是固定 +1）。
+已有 Buff 时再次施加，叠层数按 `InitialStacks` 增长（不是固定 +1），**只对新增层数执行 OnApplyActions**（旧层效果保留）。
 ModifyBuffAction(StacksDelta=-1) -> 减 1 层，还原 1 次 -> ATK-1。
 归零 -> 移除，还原全部 + OnExpireActions。
 
@@ -626,7 +628,7 @@ OnEnterGameStart
 - ValueSource 运算（6 种公式 + 嵌套）
 - Condition 复合（And/Or/Not + Compare/HasBuff/Random）
 - Buff 生命周期（叠层/倒计时/还原/驱散）
-- ModifyBuffAction（减层归零/负数拒绝）
+- ModifyBuffAction（减层归零/负值 clamp 到 0/永久 Buff 回合忽略）
 - ECA 集成（条件满足执行/MaxTriggerCount 限制）
 - DamageUnit（正常扣血/过量/击杀）
 - MaxStack/Duration 边界值

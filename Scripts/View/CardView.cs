@@ -58,7 +58,7 @@ public partial class CardView : TextureButton
                 CardDescription.Text += $"\n" +
                                         $"{equipmentCard.EquipmentData.Description}" +
                                         $"\n" +
-                                        $"AB: {equipmentCard.EquipmentData.AttackBonus}" +
+                                        $"AB: {equipmentCard.EquipmentData.AttackBonus} " +
                                         $"MHB: {equipmentCard.EquipmentData.MaxHealthBonus}";
             }
         }

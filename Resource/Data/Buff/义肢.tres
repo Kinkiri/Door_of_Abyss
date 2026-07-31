@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="BuffData" format=3 uid="uid://dg376asw4ubsn"]
+
+[ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="1_8jfxn"]
+[ext_resource type="Script" uid="uid://b3sdoj1kcep0a" path="res://Scripts/Data/BuffData.cs" id="1_wc4qa"]
+[ext_resource type="Script" uid="uid://bubokmjt34mm" path="res://Scripts/Data/Actions/ModifyBuffAction.cs" id="2_hweew"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_0fteh"]
+
+[sub_resource type="Resource" id="Resource_sw7ab"]
+script = ExtResource("1_8jfxn")
+Value = 1
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_cmylw"]
+script = ExtResource("1_8jfxn")
+TargetStat = 1
+Value = 1
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_hweew"]
+script = ExtResource("2_hweew")
+BuffID = "义肢"
+StacksDelta = -1
+metadata/_custom_type_script = "uid://bubokmjt34mm"
+
+[sub_resource type="Resource" id="Resource_8jfxn"]
+script = ExtResource("3_0fteh")
+TriggerEvent = 8
+Actions = Array[Object]([SubResource("Resource_hweew")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("1_wc4qa")
+BuffID = "义肢"
+BuffName = "义肢"
+Description = "+X血上限和攻，每次行动减少"
+Duration = -1
+MaxStack = -1
+OnApplyActions = Array[Object]([SubResource("Resource_sw7ab"), SubResource("Resource_cmylw")])
+OnExpireActions = null
+OnRoundEndActions = null
+PassiveEffects = Array[Object]([SubResource("Resource_8jfxn")])
+metadata/_custom_type_script = "uid://b3sdoj1kcep0a"
