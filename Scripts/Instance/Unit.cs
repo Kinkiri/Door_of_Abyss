@@ -34,6 +34,9 @@ public partial class Unit
     public int ActionPoints { get; set; }
     /// <summary>行动点上限（可被 Buff/装备修改，最小不低于 1）</summary>
     public int MaxActionPoints { get; set; }
+
+    /// <summary>本回合行动次数（移动/攻击各算一次；出牌和被动自动攻击不计）。RoundStart 归零</summary>
+    public int ActionsThisTurn { get; set; }
     public UnitType Type { get; set; }
 
 

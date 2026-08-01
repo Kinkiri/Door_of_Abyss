@@ -20,6 +20,7 @@ metadata/_custom_type_script = "uid://ce73rlwqwvo0j"
 [sub_resource type="Resource" id="Resource_aflhj"]
 script = ExtResource("3_gfiwa")
 TriggerEvent = 10
+TargetFilters = null
 Actions = Array[Object]([SubResource("Resource_6efkh")])
 Conditions = Array[Object]([SubResource("Resource_qv6y3")])
 metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
@@ -32,7 +33,8 @@ World = 1
 Faction = 2
 Tags = Array[int]([4, 0, 7])
 Rarity = 1
-Description = "义肢1 被消灭：若拥有义肢，则在原地部署另一只钢肢蝼蛄"
+ActionPoints = 2
+Description = "被消灭：若拥有义肢，则在原地部署另一只钢肢蝼蛄"
 UnitPrefab = ExtResource("5_afbfo")
 PassiveEffects = Array[Object]([SubResource("Resource_aflhj")])
 metadata/_custom_type_script = "uid://cthrvfilibvfl"

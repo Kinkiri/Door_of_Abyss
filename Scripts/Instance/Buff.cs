@@ -15,6 +15,9 @@ public partial class Buff
     /// <summary>当前叠加层数</summary>
     public int StackCount { get; set; }
 
+    /// <summary>最近一次行动开始时的叠层快照。WearMode 减层只消耗快照内的旧层——行动中新增的层不受本次行动磨损</summary>
+    public int StacksAtActionStart { get; set; }
+
     /// <summary>施加者（谁上的这个 buff）</summary>
     public Unit SourceUnit { get; set; }
 

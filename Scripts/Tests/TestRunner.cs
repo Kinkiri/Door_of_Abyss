@@ -436,6 +436,163 @@ public partial class TestRunner : Node
             VAssert("无RequiredTags：无条件生效 ATK=7", () => plainUnit.AttackPower == 7);
         });
 
+        // ── ModifyStatAction 仅当前 AP（上限不动） ────────────────────
+        RunGroup("ModifyStatAction 仅当前AP", () =>
+        {
+            var unit = MakeUnit("仅当前AP", 5, 10);
+            unit.MaxActionPoints = 3;
+            unit.ActionPoints = 2;
+
+            var action = new ModifyStatAction { TargetStat = ModifyStatType.ActionPoints, Value = 1, CurrentAPOnly = true };
+            action.Execute(new Context { TargetUnit = unit });
+            VAssert("仅当前+1：MaxAP 不变=3", () => unit.MaxActionPoints == 3);
+            VAssert("仅当前+1：AP=3", () => unit.ActionPoints == 3);
+
+            // 满状态再 +1：允许透支超过上限（本回合多动一次）
+            action.Execute(new Context { TargetUnit = unit });
+            VAssert("仅当前+1 透支：AP=4（允许超上限）", () => unit.ActionPoints == 4);
+            VAssert("透支后 MaxAP 不变=3", () => unit.MaxActionPoints == 3);
+
+            // 负值 clamp 到 0
+            var minus = new ModifyStatAction { TargetStat = ModifyStatType.ActionPoints, Value = -5, CurrentAPOnly = true };
+            minus.Execute(new Context { TargetUnit = unit });
+            VAssert("仅当前-5 clamp 到 0", () => unit.ActionPoints == 0);
+            VAssert("仅当前-5：MaxAP 不变=3", () => unit.MaxActionPoints == 3);
+
+            // Revert 减回并 clamp 下限
+            action.Revert(new Context { TargetUnit = unit });
+            VAssert("仅当前 Revert：AP=0（下限 clamp）", () => unit.ActionPoints == 0);
+            VAssert("仅当前 Revert：MaxAP 不变=3", () => unit.MaxActionPoints == 3);
+
+            // 对照组：默认行为（上限+当前同步）不受影响
+            var normal = MakeUnit("默认AP", 5, 10);
+            normal.MaxActionPoints = 3;
+            normal.ActionPoints = 2;
+            var normalAction = new ModifyStatAction { TargetStat = ModifyStatType.ActionPoints, Value = 1 };
+            normalAction.Execute(new Context { TargetUnit = normal });
+            VAssert("默认模式：MaxAP=4", () => normal.MaxActionPoints == 4);
+            VAssert("默认模式：AP=3", () => normal.ActionPoints == 3);
+            normalAction.Revert(new Context { TargetUnit = normal });
+            VAssert("默认模式 Revert：MaxAP=3", () => normal.MaxActionPoints == 3);
+            VAssert("默认模式 Revert：AP 截断=3", () => normal.ActionPoints == 3);
+        });
+
+        // ── 充能透支逻辑（+1 由 Revert 在减层时还债，无双重扣减） ────────
+        RunGroup("充能透支逻辑", () =>
+        {
+            var bm = BuffManager.Instance;
+            if (bm == null) { VAssert("BuffManager 未就绪，跳过", () => false); return; }
+
+            var unit = MakeUnit("充能测试", 5, 10);
+            unit.MaxActionPoints = 3;
+            unit.ActionPoints = 3;
+
+            var buff = new BuffData
+            {
+                BuffID = "充能",
+                Duration = -1,
+                MaxStack = -1,
+                OnApplyActions = new GameAction[]
+                {
+                    new ModifyStatAction { TargetStat = ModifyStatType.ActionPoints, Value = 1, CurrentAPOnly = true },
+                },
+            };
+
+            bm.ApplyBuff(unit, buff, null, 1);
+            VAssert("充能+1：MaxAP 不变=3", () => unit.MaxActionPoints == 3);
+            VAssert("充能+1：AP=4（满状态透支多动一次）", () => unit.ActionPoints == 4);
+
+            // 用掉行动点后叠第 2 层
+            unit.ActionPoints = 1;
+            bm.ApplyBuff(unit, buff, null, 1);
+            VAssert("2 层：MaxAP 不变=3", () => unit.MaxActionPoints == 3);
+            VAssert("2 层：AP=2", () => unit.ActionPoints == 2);
+            VAssert("2 层：StackCount=2", () => bm.GetBuff(unit, "充能")?.StackCount == 2);
+
+            // 模拟下回合 RoundStart 被动：减 1 层 → Revert +1 → AP-1
+            var modBuff = new ModifyBuffAction { BuffID = "充能", StacksDelta = -1 };
+            modBuff.Execute(new Context { TargetUnit = unit });
+            VAssert("减层后 AP=1（Revert 还债）", () => unit.ActionPoints == 1);
+            VAssert("减层后剩 1 层", () => bm.GetBuff(unit, "充能")?.StackCount == 1);
+
+            // 再减 1 层 → 归零移除，无重复扣减
+            modBuff.Execute(new Context { TargetUnit = unit });
+            VAssert("归零后 Buff 移除", () => !bm.HasBuff(unit, "充能"));
+            VAssert("归零后 AP=0", () => unit.ActionPoints == 0);
+            VAssert("归零后 MaxAP 不变=3", () => unit.MaxActionPoints == 3);
+        });
+
+        // ── 义肢行动磨损快照（本次行动获得的层不磨损） ──────────────────
+        RunGroup("义肢行动磨损快照", () =>
+        {
+            var bm = BuffManager.Instance;
+            if (bm == null) { VAssert("BuffManager 未就绪，跳过", () => false); return; }
+
+            var unit = MakeUnit("磨损测试", 2, 10);
+            var prosthetic = new BuffData { BuffID = "义肢", Duration = -1, MaxStack = -1 };
+
+            // 场景1：行动开始无义肢（快照 0）→ 行动中加 2 层 → WearMode 减层 → 不减
+            bm.MarkActionStart(unit);
+            bm.ApplyBuff(unit, prosthetic, null, 2);
+            var wear = new ModifyBuffAction { BuffID = "义肢", StacksDelta = -1, WearMode = true };
+            wear.Execute(new Context { TargetUnit = unit });
+            VAssert("行动中加 2 层：本次行动不减（仍 2 层）", () => bm.GetBuff(unit, "义肢")?.StackCount == 2);
+
+            // 场景2：下次行动开始（快照 2）→ 减层 → 2→1
+            bm.MarkActionStart(unit);
+            wear.Execute(new Context { TargetUnit = unit });
+            VAssert("下次行动磨损：2→1", () => bm.GetBuff(unit, "义肢")?.StackCount == 1);
+
+            // 场景3：非 WearMode 不受快照限制（驱散类直接减）
+            var plain = MakeUnit("普通磨损", 2, 10);
+            bm.ApplyBuff(plain, prosthetic, null, 2);
+            new ModifyBuffAction { BuffID = "义肢", StacksDelta = -1 }.Execute(new Context { TargetUnit = plain });
+            VAssert("非 WearMode：直接减 1 层", () => bm.GetBuff(plain, "义肢")?.StackCount == 1);
+
+            bm.RemoveAllBuffs(unit);
+            bm.RemoveAllBuffs(plain);
+        });
+
+        // ── FixedEffect 固定效果（效果与层数解耦） ────────────────────
+        RunGroup("FixedEffect 固定效果", () =>
+        {
+            var bm = BuffManager.Instance;
+            if (bm == null) { VAssert("BuffManager 未就绪，跳过", () => false); return; }
+
+            var unit = MakeUnit("固定效果", 5, 10);
+            var buffData = new BuffData
+            {
+                BuffID = "fixed",
+                Duration = -1,
+                MaxStack = -1,
+                FixedEffect = true,
+                OnApplyActions = new GameAction[]
+                {
+                    new ModifyStatAction { TargetStat = ModifyStatType.AttackPower, Value = 2 },
+                },
+            };
+
+            // 施加 3 层：FixedEffect 只执行 1 次 → ATK=7（不是 5+2*3=11）
+            bm.ApplyBuff(unit, buffData, null, 3);
+            VAssert("3 层 FixedEffect：ATK=7（只加一次）", () => unit.AttackPower == 7);
+
+            // 叠层 2 层：不重放效果 → ATK 仍 7，层数 5
+            bm.ApplyBuff(unit, buffData, null, 2);
+            VAssert("再叠 2 层：ATK 仍 7", () => unit.AttackPower == 7);
+            VAssert("叠层共 5 层", () => bm.GetBuff(unit, "fixed")?.StackCount == 5);
+
+            // 减 1 层：不减效果 → ATK 仍 7
+            var mod = new ModifyBuffAction { BuffID = "fixed", StacksDelta = -1 };
+            mod.Execute(new Context { TargetUnit = unit });
+            VAssert("减 1 层：ATK 仍 7（效果保留）", () => unit.AttackPower == 7);
+
+            // 减到 0：归零移除 → 一次性还原 → ATK=5
+            for (int i = 0; i < 4; i++)
+                mod.Execute(new Context { TargetUnit = unit });
+            VAssert("归零移除", () => !bm.HasBuff(unit, "fixed"));
+            VAssert("归零还原：ATK=5", () => unit.AttackPower == 5);
+        });
+
         // ── EventBus 条件过滤 ────────────────────────────────────────
         RunGroup("EventBus 条件", () =>
         {
@@ -580,6 +737,140 @@ public partial class TestRunner : Node
             VAssert("DamageUnit 击杀", () => !unit.IsAlive);
         });
 
+        // ── 伤害修饰 OnBeforeDamage（加伤/减伤被动） ────────────────────
+        RunGroup("伤害修饰 OnBeforeDamage", () =>
+        {
+            var eb = EventBus.Instance;
+            if (eb == null) { VAssert("EventBus 未就绪，跳过", () => false); return; }
+
+            // ModifyDamageAction 单测：改 ctx.DamageModifier
+            var mctx = new Context();
+            new ModifyDamageAction { Delta = -3 }.Execute(mctx);
+            VAssert("ModifyDamageAction：ctx.DamageModifier=-3", () => mctx.DamageModifier == -3);
+
+            var attacker = MakeUnit("攻击者", 10, 10);
+            var victim = MakeUnit("受击者", 5, 20);
+
+            // 受击者减伤被动 -3（OnBeforeDamage 受击者侧触发）
+            var reduce = new EffectData
+            {
+                TriggerEvent = EventType.OnBeforeDamage,
+                Target = PassiveTarget.Self,
+                Actions = new GameAction[] { new ModifyDamageAction { Delta = -3 } },
+            };
+            eb.Subscribe(victim, new[] { reduce });
+
+            new DamageAction { Value = 10 }.Execute(new Context { SourceUnit = attacker, TargetUnits = new[] { victim } });
+            VAssert("减伤-3：20→13", () => victim.CurrentHP == 13);
+
+            // 攻击者加伤被动 +2（OnBeforeDamage 攻击者侧触发）
+            var boost = new EffectData
+            {
+                TriggerEvent = EventType.OnBeforeDamage,
+                Target = PassiveTarget.Self,
+                Actions = new GameAction[] { new ModifyDamageAction { Delta = 2 } },
+            };
+            eb.Subscribe(attacker, new[] { boost });
+
+            new DamageAction { Value = 10 }.Execute(new Context { SourceUnit = attacker, TargetUnits = new[] { victim } });
+            VAssert("减伤-3 + 加伤+2 叠加：13-9=4", () => victim.CurrentHP == 4);
+
+            // 减伤溢出：伤害 clamp 到 0 不死
+            var victim2 = MakeUnit("受击者2", 5, 20);
+            var bigReduce = new EffectData
+            {
+                TriggerEvent = EventType.OnBeforeDamage,
+                Target = PassiveTarget.Self,
+                Actions = new GameAction[] { new ModifyDamageAction { Delta = -50 } },
+            };
+            eb.Subscribe(victim2, new[] { bigReduce });
+            new DamageAction { Value = 5 }.Execute(new Context { SourceUnit = attacker, TargetUnits = new[] { victim2 } });
+            VAssert("减伤溢出：伤害 0，HP 不变=20", () => victim2.CurrentHP == 20);
+            VAssert("减伤溢出：单位存活", () => victim2.IsAlive);
+
+            eb.Unsubscribe(victim);
+            eb.Unsubscribe(attacker);
+            eb.Unsubscribe(victim2);
+        });
+
+        // ── 已行动条件 HasActed（攻击时本回合已行动过则加伤） ────────────
+        RunGroup("已行动条件 HasActed", () =>
+        {
+            var eb = EventBus.Instance;
+            if (eb == null) { VAssert("EventBus 未就绪，跳过", () => false); return; }
+
+            var attacker = MakeUnit("攻击者", 10, 10);
+            var victim = MakeUnit("受击者", 5, 20);
+
+            // 条件单测
+            var cond = new HasActedCondition { CheckTarget = ConditionTarget.Source, HasActed = true };
+            VAssert("未行动：HasActed 不满足", () => !cond.IsMet(new Context { SourceUnit = attacker }));
+
+            attacker.ActionsThisTurn = 1;
+            VAssert("已行动：HasActed 满足", () => cond.IsMet(new Context { SourceUnit = attacker }));
+
+            var noCond = new HasActedCondition { CheckTarget = ConditionTarget.Source, HasActed = false };
+            VAssert("已行动：HasActed=false 不满足", () => !noCond.IsMet(new Context { SourceUnit = attacker }));
+
+            // 集成：已行动 → 攻击加伤 +1
+            var boost = new EffectData
+            {
+                TriggerEvent = EventType.OnBeforeDamage,
+                Target = PassiveTarget.Self,
+                Conditions = new Condition[] { new HasActedCondition { CheckTarget = ConditionTarget.Source, HasActed = true } },
+                Actions = new GameAction[] { new ModifyDamageAction { Delta = 1 } },
+            };
+            eb.Subscribe(attacker, new[] { boost });
+
+            new DamageAction { Value = 10 }.Execute(new Context { SourceUnit = attacker, TargetUnits = new[] { victim } });
+            VAssert("已行动+加伤：20→9", () => victim.CurrentHP == 9);
+
+            // 未行动 → 不加伤
+            var victim2 = MakeUnit("受击者2", 5, 20);
+            attacker.ActionsThisTurn = 0;
+            new DamageAction { Value = 10 }.Execute(new Context { SourceUnit = attacker, TargetUnits = new[] { victim2 } });
+            VAssert("未行动不加伤：20→10", () => victim2.CurrentHP == 10);
+
+            eb.Unsubscribe(attacker);
+        });
+
+        // ── 同事件多被动独立触发计数 ─────────────────────────────────
+        RunGroup("同事件多被动独立计数", () =>
+        {
+            var eb = EventBus.Instance;
+            if (eb == null) { VAssert("EventBus 未就绪，跳过", () => false); return; }
+
+            var unit = MakeUnit("多被动", 5, 10);
+            var victim = MakeUnit("靶子", 5, 50);
+
+            // 同一单位同一事件注册两个被动，各自 MaxTriggerCount=1
+            var fx1 = new EffectData
+            {
+                TriggerEvent = EventType.OnBeforeDamage,
+                Target = PassiveTarget.Self,
+                MaxTriggerCount = 1,
+                Actions = new GameAction[] { new ModifyDamageAction { Delta = 1 } },
+            };
+            var fx2 = new EffectData
+            {
+                TriggerEvent = EventType.OnBeforeDamage,
+                Target = PassiveTarget.Self,
+                MaxTriggerCount = 1,
+                Actions = new GameAction[] { new ModifyDamageAction { Delta = 2 } },
+            };
+            eb.Subscribe(unit, new[] { fx1, fx2 });
+
+            // 第一次攻击：两个被动都应触发 → 5+1+2=8
+            new DamageAction { Value = 5 }.Execute(new Context { SourceUnit = unit, TargetUnits = new[] { victim } });
+            VAssert("两被动各自触发：伤害 5+1+2=8", () => victim.CurrentHP == 50 - 8);
+
+            // 第二次攻击：各自已达上限 → 只受 5
+            new DamageAction { Value = 5 }.Execute(new Context { SourceUnit = unit, TargetUnits = new[] { victim } });
+            VAssert("第二次攻击两被动均达上限：伤害 5", () => victim.CurrentHP == 50 - 8 - 5);
+
+            eb.Unsubscribe(unit);
+        });
+
         // ── ModifyBuffAction ─────────────────────────────────────────
         RunGroup("ModifyBuffAction", () =>
         {
@@ -627,6 +918,183 @@ public partial class TestRunner : Node
             VAssert("负数拒绝，Buff 仍在", () => bm.HasBuff(unit, "modify_test"));
 
             bm.RemoveAllBuffs(unit);
+        });
+
+        // ── 行动类型 / 义肢豁免（耐用：移动不消耗；耐打：攻击不消耗） ────────
+        RunGroup("行动类型/义肢豁免", () =>
+        {
+            // 义肢被动条件：非(移动 且 带耐用义肢Tag) 且 非(攻击 且 带耐打义肢Tag)
+            // —— 普通单位移动/攻击都消耗；耐用单位移动不消耗；耐打单位攻击不消耗
+            var cond = new AndCondition
+            {
+                Conditions = new Condition[]
+                {
+                    new NotCondition
+                    {
+                        Condition = new AndCondition
+                        {
+                            Conditions = new Condition[]
+                            {
+                                new ActionKindCondition { Kind = UnitActType.Move },
+                                new HasTagCondition { Tags = new Array<Tag> { Tag.耐用义肢 }, Has = true },
+                            }
+                        }
+                    },
+                    new NotCondition
+                    {
+                        Condition = new AndCondition
+                        {
+                            Conditions = new Condition[]
+                            {
+                                new ActionKindCondition { Kind = UnitActType.Attack },
+                                new HasTagCondition { Tags = new Array<Tag> { Tag.耐打义肢 }, Has = true },
+                            }
+                        }
+                    },
+                }
+            };
+
+            // ── 条件层 ──
+            var unit = MakeUnit("义肢豁免测试", 5, 10);
+            var ctx = new Context { SourceUnit = unit };
+
+            unit.UnitData.Tags = new Array<Tag> { Tag.耐用义肢 };
+            ctx.ActType = UnitActType.Move;
+            VAssert("耐用+移动 → 条件不满足（移动不消耗）", () => !cond.IsMet(ctx));
+
+            ctx.ActType = UnitActType.Attack;
+            VAssert("耐用+攻击 → 条件满足（攻击仍消耗）", () => cond.IsMet(ctx));
+
+            unit.UnitData.Tags = new Array<Tag> { Tag.耐打义肢 };
+            ctx.ActType = UnitActType.Attack;
+            VAssert("耐打+攻击 → 条件不满足（攻击不消耗）", () => !cond.IsMet(ctx));
+
+            ctx.ActType = UnitActType.Move;
+            VAssert("耐打+移动 → 条件满足（移动仍消耗）", () => cond.IsMet(ctx));
+
+            unit.UnitData.Tags = new Array<Tag> { Tag.科技 };
+            ctx.ActType = UnitActType.Move;
+            VAssert("无豁免+移动 → 条件满足（普通单位移动仍消耗）", () => cond.IsMet(ctx));
+
+            ctx.ActType = UnitActType.Attack;
+            VAssert("无豁免+攻击 → 条件满足（普通单位攻击仍消耗）", () => cond.IsMet(ctx));
+
+            var noTagCond = new HasTagCondition { Tags = new Array<Tag> { Tag.耐用义肢 }, Has = false };
+            VAssert("Has=false：无耐用Tag 满足", () => noTagCond.IsMet(new Context { SourceUnit = unit }));
+
+            // ── EventBus 集成：义肢 Buff 完整链路 ──
+            var eb = EventBus.Instance;
+            var bm = BuffManager.Instance;
+            if (eb == null || bm == null) { VAssert("Manager 未就绪，跳过", () => false); return; }
+
+            var prosthetic = new BuffData
+            {
+                BuffID = "义肢",
+                Duration = -1,
+                MaxStack = -1,
+                OnApplyActions = new GameAction[]
+                {
+                    new ModifyStatAction { TargetStat = ModifyStatType.AttackPower, Value = 1 },
+                },
+                PassiveEffects = new EffectData[]
+                {
+                    new EffectData
+                    {
+                        TriggerEvent = EventType.OnUnitAct,
+                        Target = PassiveTarget.Self,
+                        MaxTriggerCount = 1,
+                        Conditions = new Condition[] { cond },
+                        Actions = new GameAction[]
+                        {
+                            new ModifyBuffAction { BuffID = "义肢", StacksDelta = -1 },
+                        },
+                    }
+                },
+            };
+
+            // 带耐用义肢 tag：移动不减层，攻击减层
+            var durable = MakeUnit("耐用单位", 5, 10);
+            durable.UnitData.Tags = new Array<Tag> { Tag.耐用义肢 };
+            bm.ApplyBuff(durable, prosthetic, null, 2);
+            VAssert("耐用初始 2 层 ATK=7", () => durable.AttackPower == 7);
+
+            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Move, SourceUnit = durable }, subject: durable);
+            VAssert("耐用+移动：不减层（仍 2 层）", () => bm.GetBuff(durable, "义肢")?.StackCount == 2);
+            VAssert("耐用+移动：ATK 仍 7", () => durable.AttackPower == 7);
+
+            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack, SourceUnit = durable }, subject: durable);
+            VAssert("耐用+攻击：减 1 层", () => bm.GetBuff(durable, "义肢")?.StackCount == 1);
+            VAssert("耐用+攻击：ATK=6", () => durable.AttackPower == 6);
+
+            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack, SourceUnit = durable }, subject: durable);
+            VAssert("攻击已达 MaxTriggerCount=1：不再减层", () => bm.GetBuff(durable, "义肢")?.StackCount == 1);
+
+            eb.Unsubscribe(durable);
+            bm.RemoveAllBuffs(durable);
+
+            // 带耐打义肢 tag：攻击不减层，移动减层
+            var tough = MakeUnit("耐打单位", 5, 10);
+            tough.UnitData.Tags = new Array<Tag> { Tag.耐打义肢 };
+            bm.ApplyBuff(tough, prosthetic, null, 2);
+            VAssert("耐打初始 2 层 ATK=7", () => tough.AttackPower == 7);
+
+            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack, SourceUnit = tough }, subject: tough);
+            VAssert("耐打+攻击：不减层（仍 2 层）", () => bm.GetBuff(tough, "义肢")?.StackCount == 2);
+            VAssert("耐打+攻击：ATK 仍 7", () => tough.AttackPower == 7);
+
+            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Move, SourceUnit = tough }, subject: tough);
+            VAssert("耐打+移动：减 1 层", () => bm.GetBuff(tough, "义肢")?.StackCount == 1);
+            VAssert("耐打+移动：ATK=6", () => tough.AttackPower == 6);
+
+            eb.Unsubscribe(tough);
+            bm.RemoveAllBuffs(tough);
+
+            // 普通单位：移动减层，攻击减层
+            var plain = MakeUnit("普通单位", 5, 10);
+            bm.ApplyBuff(plain, prosthetic, null, 2);
+            VAssert("普通单位初始 2 层 ATK=7", () => plain.AttackPower == 7);
+
+            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Move, SourceUnit = plain }, subject: plain);
+            VAssert("普通+移动：减 1 层", () => bm.GetBuff(plain, "义肢")?.StackCount == 1);
+            VAssert("普通+移动：ATK=6", () => plain.AttackPower == 6);
+
+            eb.Unsubscribe(plain);
+            bm.RemoveAllBuffs(plain);
+
+            var plain2 = MakeUnit("普通单位2", 5, 10);
+            bm.ApplyBuff(plain2, prosthetic, null, 2);
+            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack, SourceUnit = plain2 }, subject: plain2);
+            VAssert("普通+攻击：减 1 层", () => bm.GetBuff(plain2, "义肢")?.StackCount == 1);
+
+            eb.Unsubscribe(plain2);
+            bm.RemoveAllBuffs(plain2);
+        });
+
+        // ── OnUseCard 事件（出牌后触发被动） ────────────────────────────
+        RunGroup("OnUseCard 事件", () =>
+        {
+            var eb = EventBus.Instance;
+            if (eb == null) { VAssert("EventBus 未就绪，跳过", () => false); return; }
+
+            var unit = MakeUnit("出牌单位", 5, 10);
+            var effect = new EffectData
+            {
+                TriggerEvent = EventType.OnUseCard,
+                Target = PassiveTarget.Self,
+                Actions = new GameAction[]
+                {
+                    new ModifyStatAction { TargetStat = ModifyStatType.AttackPower, Value = 1 },
+                },
+            };
+            eb.Subscribe(unit, new[] { effect });
+
+            eb.Fire(EventType.OnUseCard, new Context { SourceUnit = unit }, subject: unit);
+            VAssert("OnUseCard 触发被动：ATK=6", () => unit.AttackPower == 6);
+
+            eb.Fire(EventType.OnUnitAct, new Context { SourceUnit = unit, ActType = UnitActType.Move }, subject: unit);
+            VAssert("OnUnitAct 不触发 OnUseCard 被动：ATK 仍 6", () => unit.AttackPower == 6);
+
+            eb.Unsubscribe(unit);
         });
 
         // ── MaxStack=-1 无限叠 ─────────────────────────────────────────

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://d0sm2c2orqtu2"]
+
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_saokk"]
+[ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_iytpj"]
+[ext_resource type="Resource" uid="uid://bbkq67n50v7xu" path="res://Resource/Data/Units/擢升之手/飞拳斗士.tres" id="3_saokk"]
+[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="4_h4mhv"]
+
+[sub_resource type="Resource" id="Resource_gfhjv"]
+script = ExtResource("1_saokk")
+AnimationDuration = 0.3
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[resource]
+script = ExtResource("4_h4mhv")
+UnitData = ExtResource("3_saokk")
+CardID = "飞拳斗士"
+CardName = "飞拳斗士"
+Description = "装载了攻击特化型义肢的防暴队，擅长“远距离搏击”"
+Type = 0
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+Rarity = 1
+Cost = 5
+TargetFilters = Array[Object]([ExtResource("2_iytpj")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_gfhjv")])
+metadata/_custom_type_script = "uid://p1hhkgy2pem"

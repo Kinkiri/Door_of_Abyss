@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://berq0byplvsig"]
+
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_60rhe"]
+[ext_resource type="Resource" uid="uid://djm1disxpn1o1" path="res://Resource/Data/Effects/追击.tres" id="1_cgkhl"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_ihnyv"]
+[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="2_sbojt"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="3_yupwh"]
+[ext_resource type="Script" uid="uid://dso6efmkhromg" path="res://Scripts/Data/Conditions/HasActedCondition.cs" id="4_5gufy"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="5_n2g6y"]
+
+[sub_resource type="Resource" id="Resource_71yya"]
+script = ExtResource("3_yupwh")
+BuffData = ExtResource("2_sbojt")
+InitialStacks = 2
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_gaf4u"]
+script = ExtResource("4_5gufy")
+metadata/_custom_type_script = "uid://dso6efmkhromg"
+
+[sub_resource type="Resource" id="Resource_vfoc4"]
+script = ExtResource("5_n2g6y")
+TriggerEvent = 9
+TargetFilters = null
+MaxTriggerCount = 1
+Actions = Array[Object]([SubResource("Resource_71yya")])
+Conditions = Array[Object]([SubResource("Resource_gaf4u")])
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("1_ihnyv")
+UnitID = "秒速尖兵"
+UnitName = "秒速尖兵"
+World = 1
+Faction = 2
+Tags = Array[int]([0, 4])
+Rarity = 1
+AttackPower = 2
+HealthPoints = 3
+Stamina = 2
+ActionPoints = 2
+Description = "攻击时，若该单位本回合已行动过，则此次伤害+1，且在此次攻击后获得2义肢（此次攻击不吃义肢加成"
+UnitPrefab = ExtResource("1_60rhe")
+PassiveEffects = Array[Object]([ExtResource("1_cgkhl"), SubResource("Resource_vfoc4")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

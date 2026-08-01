@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="BuffData" format=3 uid="uid://c0oiwjebt5ssb"]
+
+[ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="1_05b8e"]
+[ext_resource type="Script" uid="uid://b3sdoj1kcep0a" path="res://Scripts/Data/BuffData.cs" id="1_kkivp"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_by7ar"]
+[ext_resource type="Script" uid="uid://bubokmjt34mm" path="res://Scripts/Data/Actions/ModifyBuffAction.cs" id="3_mba"]
+
+[sub_resource type="Resource" id="Resource_07s42"]
+script = ExtResource("1_05b8e")
+TargetStat = 4
+Value = 1
+RequiredTags = null
+CurrentAPOnly = true
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_mba"]
+script = ExtResource("3_mba")
+BuffID = "充能"
+StacksDelta = -1
+metadata/_custom_type_script = "uid://bubokmjt34mm"
+
+[sub_resource type="Resource" id="Resource_05b8e"]
+script = ExtResource("2_by7ar")
+TargetFilters = null
+MaxTriggerCount = 1
+Actions = Array[Object]([SubResource("Resource_mba")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("1_kkivp")
+BuffID = "充能"
+BuffName = "充能"
+Description = "行动点+X，下回合行动点-1"
+Duration = -1
+MaxStack = -1
+OnApplyActions = Array[Object]([SubResource("Resource_07s42")])
+OnExpireActions = null
+OnRoundEndActions = null
+PassiveEffects = Array[Object]([SubResource("Resource_05b8e")])
+metadata/_custom_type_script = "uid://b3sdoj1kcep0a"

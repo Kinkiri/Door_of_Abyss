@@ -38,20 +38,14 @@ public partial class AutoAttackAction : GameAction
 
         if (nearest != null)
         {
-            int dealt = UnitManager.Instance.DamageUnit(nearest, ctx.SourceUnit.AttackPower);
-            if (dealt > 0)
+            // 统一走 DamageAction 攻击链路：触发 OnBeforeDamage（加伤/减伤修饰）、
+            // OnDealDamage / OnTakeDamage / OnKill 等战斗被动事件
+            var dmgAction = new DamageAction { Value = ctx.SourceUnit.AttackPower };
+            dmgAction.Execute(new Context
             {
-                GD.Print($"[AutoAttackAction] {ctx.SourceUnit.UnitData?.UnitName} " +
-                         $"自动攻击 {nearest.UnitData?.UnitName} 造成 {dealt} 点伤害");
-
-                EventBus.Instance?.Fire(EventType.OnDealDamage,
-                    new Context { TargetUnit = nearest }, subject: ctx.SourceUnit);
-                EventBus.Instance?.Fire(EventType.OnTakeDamage,
-                    new Context { TargetUnit = ctx.SourceUnit }, subject: nearest);
-                if (!nearest.IsAlive)
-                    EventBus.Instance?.Fire(EventType.OnKill,
-                        new Context { TargetUnit = nearest }, subject: ctx.SourceUnit);
-            }
+                SourceUnit = ctx.SourceUnit,
+                TargetUnits = new[] { nearest },
+            });
         }
     }
 }

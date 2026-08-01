@@ -32,6 +32,10 @@ public partial class BuffData : Resource
     /// </summary>
     [Export] public int MaxStack { get; set; } = 1;
 
+    /// <summary>固定效果：OnApplyActions 只执行一次，效果与层数解耦（有层即生效，归零/移除才还原）。
+    /// 层数仅作计数器（如"义肢"的耐久/磨损）。默认 false = 层数倍率（每层执行一次）</summary>
+    [Export] public bool FixedEffect { get; set; }
+
     /// <summary>
     /// 施加时执行的动作序列。
     /// 属性修改型 GameAction（ModifyAttackPower 等）会在到期时自动还原。

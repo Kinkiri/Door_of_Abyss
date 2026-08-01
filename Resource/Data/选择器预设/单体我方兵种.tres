@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AndTargetFilter" format=3 uid="uid://6ar1d2ju8h46"]
+
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="1_ye4v3"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="2_shkmb"]
+[ext_resource type="Script" uid="uid://dbviswjwggeup" path="res://Scripts/Data/Targeting/UnitTypeTargetFilter.cs" id="3_3rh16"]
+[ext_resource type="Script" uid="uid://daag6x4i07t3w" path="res://Scripts/Data/Targeting/AndTargetFilter.cs" id="4_vfbd0"]
+
+[sub_resource type="Resource" id="Resource_qkwwf"]
+script = ExtResource("1_ye4v3")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_ny7m1"]
+script = ExtResource("2_shkmb")
+Team = 1
+metadata/_custom_type_script = "uid://bjnrbd7iwxb5u"
+
+[sub_resource type="Resource" id="Resource_hf6an"]
+script = ExtResource("3_3rh16")
+UnitTypes = Array[int]([0])
+metadata/_custom_type_script = "uid://dbviswjwggeup"
+
+[resource]
+script = ExtResource("4_vfbd0")
+Filters = Array[Object]([SubResource("Resource_qkwwf"), SubResource("Resource_ny7m1"), SubResource("Resource_hf6an")])
+metadata/_custom_type_script = "uid://daag6x4i07t3w"

@@ -14,6 +14,7 @@ metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
 
 [sub_resource type="Resource" id="Resource_5jjgn"]
 script = ExtResource("2_fpyoc")
+TargetFilters = null
 Actions = Array[Object]([SubResource("Resource_l2avd")])
 Conditions = null
 metadata/_custom_type_script = "uid://5fvxtm1dtsgk"

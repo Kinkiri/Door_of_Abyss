@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://c8ovrqlhxc5qr"]
+
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_iu3em"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="2_7dm54"]
+
+[resource]
+script = ExtResource("2_7dm54")
+UnitID = "移动沙包"
+UnitName = "移动沙包"
+Tags = null
+AttackPower = 0
+HealthPoints = 20
+Stamina = 5
+Description = "测试用沙包"
+UnitPrefab = ExtResource("1_iu3em")
+PassiveEffects = null
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

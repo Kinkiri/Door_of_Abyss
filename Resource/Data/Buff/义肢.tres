@@ -4,6 +4,10 @@
 [ext_resource type="Script" uid="uid://b3sdoj1kcep0a" path="res://Scripts/Data/BuffData.cs" id="1_wc4qa"]
 [ext_resource type="Script" uid="uid://bubokmjt34mm" path="res://Scripts/Data/Actions/ModifyBuffAction.cs" id="2_hweew"]
 [ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_0fteh"]
+[ext_resource type="Script" uid="uid://dmodxe65jtahh" path="res://Scripts/Data/Conditions/NotCondition.cs" id="4_not"]
+[ext_resource type="Script" uid="uid://pitloibtm3ia" path="res://Scripts/Data/Conditions/AndCondition.cs" id="5_and"]
+[ext_resource type="Script" uid="uid://bihcr276lllrj" path="res://Scripts/Data/Conditions/ActionKindCondition.cs" id="6_act"]
+[ext_resource type="Script" uid="uid://ckxmw3ikmbo5o" path="res://Scripts/Data/Conditions/HasTagCondition.cs" id="7_tag"]
 
 [sub_resource type="Resource" id="Resource_sw7ab"]
 script = ExtResource("1_8jfxn")
@@ -56,14 +60,51 @@ metadata/_custom_type_script = "uid://qlng65nfa7th"
 script = ExtResource("2_hweew")
 BuffID = "义肢"
 StacksDelta = -1
+WearMode = true
 metadata/_custom_type_script = "uid://bubokmjt34mm"
+
+[sub_resource type="Resource" id="Resource_cond_act"]
+script = ExtResource("6_act")
+
+[sub_resource type="Resource" id="Resource_cond_tag"]
+script = ExtResource("7_tag")
+Tags = Array[int]([8])
+
+[sub_resource type="Resource" id="Resource_cond_and"]
+script = ExtResource("5_and")
+Conditions = Array[Object]([SubResource("Resource_cond_act"), SubResource("Resource_cond_tag")])
+
+[sub_resource type="Resource" id="Resource_cond_not"]
+script = ExtResource("4_not")
+Condition = SubResource("Resource_cond_and")
+
+[sub_resource type="Resource" id="Resource_cond_act2"]
+script = ExtResource("6_act")
+Kind = 2
+
+[sub_resource type="Resource" id="Resource_cond_tag2"]
+script = ExtResource("7_tag")
+Tags = Array[int]([9])
+
+[sub_resource type="Resource" id="Resource_cond_and2"]
+script = ExtResource("5_and")
+Conditions = Array[Object]([SubResource("Resource_cond_act2"), SubResource("Resource_cond_tag2")])
+
+[sub_resource type="Resource" id="Resource_cond_not2"]
+script = ExtResource("4_not")
+Condition = SubResource("Resource_cond_and2")
+
+[sub_resource type="Resource" id="Resource_cond_all"]
+script = ExtResource("5_and")
+Conditions = Array[Object]([SubResource("Resource_cond_not"), SubResource("Resource_cond_not2")])
 
 [sub_resource type="Resource" id="Resource_8jfxn"]
 script = ExtResource("3_0fteh")
 TriggerEvent = 8
+TargetFilters = null
 MaxTriggerCount = 1
 Actions = Array[Object]([SubResource("Resource_hweew")])
-Conditions = null
+Conditions = Array[Object]([SubResource("Resource_cond_all")])
 metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
 
 [resource]
@@ -72,7 +113,7 @@ BuffID = "义肢"
 BuffName = "义肢"
 Description = "+X血上限和攻，每次行动减少"
 Duration = -1
-MaxStack = -1
+MaxStack = 10
 OnApplyActions = Array[Object]([SubResource("Resource_sw7ab"), SubResource("Resource_cmylw"), SubResource("Resource_tagatk"), SubResource("Resource_taghp"), SubResource("Resource_tagsta"), SubResource("Resource_tagap"), SubResource("Resource_tagdis")])
 OnExpireActions = null
 OnRoundEndActions = null

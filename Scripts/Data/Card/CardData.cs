@@ -15,8 +15,7 @@ public abstract partial class CardData : Resource
 
     [Export] public virtual CardType Type { get; set; } = CardType.Special;
 
-    /// <summary>目标筛选器数组（默认 And 组合；null/空 = 无目标，直接打出）。替代旧 Shape + Filter + AreaRange 三个字段</summary>
-    [Export] public TargetFilter[] TargetFilters { get; set; }
+    
 
     /// <summary>世界观</summary>
     [Export] public World World { get; set; } = World.测试;
@@ -34,6 +33,9 @@ public abstract partial class CardData : Resource
     [Export] public int Cost { get; set; } = 1;
 
     [Export] public Texture2D Icon { get; set; }
+
+    /// <summary>目标筛选器数组（默认 And 组合；null/空 = 无目标，直接打出）。替代旧 Shape + Filter + AreaRange 三个字段</summary>
+    [Export] public TargetFilter[] TargetFilters { get; set; }
 
     /// <summary>打出条件，不满足时不出牌不扣费</summary>
     [Export] public Condition[] Conditions { get; set; }

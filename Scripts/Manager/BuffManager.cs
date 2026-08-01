@@ -66,7 +66,7 @@ public partial class BuffManager : Node
                 // 只对实际新增层数执行施加（不先还原旧层——还原不扣当前 HP，
                 // 旧实现"先全量还原再全量施加"会让 CurrentHP 虚增旧层数+新层数）
                 int added = existing.StackCount - oldStack;
-                if (added > 0 && buffData.OnApplyActions != null)
+                if (added > 0 && buffData.OnApplyActions != null && !buffData.FixedEffect)
                 {
                     var ctx = new Context { TargetUnit = target, SourceUnit = sourceUnit };
                     for (int i = 0; i < added; i++)
@@ -87,10 +87,12 @@ public partial class BuffManager : Node
             _activeBuffs[target] = new List<Buff>();
         _activeBuffs[target].Add(buff);
 
-        // 执行施加动作（按层数倍数执行）
+        // 执行施加动作（FixedEffect 固定只执行一次；无 OnApplyActions 的纯被动 Buff 也允许施加）
+        if (buffData.OnApplyActions != null)
         {
             var ctx = new Context { TargetUnit = target, SourceUnit = sourceUnit };
-            for (int i = 0; i < initialStacks; i++)
+            int times = buffData.FixedEffect ? 1 : initialStacks;
+            for (int i = 0; i < times; i++)
                 foreach (var action in buffData.OnApplyActions)
                     action.Execute(ctx);
         }
@@ -130,11 +132,12 @@ public partial class BuffManager : Node
         if (buff == null || buff.IsExpired) return;
         buff.IsExpired = true;
 
-        // ── 还原属性修改 ──────────────────────────────────────────
+        // ── 还原属性修改（FixedEffect 只还原一次；层数倍率按层还原） ──────
         if (buff.Data.OnApplyActions != null)
         {
             var ctx = new Context { TargetUnit = target };
-            for (int i = 0; i < buff.StackCount; i++)
+            int revertTimes = buff.Data.FixedEffect ? 1 : buff.StackCount;
+            for (int i = 0; i < revertTimes; i++)
                 foreach (var action in buff.Data.OnApplyActions)
                     action.Revert(ctx);
         }
@@ -288,6 +291,14 @@ public partial class BuffManager : Node
     // ======================================================================
     // 查询
     // ======================================================================
+
+    /// <summary>标记一次行动开始：快照所有 Buff 的当前叠层。行动中新增的层不因本次行动被 WearMode 减层消耗</summary>
+    public void MarkActionStart(Unit unit)
+    {
+        if (unit == null) return;
+        foreach (var buff in GetBuffs(unit))
+            buff.StacksAtActionStart = buff.StackCount;
+    }
 
     /// <summary>获取单位的所有活跃 Buff</summary>
     public List<Buff> GetBuffs(Unit unit)

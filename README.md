@@ -339,6 +339,9 @@ CompareCondition
 |---|---|---|
 | `HasBuffCondition` | CheckTarget, BuffID, Has | 检查 Buff 是否存在 |
 | `HasEquipmentCondition` | CheckTarget, EquipmentID, Has | 检查装备是否存在（EquipmentID 留空=任意装备） |
+| `HasTagCondition` | CheckTarget, Tags, Has | 检查单位是否带任一指定 Tag（Tag 来自单位模板，战斗中不变） |
+| `HasActedCondition` | CheckTarget, HasActed | "本回合已行动过"——读 `Unit.ActionsThisTurn`（移动/攻击各算一次，出牌/被动自动攻击不计，RoundStart 归零）。不依赖 AP 比较（AP 可被透支超过上限） |
+| `ActionKindCondition` | Kind=移动/攻击 | 判断 OnUnitAct 触发时的行动类型（`Context.ActType`，由 BattleManager 触发时填充） |
 | `RandomCondition` | Probability=0.0~1.0 | 概率判定 |
 
 ### 2.3 复合条件
@@ -395,6 +398,8 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 
 **行动点（AP）双值：** `ActionPoints`（当前）+ `MaxActionPoints`（上限）。行动消耗当前值；**每回合开始当前 = 上限**（不从模板取，Buff/装备加的上限在恢复时生效）；**上限最小不低于 1**。ModifyStatAction 修改上限：施加时当前随上限同步增加，还原时上限减回（clamp ≥1）、当前仅截断（同 MaxHP 语义）。
 
+**仅当前 AP（`CurrentAPOnly=true`）：** 只修改当前行动点，上限不动——**允许当前 AP 超过上限**（"本回合多动一次"类透支效果），只 clamp 下限 0。用于如卡牌"行动点+1，下回合开始-1"：+1 用当前模式，惩罚由额外 Buff 在下回合 RoundStart 被动减层（触发 Revert 还原 +1）自毁。
+
 **体力单值：** 体力 = 移动范围半径（曼哈顿距离），单值无"上限/剩余"之分（移动不消耗体力，只扣 AP）。
 
 **叠层刷新**：已有 Buff 再次施加时，只对**新增层数**执行 OnApplyActions（旧层效果保留，不先还原旧层）——避免"还原不扣当前 HP + 全量重施"导致的血量虚增（如 2 层义肢 3/6 血再上 2 层 → 5/8，而非错误的 7/8）。
@@ -404,8 +409,9 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 | 动作 | 字段 | 说明 |
 |---|---|---|
 | ApplyBuffAction | BuffData, InitialStacks | 施加 Buff。**遍历 `TargetUnits` 支持多目标**（如 Shape=All）。
-| ModifyBuffAction | BuffID, TurnsDelta, StacksDelta | 修改回合/叠层。**回合/叠层最小减到 0，不能为负**；`RemainingTurns=-1`（永久 Buff）忽略回合修改，其他非法负值警告并按 0 处理；叠层归零移除 |
+| ModifyBuffAction | BuffID, TurnsDelta, StacksDelta, WearMode | 修改回合/叠层。**回合/叠层最小减到 0，不能为负**；`RemainingTurns=-1`（永久 Buff）忽略回合修改，其他非法负值警告并按 0 处理；叠层归零移除。**`WearMode=true`（磨损模式）：减层只消耗"行动开始快照（`Buff.StacksAtActionStart`）内的旧层"**——本次行动中新增的层不因本次行动损耗（如"攻击后获得义肢"不被本次攻击磨损） |
 | RemoveBuffAction | BuffID | 无条件整个移除（驱散） |
+| **ModifyDamageAction** | Delta | 修改本次伤害事件的伤害量（正=加伤，负=减伤）。配合 **OnBeforeDamage** 事件使用：作用于 `ctx.DamageModifier`，由 `DamageAction` 结算时应用，多个加伤/减伤被动可叠加 |
 
 ### 3.6 控制流
 
@@ -489,6 +495,8 @@ InitialStacks=2 + ModifyStatAction(ATK,+1) -> ATK+2。
 ModifyBuffAction(StacksDelta=-1) -> 减 1 层，还原 1 次 -> ATK-1。
 归零 -> 移除，还原全部 + OnExpireActions。
 
+**例外：`FixedEffect=true`（固定效果，如义肢）**——OnApplyActions 只执行 **1 次**，效果与层数解耦：叠层/减层不重放/不还原，**有层即生效，归零/移除才一次性还原**。层数仅作计数器（耐久/磨损）。
+
 完整生命周期见程序员部分。
 
 ## 6. 被动效果
@@ -515,8 +523,9 @@ ModifyBuffAction(StacksDelta=-1) -> 减 1 层，还原 1 次 -> ATK-1。
 | OnDealDamage / OnTakeDamage | 造成/受到伤害 |
 | OnKill | 击杀 |
 | OnBuffApplied / OnBuffRemoved | Buff 施加/移除 |
-| OnUnitAct | 单位行动（移动/攻击/出牌） |
-| **OnBeforeDamage** | 伤害计算前（减伤/易伤/护盾） |
+| OnUnitAct | 单位行动后（移动/攻击；**出牌不触发**），`ctx.ActType` 区分移动/攻击 |
+| **OnUseCard** | 使用卡牌后（出牌成功扣费后、卡牌动作执行前），subject=出牌单位 |
+| **OnBeforeDamage** | 伤害计算前。**攻击者侧 + 受击者侧各触发一次**（subject 分别为攻击者、受击者）：攻击者挂"加伤"被动、受击者挂"减伤"被动均生效。被动用 **`ModifyDamageAction`** 修改 `ctx.DamageModifier`（正加负减），`DamageAction` 结算时 `max(0, 伤害+修饰)`；`AutoAttackAction` 已统一走 `DamageAction` 链路 |
 | **OnUnitDeath** | 单位死亡（亡语） |
 | **OnMove** | 移动后（不含攻击/出牌） |
 
@@ -718,14 +727,14 @@ DamageAction {
 }
 ```
 
-### 11.2 义肢 - 每层基础加成 + Tag 额外加成 + 行动后减层
+### 11.2 义肢 - 每层加成 + Tag 额外加成 + 行动后减层
 
-**BuffData：** Duration=-1, MaxStack=-1
+**BuffData：** Duration=-1, MaxStack=10（层数 = 效果倍率；`FixedEffect` 能力已实现但义肢当前未启用）
 ```
 OnApplyActions = [
-  ModifyStatAction(ATK,+1),                                // 基础：每层 ATK+1
-  ModifyStatAction(MaxHP,+1),                              // 基础：每层 MaxHP+1
-  ModifyStatAction(ATK,+1, RequiredTags=[攻击义肢]),        // Tag 额外：带 Tag 才生效
+  ModifyStatAction(ATK,+1),                                // 每层 ATK+1
+  ModifyStatAction(MaxHP,+1),                              // 每层 MaxHP+1
+  ModifyStatAction(ATK,+1, RequiredTags=[攻击义肢]),        // Tag 额外：带 Tag 每层再 +1
   ModifyStatAction(MaxHP,+1, RequiredTags=[生命义肢]),
   ModifyStatAction(体力,+1, RequiredTags=[体力义肢]),
   ModifyStatAction(行动点,+1, RequiredTags=[行动义肢]),
@@ -733,11 +742,15 @@ OnApplyActions = [
 ]
 PassiveEffects = [EffectData {
   TriggerEvent=OnUnitAct, MaxTriggerCount=1
-  Actions=[ModifyBuffAction { BuffID=义肢, StacksDelta=-1 }]
+  Conditions=[And(Not(And(ActionKind=移动, HasTag=耐用义肢)),   // 耐用：移动不消耗
+				  Not(And(ActionKind=攻击, HasTag=耐打义肢)))]  // 耐打：攻击不消耗
+  Actions=[ModifyBuffAction { BuffID=义肢, StacksDelta=-1, WearMode=true }]  // 磨损模式：本次行动中新增的层不磨损
 }]
 ```
 
-**Tag → 额外加成映射：** `攻击义肢`→攻击力、`生命义肢`→生命上限、`体力义肢`→体力（移动范围）、`行动义肢`→行动点上限、`距离义肢`→攻击范围。单位带哪个 Tag，对应属性额外 +1（按层数倍数）。
+**Tag → 额外加成映射：** `攻击义肢`→攻击力、`生命义肢`→生命上限、`体力义肢`→体力（移动范围）、`行动义肢`→行动点上限、`距离义肢`→攻击范围。单位带哪个 Tag，对应属性每层额外 +1（层数倍率）。
+
+**义肢豁免 Tag：** `耐用义肢`=**移动不消耗**（攻击仍消耗）；`耐打义肢`=**攻击不消耗**（移动仍消耗）。普通单位移动/攻击照常消耗。实现：`BattleManager` 触发 `OnUnitAct` 时把 `Context.ActType`（移动/攻击）传给被动，义肢被动加条件 `非(移动 且 带耐用义肢Tag) 且 非(攻击 且 带耐打义肢Tag)`（`ActionKindCondition` + `HasTagCondition` + And/Not 复合）。注意**出牌不再触发 OnUnitAct**（"行动"仅指移动与攻击）。
 
 **卡牌：** `ApplyBuffAction { BuffData=<义肢.tres>, InitialStacks=2 }`
 
@@ -951,6 +964,7 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 | `攻击后` / `受伤时` / `击杀后` | 战斗事件 | `击杀后:属性:攻击力+1` |
 | `受伤前` | 伤害计算前（可修改） | `受伤前:属性:攻击力-1` |
 | `行动后` / `移动后` | 行动事件 | |
+| `出牌后` | 出牌事件 | `出牌后:属性:攻击力+1` |
 | `Buff施加时` / `Buff移除时` | Buff 事件 | |
 
 有范围格式：`事件:形状,过滤,动作`（如 `亡语:菱形,敌方,伤害:3`）

@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="1_hyohf"]
 [ext_resource type="Resource" path="res://Resource/Data/Maps/1.tres" id="1_l5mm8"]
 [ext_resource type="Resource" uid="uid://besew5ondee15" path="res://Resource/Data/Units/测试/小兵.tres" id="2_ao2qh"]
+[ext_resource type="Resource" uid="uid://c8ovrqlhxc5qr" path="res://Resource/Data/Units/测试/移动沙包.tres" id="3_cq6hx"]
 [ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="3_nk2b2"]
 [ext_resource type="Resource" uid="uid://bn23m0b6t8tvw" path="res://Resource/Data/Units/测试/弓手.tres" id="4_jllce"]
 [ext_resource type="Resource" uid="uid://cl8dt7np6l2rg" path="res://Resource/Data/Units/测试/战墙.tres" id="5_cq6hx"]
@@ -14,7 +15,7 @@
 
 [sub_resource type="Resource" id="Resource_ij2mw"]
 script = ExtResource("3_nk2b2")
-UnitDatas = Array[Object]([ExtResource("2_ao2qh"), ExtResource("5_cq6hx"), ExtResource("5_cq6hx"), ExtResource("5_cq6hx")])
+UnitDatas = Array[Object]([ExtResource("2_ao2qh"), ExtResource("3_cq6hx")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_vikhu"]

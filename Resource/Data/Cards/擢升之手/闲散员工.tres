@@ -3,22 +3,15 @@
 [ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_13xvd"]
 [ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="1_vvoc6"]
 [ext_resource type="Resource" uid="uid://bkw4f7fjiykxq" path="res://Resource/Data/Units/擢升之手/闲散员工.tres" id="2_1sx61"]
-[ext_resource type="Script" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="1_tf_shape"]
+[ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_xuxdw"]
 
 [sub_resource type="Resource" id="Resource_gfhjv"]
 script = ExtResource("1_13xvd")
 AnimationDuration = 0.3
 metadata/_custom_type_script = "uid://d30a56l3sh3q0"
 
-[sub_resource type="Resource" id="Resource_tf_shape"]
-script = ExtResource("1_tf_shape")
-Shape = 2
-Kind = 1
-metadata/_custom_type_script = "uid://bh835k2ig4ik"
-
 [resource]
 script = ExtResource("1_vvoc6")
-TargetFilters = Array[Object]([SubResource("Resource_tf_shape")])
 UnitData = ExtResource("2_1sx61")
 CardID = "闲散员工"
 CardName = "闲散员工"
@@ -27,6 +20,7 @@ Type = 0
 World = 1
 Faction = 2
 Tags = Array[int]([0])
+TargetFilters = Array[Object]([ExtResource("2_xuxdw")])
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_gfhjv")])
 metadata/_custom_type_script = "uid://p1hhkgy2pem"

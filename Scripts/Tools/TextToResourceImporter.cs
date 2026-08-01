@@ -549,6 +549,7 @@ public partial class TextToResourceImporter : EditorScript
         { "受伤时", EventType.OnTakeDamage },
         { "击杀后", EventType.OnKill },
         { "行动后", EventType.OnUnitAct },
+        { "出牌后", EventType.OnUseCard },
         { "受伤前", EventType.OnBeforeDamage },
         { "移动后", EventType.OnMove },
         { "Buff施加时", EventType.OnBuffApplied },

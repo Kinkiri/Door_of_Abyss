@@ -12,6 +12,7 @@ public partial class UnitStatValue : ValueSource
 
     /// <summary>true=取 CurrentHP，false=取 MaxHP（仅对 MaxHP 类型有效）</summary>
     [Export] public bool CurrentHP { get; set; } = true;
+    [Export] public bool CurrentAP { get; set; } = true;
 
     public override int GetValue(Context ctx)
     {
@@ -24,7 +25,7 @@ public partial class UnitStatValue : ValueSource
             ModifyStatType.MaxHP => CurrentHP ? unit.CurrentHP : unit.MaxHP,
             ModifyStatType.Stamina => unit.Stamina,
             ModifyStatType.AttackDistance => unit.AttackDistance,
-            ModifyStatType.ActionPoints => unit.ActionPoints,
+            ModifyStatType.ActionPoints => CurrentAP ? unit.ActionPoints : unit.MaxActionPoints,
             _ => 0,
         };
     }

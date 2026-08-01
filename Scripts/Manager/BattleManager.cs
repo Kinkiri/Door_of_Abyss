@@ -129,10 +129,12 @@ public partial class BattleManager : Node2D
         if (!UnitManager.Instance.MoveUnit(unit, targetPos)) return;
 
         unit.ActionPoints--;
+        BuffManager.Instance?.MarkActionStart(unit);
+        unit.ActionsThisTurn++;
         unit.UpdateUnit();
         GD.Print($"[Battle] 移动单位至 ({targetPos.X}, {targetPos.Y})，剩余 AP: {unit.ActionPoints}");
 
-        EventBus.Instance?.Fire(EventType.OnUnitAct, new Context(), subject: unit);
+        EventBus.Instance?.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Move }, subject: unit);
         EventBus.Instance?.Fire(EventType.OnMove, new Context(), subject: unit);
 
         if (unit.ActionPoints <= 0)
@@ -158,6 +160,7 @@ public partial class BattleManager : Node2D
 
         // 先扣 AP（即时生效，防止动画期间单位被重复操作）
         attacker.ActionPoints--;
+        BuffManager.Instance?.MarkActionStart(attacker);
         GD.Print($"[Battle] {attacker.UnitData?.UnitName} 攻击 {target.UnitData?.UnitName}" +
                  $"，造成 {attacker.AttackPower} 点伤害，剩余 AP: {attacker.ActionPoints}");
 
@@ -178,8 +181,9 @@ public partial class BattleManager : Node2D
         ActionQueue.Instance.Enqueue(new[] { dmgAction }, ctx, Callable.From(() =>
         {
             attacker.UpdateUnit();
+            attacker.ActionsThisTurn++;
             CheckVictory();
-            EventBus.Instance?.Fire(EventType.OnUnitAct, new Context(), subject: attacker);
+            EventBus.Instance?.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack }, subject: attacker);
 
             if (attacker.ActionPoints <= 0)
                 SelectionManager.Instance.ClearSelection();
@@ -230,6 +234,9 @@ public partial class BattleManager : Node2D
         ctx.SourceUnit = SelectionManager.Instance?.SelectedUnit;
         ctx.SourceTeam = BattleManager.Instance.CurrentTeam;
 
+        // 出牌成功（扣费+移出手牌）即触发 OnUseCard，被动先于卡牌动作执行
+        EventBus.Instance?.Fire(EventType.OnUseCard, ctx, subject: ctx.SourceUnit);
+
         // 通过 ActionQueue 逐个执行，支持动画节奏
         ActionQueue.Instance?.Enqueue(card.CardData.Actions, ctx, new Callable(this, nameof(OnCardPlayActionsDone)));
     }
@@ -238,8 +245,6 @@ public partial class BattleManager : Node2D
     {
         GD.Print("[Battle] 卡牌动作序列执行完毕");
         CheckVictory();
-        if (SelectionManager.Instance?.SelectedUnit != null)
-            EventBus.Instance?.Fire(EventType.OnUnitAct, new Context(), subject: SelectionManager.Instance.SelectedUnit);
     }
 
     /// <summary>AI 移动单位（跳过阵营检查）</summary>
@@ -257,9 +262,11 @@ public partial class BattleManager : Node2D
         }
 
         unit.ActionPoints--;
+        BuffManager.Instance?.MarkActionStart(unit);
+        unit.ActionsThisTurn++;
         unit.UpdateUnit();
         GD.Print($"[Battle][AI] 移动 {unit.UnitData?.UnitName} 至 ({targetPos.X}, {targetPos.Y})");
-        EventBus.Instance?.Fire(EventType.OnUnitAct, new Context(), subject: unit);
+        EventBus.Instance?.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Move }, subject: unit);
         EventBus.Instance?.Fire(EventType.OnMove, new Context(), subject: unit);
     }
 
@@ -270,6 +277,7 @@ public partial class BattleManager : Node2D
 
         // 先扣 AP（即时生效）
         attacker.ActionPoints--;
+        BuffManager.Instance?.MarkActionStart(attacker);
         GD.Print($"[Battle][AI] {attacker.UnitData?.UnitName} 攻击 {target.UnitData?.UnitName}，造成 {attacker.AttackPower} 点伤害");
 
         var dmgAction = new DamageAction
@@ -288,8 +296,9 @@ public partial class BattleManager : Node2D
         ActionQueue.Instance.Enqueue(new[] { dmgAction }, ctx, Callable.From(() =>
         {
             attacker.UpdateUnit();
+            attacker.ActionsThisTurn++;
             CheckVictory();
-            EventBus.Instance?.Fire(EventType.OnUnitAct, new Context(), subject: attacker);
+            EventBus.Instance?.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack }, subject: attacker);
         }));
     }
 
@@ -707,7 +716,10 @@ public partial class BattleManager : Node2D
         foreach (var u in UnitManager.Instance.ActiveUnits)
         {
             if (u.IsAlive && !u.IsDead)
+            {
                 u.ActionPoints = u.MaxActionPoints;
+                u.ActionsThisTurn = 0;
+            }
         }
         GD.Print($"[Battle] 回合 {RoundCount} 开始，所有单位行动次数已重置");
 

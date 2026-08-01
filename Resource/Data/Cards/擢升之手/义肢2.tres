@@ -3,8 +3,7 @@
 [ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_cfv62"]
 [ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="1_vughp"]
 [ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_j1cn4"]
-[ext_resource type="Script" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="1_tf_shape"]
-[ext_resource type="Script" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="1_tf_team"]
+[ext_resource type="Resource" uid="uid://6ar1d2ju8h46" path="res://Resource/Data/选择器预设/单体我方兵种.tres" id="3_j1cn4"]
 
 [sub_resource type="Resource" id="Resource_xtokb"]
 script = ExtResource("2_j1cn4")
@@ -12,18 +11,8 @@ BuffData = ExtResource("1_vughp")
 InitialStacks = 2
 metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
 
-[sub_resource type="Resource" id="Resource_tf_shape"]
-script = ExtResource("1_tf_shape")
-Shape = 1
-metadata/_custom_type_script = "uid://bh835k2ig4ik"
-
-[sub_resource type="Resource" id="Resource_tf_attr_team"]
-script = ExtResource("1_tf_team")
-Team = 1
-
 [resource]
 script = ExtResource("1_cfv62")
-TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_attr_team")])
 CardID = "义肢2"
 CardName = "义肢2"
 Description = "给单位上2层义肢"
@@ -31,6 +20,7 @@ Type = 1
 World = 1
 Faction = 2
 Tags = Array[int]([0])
+TargetFilters = Array[Object]([ExtResource("3_j1cn4")])
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_xtokb")])
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

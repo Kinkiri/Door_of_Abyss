@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AndTargetFilter" format=3 uid="uid://ki3r8ov3q500"]
+
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="1_u6vys"]
+[ext_resource type="Script" uid="uid://daag6x4i07t3w" path="res://Scripts/Data/Targeting/AndTargetFilter.cs" id="2_2h7qi"]
+
+[sub_resource type="Resource" id="Resource_p0dw5"]
+script = ExtResource("1_u6vys")
+Shape = 2
+AreaRange = 0
+Kind = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[resource]
+script = ExtResource("2_2h7qi")
+Filters = Array[Object]([SubResource("Resource_p0dw5")])
+metadata/_custom_type_script = "uid://daag6x4i07t3w"

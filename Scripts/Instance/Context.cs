@@ -18,6 +18,12 @@ public partial class Context
     public Card SourceCard { get; set; }
     public Unit SourceUnit { get; set; }
 
+    /// <summary>触发 OnUnitAct 时的行动类型（移动/攻击），供被动效果区分</summary>
+    public UnitActType ActType { get; set; }
+
+    /// <summary>本次伤害事件的修饰量（正=加伤，负=减伤）。OnBeforeDamage 被动用 ModifyDamageAction 增减，DamageAction 结算时应用</summary>
+    public int DamageModifier { get; set; }
+
     /// <summary>
     /// 范围攻击再用
     /// </summary>

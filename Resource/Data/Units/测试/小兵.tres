@@ -7,8 +7,10 @@
 script = ExtResource("2_owyq3")
 UnitID = "小兵"
 UnitName = "小兵"
+Tags = null
 HealthPoints = 1
 ActionPoints = 2
+Description = "无能力"
 UnitPrefab = ExtResource("1_owyq3")
 PassiveEffects = Array[Object]([])
 metadata/_custom_type_script = "uid://cthrvfilibvfl"

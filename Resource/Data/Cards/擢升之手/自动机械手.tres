@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://cmjvls1mhbuyu"]
+
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_8ocdp"]
+[ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_8ocdp"]
+[ext_resource type="Resource" uid="uid://b1p6ar02lyld3" path="res://Resource/Data/Units/擢升之手/自动机械手.tres" id="3_8ocdp"]
+[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="4_neymv"]
+
+[sub_resource type="Resource" id="Resource_gfhjv"]
+script = ExtResource("1_8ocdp")
+AnimationDuration = 0.3
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[resource]
+script = ExtResource("4_neymv")
+UnitData = ExtResource("3_8ocdp")
+CardID = "自动机械手"
+CardName = "自动机械手"
+Description = "对自己的义肢恩爱有加，偶尔还会给它打个蜡"
+Type = 0
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+Cost = 2
+TargetFilters = Array[Object]([ExtResource("2_8ocdp")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_gfhjv")])
+metadata/_custom_type_script = "uid://p1hhkgy2pem"

@@ -38,4 +38,7 @@ public enum EventType
 
     /// <summary>移动后，subject=移动单位</summary>
     OnMove,
+
+    /// <summary>使用卡牌后（出牌成功、扣费后，卡牌动作执行前），subject=出牌单位</summary>
+    OnUseCard,
 }

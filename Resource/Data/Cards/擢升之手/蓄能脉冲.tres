@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="EquipmentCardData" format=3 uid="uid://d2lx7msdme5q4"]
+
+[ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="1_462yx"]
+[ext_resource type="Resource" uid="uid://6ar1d2ju8h46" path="res://Resource/Data/选择器预设/单体我方兵种.tres" id="1_lyr25"]
+[ext_resource type="Script" uid="uid://ci5o1ouk3jcsf" path="res://Scripts/Data/Actions/EquipAction.cs" id="1_m1jxx"]
+[ext_resource type="Script" uid="uid://4ksuiqod0x18" path="res://Scripts/Data/Card/EquipmentCardData.cs" id="1_nwipk"]
+[ext_resource type="Script" uid="uid://tmoxnw3avry4" path="res://Scripts/Data/Units/EquipmentData.cs" id="2_m1jxx"]
+[ext_resource type="Resource" uid="uid://djm1disxpn1o1" path="res://Resource/Data/Effects/追击.tres" id="3_pxvuq"]
+
+[sub_resource type="Resource" id="Resource_fnwy8"]
+script = ExtResource("1_m1jxx")
+metadata/_custom_type_script = "uid://ci5o1ouk3jcsf"
+
+[sub_resource type="Resource" id="Resource_tt2kv"]
+script = ExtResource("2_m1jxx")
+EquipmentID = "蓄能脉冲"
+EquipmentName = "蓄能脉冲"
+Description = "令装备的己方兵种攻击力+2"
+Icon = ExtResource("1_462yx")
+AttackBonus = 2
+MaxHealthBonus = 0
+PassiveEffects = Array[Object]([ExtResource("3_pxvuq")])
+OnApplyActions = null
+metadata/_custom_type_script = "uid://tmoxnw3avry4"
+
+[resource]
+script = ExtResource("1_nwipk")
+EquipmentData = SubResource("Resource_tt2kv")
+CardID = "蓄能脉冲"
+CardName = "蓄能脉冲"
+Description = "公司内的每个标牌上都写着：“严禁外接线缆，请使用充电桩。”"
+Type = 3
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+TargetFilters = Array[Object]([ExtResource("1_lyr25")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_fnwy8")])
+metadata/_custom_type_script = "uid://4ksuiqod0x18"

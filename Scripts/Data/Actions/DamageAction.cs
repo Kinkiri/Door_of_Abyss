@@ -21,14 +21,18 @@ public partial class DamageAction : GameAction
         {
             if (target == null || !target.IsAlive) continue;
 
-            // 伤害计算前触发（被动可在此修改伤害）
+            int finalDmg = dmg;
             if (ctx.SourceUnit != null)
             {
-                EventBus.Instance?.Fire(EventType.OnBeforeDamage,
-                    new Context { TargetUnit = target }, subject: ctx.SourceUnit);
+                // 伤害计算前触发：攻击者侧（加伤被动）+ 受击者侧（减伤被动）各一次，
+                // 被动用 ModifyDamageAction 修改 beforeCtx.DamageModifier
+                var beforeCtx = new Context { TargetUnit = target };
+                EventBus.Instance?.Fire(EventType.OnBeforeDamage, beforeCtx, subject: ctx.SourceUnit);
+                EventBus.Instance?.Fire(EventType.OnBeforeDamage, beforeCtx, subject: target);
+                finalDmg = System.Math.Max(0, dmg + beforeCtx.DamageModifier);
             }
 
-            int dealt = UnitManager.Instance.DamageUnit(target, dmg);
+            int dealt = UnitManager.Instance.DamageUnit(target, finalDmg);
             if (dealt <= 0) continue;
 
             GD.Print($"[DamageAction] 对 {target.UnitData?.UnitName} 造成 {dealt} 点伤害");

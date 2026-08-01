@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://c4fbolq7kffmd"]
+
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_kbwt5"]
+[ext_resource type="Script" uid="uid://cq8v06lvy3mmc" path="res://Scripts/Data/Actions/RemoveBuffAction.cs" id="1_vejfn"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="2_k3pip"]
+
+[sub_resource type="Resource" id="Resource_ecxgy"]
+script = ExtResource("1_vejfn")
+BuffID = "义肢"
+metadata/_custom_type_script = "uid://cq8v06lvy3mmc"
+
+[sub_resource type="Resource" id="Resource_vejfn"]
+script = ExtResource("2_k3pip")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[resource]
+script = ExtResource("1_kbwt5")
+CardID = "拆除义肢"
+CardName = "拆除义肢"
+Description = "清理单位的义肢buff"
+Tags = null
+Cost = 0
+TargetFilters = Array[Object]([SubResource("Resource_vejfn")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_ecxgy")])
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

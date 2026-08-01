@@ -14,10 +14,10 @@ public partial class EventBus : Node
     /// <summary>按事件类型分组</summary>
     private Dictionary<EventType, List<Subscription>> _subscriptions = new();
 
-    /// <summary>触发计数追踪：(owner, type) → (maxCount, currentCount)</summary>
-    private Dictionary<(Unit owner, EventType type), (int max, int current)> _triggerCounts = new();
+    /// <summary>触发计数追踪：按订阅条目独立计数（同单位同事件多被动互不共享）</summary>
+    private Dictionary<Subscription, (int max, int current)> _triggerCounts = new();
 
-    private struct Subscription
+    private class Subscription
     {
         public Unit Owner;
         public GameAction[] Actions;
@@ -63,7 +63,7 @@ public partial class EventBus : Node
                 _subscriptions[effect.TriggerEvent] = list;
             }
 
-            list.Add(new Subscription
+            var sub = new Subscription
             {
                 Owner = owner,
                 Actions = effect.Actions,
@@ -72,13 +72,13 @@ public partial class EventBus : Node
                 MaxTriggerCount = effect.MaxTriggerCount,
                 Conditions = effect.Conditions,
                 Tag = tag,
-            });
+            };
+            list.Add(sub);
 
-            // 初始化触发计数
+            // 初始化触发计数（按订阅条目独立计数）
             if (effect.MaxTriggerCount > 0)
             {
-                var key = (owner, effect.TriggerEvent);
-                _triggerCounts[key] = (effect.MaxTriggerCount, effect.MaxTriggerCount);
+                _triggerCounts[sub] = (effect.MaxTriggerCount, effect.MaxTriggerCount);
             }
 
             GD.Print($"[EventBus]   注册 {effect.TriggerEvent} target={effect.Target} " +
@@ -98,8 +98,8 @@ public partial class EventBus : Node
         {
             removed += kv.Value.RemoveAll(s => s.Owner == owner);
         }
-        // 清理触发计数
-        var keys = _triggerCounts.Keys.Where(k => k.owner == owner).ToList();
+        // 清理触发计数（按订阅条目，owner 匹配即删）
+        var keys = _triggerCounts.Keys.Where(k => k.Owner == owner).ToList();
         foreach (var key in keys)
             _triggerCounts.Remove(key);
         GD.Print($"[EventBus]   移除 {removed} 条订阅");
@@ -156,6 +156,9 @@ public partial class EventBus : Node
         GD.Print($"[EventBus] >>> Fire({type}) subject={(subject?.UnitData?.UnitName ?? "所有人")} 订阅者数={list.Count}");
 
         int triggered = 0;
+        // 伤害修饰初值（OnBeforeDamage 被动经 ModifyDamageAction 修改后回写累加）
+        int dmgBase = ctx?.DamageModifier ?? 0;
+
         // 快照遍历，防止递归 Fire 修改原 List 导致异常
         foreach (var entry in list.ToList())
         {
@@ -168,11 +171,10 @@ public partial class EventBus : Node
 
             if (subject != null && owner != subject) continue;
 
-            // 触发次数限制检查
+            // 触发次数限制检查（按订阅条目独立计数）
             if (entry.MaxTriggerCount > 0)
             {
-                var key = (owner, type);
-                if (_triggerCounts.TryGetValue(key, out var tc) && tc.current <= 0)
+                if (_triggerCounts.TryGetValue(entry, out var tc) && tc.current <= 0)
                 {
                     GD.Print($"[EventBus]   跳过: {owner.UnitData?.UnitName} — 已达触发上限({entry.MaxTriggerCount})");
                     continue;
@@ -212,6 +214,8 @@ public partial class EventBus : Node
                         TargetCells = cells,
                         SourceTeam = owner.Team,
                         TargetTeam = Team.Neutral,
+                        ActType = ctx?.ActType ?? UnitActType.None,
+                        DamageModifier = dmgBase,
                     };
                 }
                 else
@@ -225,6 +229,8 @@ public partial class EventBus : Node
                         TargetUnits = targets,
                         SourceTeam = owner.Team,
                         TargetTeam = Team.Neutral,
+                        ActType = ctx?.ActType ?? UnitActType.None,
+                        DamageModifier = dmgBase,
                     };
                 }
             }
@@ -244,6 +250,8 @@ public partial class EventBus : Node
                     SourceCard = ctx?.SourceCard,
                     SourceTeam = ctx?.SourceTeam ?? Team.Neutral,
                     TargetTeam = ctx?.TargetTeam ?? Team.Neutral,
+                    ActType = ctx?.ActType ?? UnitActType.None,
+                    DamageModifier = dmgBase,
                 };
             }
 
@@ -270,12 +278,15 @@ public partial class EventBus : Node
             foreach (var action in entry.Actions)
                 action?.Execute(effectCtx);
 
-            // 扣减触发次数
+            // 伤害修饰增量回写（多个加伤/减伤被动叠加到调用方 ctx）
+            if (ctx != null && effectCtx.DamageModifier != dmgBase)
+                ctx.DamageModifier += effectCtx.DamageModifier - dmgBase;
+
+            // 扣减触发次数（按订阅条目独立计数）
             if (entry.MaxTriggerCount > 0)
             {
-                var key = (owner, type);
-                if (_triggerCounts.TryGetValue(key, out var tc))
-                    _triggerCounts[key] = (tc.max, tc.current - 1);
+                if (_triggerCounts.TryGetValue(entry, out var tc))
+                    _triggerCounts[entry] = (tc.max, tc.current - 1);
             }
         }
 

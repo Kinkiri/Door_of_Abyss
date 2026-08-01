@@ -17,6 +17,9 @@ public partial class ModifyStatAction : GameAction
     /// <summary>仅当目标单位带任一这些 Tag 时生效；null/空 = 不限制</summary>
     [Export] public Array<Tag> RequiredTags { get; set; }
 
+    /// <summary>仅修改当前行动点（上限不动，clamp 到 [0, MaxActionPoints]）；false = 默认上限+当前同步增减</summary>
+    [Export] public bool CurrentAPOnly { get; set; }
+
     private bool TagRequiredMet(Unit unit)
     {
         if (RequiredTags == null || RequiredTags.Count == 0) return true;
@@ -30,6 +33,10 @@ public partial class ModifyStatAction : GameAction
     // ------------------- 修改为多目标版本 -------------------
     protected override void Apply(Context ctx)
     {
+        // 注意：Revert 由 BuffManager/EquipmentManager 等直接调用（不经过 Execute 的
+        // ResolveTargets 包装），调用方只传 TargetUnit；因此这里必须兼容
+        // "TargetUnits 为空但 TargetUnit 非空"的单目标 fallback，不能像 Damage/Heal 那样
+        // 直接 if (TargetUnits == null) return。
         var originalTarget = ctx.TargetUnit;
         var units = (ctx.TargetUnits != null && ctx.TargetUnits.Length > 0)
                     ? ctx.TargetUnits
@@ -64,8 +71,14 @@ public partial class ModifyStatAction : GameAction
                     unit.AttackDistance += val;
                     break;
                 case ModifyStatType.ActionPoints:
-                    unit.MaxActionPoints += val;
-                    unit.ActionPoints += val;
+                    if (CurrentAPOnly)
+                        // 仅当前 AP：允许超过上限（"本回合多动一次"类透支效果），只 clamp 下限 0
+                        unit.ActionPoints = System.Math.Max(0, unit.ActionPoints + val);
+                    else
+                    {
+                        unit.MaxActionPoints += val;
+                        unit.ActionPoints += val;
+                    }
                     break;
             }
 
@@ -79,6 +92,9 @@ public partial class ModifyStatAction : GameAction
 
     public override void Revert(Context ctx)
     {
+        // Revert 不经 ResolveTargets：BuffManager.RemoveBuff / RemoveAllBuffs、
+        // EquipmentManager 移除、ModifyBuffAction 减层均直接构造 { TargetUnit = x } 调用，
+        // 必须回退到单目标，否则属性无法还原。
         var originalTarget = ctx.TargetUnit;
         var units = (ctx.TargetUnits != null && ctx.TargetUnits.Length > 0)
                     ? ctx.TargetUnits
@@ -111,8 +127,13 @@ public partial class ModifyStatAction : GameAction
                     unit.AttackDistance -= val;
                     break;
                 case ModifyStatType.ActionPoints:
-                    unit.MaxActionPoints = System.Math.Max(1, unit.MaxActionPoints - val);
-                    unit.ActionPoints = System.Math.Min(unit.ActionPoints, unit.MaxActionPoints);
+                    if (CurrentAPOnly)
+                        unit.ActionPoints = System.Math.Max(0, unit.ActionPoints - val);
+                    else
+                    {
+                        unit.MaxActionPoints = System.Math.Max(1, unit.MaxActionPoints - val);
+                        unit.ActionPoints = System.Math.Min(unit.ActionPoints, unit.MaxActionPoints);
+                    }
                     break;
             }
 

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://df0g1x2jkw8u7"]
+
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_3boaq"]
+[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="1_axgns"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="2_m7t7w"]
+[ext_resource type="Resource" uid="uid://c8ovrqlhxc5qr" path="res://Resource/Data/Units/测试/移动沙包.tres" id="3_h1f2m"]
+
+[sub_resource type="Resource" id="Resource_ui2vm"]
+script = ExtResource("1_3boaq")
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[sub_resource type="Resource" id="Resource_3boaq"]
+script = ExtResource("2_m7t7w")
+Shape = 2
+Kind = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[resource]
+script = ExtResource("1_axgns")
+UnitData = ExtResource("3_h1f2m")
+CardID = "移动沙包"
+CardName = "移动沙包"
+Description = ""
+Type = 0
+Tags = null
+TargetFilters = Array[Object]([SubResource("Resource_3boaq")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_ui2vm")])
+metadata/_custom_type_script = "uid://p1hhkgy2pem"

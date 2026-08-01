@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://bbkq67n50v7xu"]
+
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_53dcp"]
+[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="1_im2e5"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_6tpup"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_pwu0u"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="4_c1ymg"]
+
+[sub_resource type="Resource" id="Resource_jgrd6"]
+script = ExtResource("2_6tpup")
+BuffData = ExtResource("1_im2e5")
+InitialStacks = 2
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_kg77l"]
+script = ExtResource("3_pwu0u")
+TriggerEvent = 2
+TargetFilters = null
+MaxTriggerCount = 1
+Actions = Array[Object]([SubResource("Resource_jgrd6")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("1_53dcp")
+UnitID = "飞拳斗士"
+UnitName = "飞拳斗士"
+World = 1
+Faction = 2
+Tags = Array[int]([0, 6])
+Rarity = 1
+AttackPower = 3
+Stamina = 2
+Description = "部署获得义肢2，义肢X，AD+X"
+UnitPrefab = ExtResource("4_c1ymg")
+PassiveEffects = Array[Object]([SubResource("Resource_kg77l")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

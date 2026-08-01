@@ -17,6 +17,10 @@ public partial class ModifyBuffAction : GameAction
     /// <summary>叠层变动量（正=增加，负=减少）</summary>
     [Export] public int StacksDelta { get; set; }
 
+    /// <summary>磨损模式：减层只消耗"行动开始快照（Buff.StacksAtActionStart）内的旧层"——
+    /// 本次行动中新增的层不因本次行动损耗（如"攻击后获得义肢"不会被本次攻击磨损）。普通减层（驱散等）不受限</summary>
+    [Export] public bool WearMode { get; set; }
+
     protected override void Apply(Context ctx)
     {
         if (ctx.TargetUnit == null) return;
@@ -51,25 +55,41 @@ public partial class ModifyBuffAction : GameAction
         }
 
         // ── 叠层：最小减到 0（归零触发移除），不能为负 ──
-        int newStacks = System.Math.Max(0, buff.StackCount + StacksDelta);
+        int newStacks = buff.StackCount;
 
         // ── 应用修改：减层逐层还原（最多还原到 0 层），加层逐层施加 ──
         if (StacksDelta < 0)
         {
-            var revertCtx = new Context { TargetUnit = ctx.TargetUnit };
             int reduceCount = System.Math.Min(-StacksDelta, buff.StackCount);
-            if (buff.Data.OnApplyActions != null)
-                for (int i = 0; i < reduceCount; i++)
-                    foreach (var action in buff.Data.OnApplyActions)
-                        action.Revert(revertCtx);
+            if (WearMode)
+                // 只消耗行动开始快照内的旧层：本次行动中新增的层豁免
+                reduceCount = System.Math.Min(reduceCount,
+                    System.Math.Max(0, buff.StacksAtActionStart));
+            newStacks = buff.StackCount - reduceCount;
+
+            // FixedEffect：层数是纯计数器，减层不影响效果（归零移除时一次性还原）
+            if (!buff.Data.FixedEffect)
+            {
+                var revertCtx = new Context { TargetUnit = ctx.TargetUnit };
+                if (buff.Data.OnApplyActions != null)
+                    for (int i = 0; i < reduceCount; i++)
+                        foreach (var action in buff.Data.OnApplyActions)
+                            action.Revert(revertCtx);
+            }
         }
         else if (StacksDelta > 0)
         {
-            var execCtx = new Context { TargetUnit = ctx.TargetUnit, SourceUnit = ctx.SourceUnit };
-            if (buff.Data.OnApplyActions != null)
-                for (int i = 0; i < StacksDelta; i++)
-                    foreach (var action in buff.Data.OnApplyActions)
-                        action.Execute(execCtx);
+            newStacks = buff.StackCount + StacksDelta;
+
+            // FixedEffect：叠层不重放效果（有层即生效）
+            if (!buff.Data.FixedEffect)
+            {
+                var execCtx = new Context { TargetUnit = ctx.TargetUnit, SourceUnit = ctx.SourceUnit };
+                if (buff.Data.OnApplyActions != null)
+                    for (int i = 0; i < StacksDelta; i++)
+                        foreach (var action in buff.Data.OnApplyActions)
+                            action.Execute(execCtx);
+            }
         }
 
         if (newTurns != buff.RemainingTurns)
