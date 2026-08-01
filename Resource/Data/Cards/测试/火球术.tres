@@ -2,10 +2,21 @@
 
 [ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="1_actions"]
 [ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_card"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="1_tf_shape"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="1_tf_team"]
 
 [sub_resource type="Resource" id="Resource_pdtq3"]
 script = ExtResource("1_actions")
 Value = 2
+
+[sub_resource type="Resource" id="Resource_tf_shape"]
+script = ExtResource("1_tf_shape")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_tf_attr_team"]
+script = ExtResource("1_tf_team")
+Team = 2
 
 [resource]
 script = ExtResource("1_card")
@@ -13,9 +24,7 @@ CardID = "火球术"
 CardName = "火球术"
 Description = "造成两点伤害"
 Type = 1
-Shape = 1
-Filter = 1
-AreaRange = 1
+TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_attr_team")])
 Tags = null
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_pdtq3")])

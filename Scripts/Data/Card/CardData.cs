@@ -15,14 +15,8 @@ public abstract partial class CardData : Resource
 
     [Export] public virtual CardType Type { get; set; } = CardType.Special;
 
-    /// <summary>目标范围形状</summary>
-    [Export] public virtual TargetShape Shape { get; set; } = TargetShape.None;
-
-    /// <summary>目标阵营过滤</summary>
-    [Export] public virtual TargetFilter Filter { get; set; } = TargetFilter.All;
-
-    /// <summary>当 Shape 为 AreaDiamond/AreaSquare 时，扩散半径（曼哈顿距离或半径）</summary>
-    [Export] public virtual int AreaRange { get; set; } = 0;
+    /// <summary>目标筛选器数组（默认 And 组合；null/空 = 无目标，直接打出）。替代旧 Shape + Filter + AreaRange 三个字段</summary>
+    [Export] public TargetFilter[] TargetFilters { get; set; }
 
     /// <summary>世界观</summary>
     [Export] public World World { get; set; } = World.测试;
@@ -51,6 +45,6 @@ public abstract partial class CardData : Resource
     public override string ToString()
     {
         //输出所有数据
-        return $"[Card: {CardID}] {CardName} - {Description} (Cost: {Cost}) | {Type} Shape={Shape} Filter={Filter}";
+        return $"[Card: {CardID}] {CardName} - {Description} (Cost: {Cost}) | {Type} Target={string.Join("+", System.Array.ConvertAll(TargetFilters ?? System.Array.Empty<TargetFilter>(), f => f?.GetType().Name ?? "null"))}";
     }
 }

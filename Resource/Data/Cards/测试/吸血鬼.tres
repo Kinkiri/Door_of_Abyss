@@ -2,10 +2,17 @@
 
 [ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_actions"]
 [ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="1_card"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="1_tf_shape"]
 [ext_resource type="Resource" uid="uid://brpvxdujqqh5b" path="res://Resource/Data/Units/测试/吸血鬼.tres" id="1_unit"]
 
 [sub_resource type="Resource" id="Resource_nthp5"]
 script = ExtResource("1_actions")
+
+[sub_resource type="Resource" id="Resource_tf_shape"]
+script = ExtResource("1_tf_shape")
+Shape = 2
+Kind = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
 
 [resource]
 script = ExtResource("1_card")
@@ -14,7 +21,7 @@ CardID = "吸血鬼"
 CardName = "吸血鬼"
 Description = "吸血鬼为什么能吸机器人？"
 Type = 0
-Shape = 2
+TargetFilters = Array[Object]([SubResource("Resource_tf_shape")])
 Tags = null
 Cost = 2
 Conditions = null

@@ -20,6 +20,7 @@ Conditions = null
 script = ExtResource("4_2bhwe")
 UnitID = "吸血鬼"
 UnitName = "吸血鬼"
+Tags = null
 HealthPoints = 4
 Description = "攻击后恢复1血"
 UnitPrefab = ExtResource("3_v6xdq")

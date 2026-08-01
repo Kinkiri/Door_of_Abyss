@@ -895,6 +895,398 @@ public partial class TestRunner : Node
                 () => !new HasEquipmentCondition { Has = true }.IsMet(ctx));
         });
 
+        // ── TargetFilter 目标筛选器 ────────────────────────────
+        RunGroup("TargetFilter", () =>
+        {
+            // 造地图：5x5
+            var map = new System.Collections.Generic.Dictionary<Vector2I, Cell>();
+            var block = new BlockData { BlockName = "地板", CanStand = true, CanPass = true };
+            for (int x = 0; x < 5; x++)
+                for (int y = 0; y < 5; y++)
+                    map[new Vector2I(x, y)] = new Cell(block, new Vector2I(x, y), Vector2.Zero);
+
+            // 单位：2 普通敌方 + 1 友方 + 1 敌方建筑 + 1 敌方带科技标签
+            var e1 = MakeUnit("敌方1", 3, 10); e1.Team = Team.Enemy;
+            var e2 = MakeUnit("敌方2", 3, 10); e2.Team = Team.Enemy;
+            var ally = MakeUnit("友方", 3, 10);
+            var building = MakeUnit("建筑", 3, 10); building.Team = Team.Enemy; building.Type = UnitType.Building;
+            var techie = MakeUnit("科技兵", 3, 10);
+            techie.Team = Team.Enemy;
+            techie.UnitData = new UnitData
+            {
+                UnitName = "科技兵",
+                UnitID = "科技兵",
+                AttackPower = 3,
+                HealthPoints = 10,
+                Tags = new Godot.Collections.Array<Tag> { Tag.科技 },
+            };
+
+            var units = new List<Unit> { e1, e2, ally, building, techie };
+            var ctx = new Context
+            {
+                SourceUnit = ally,
+                SourceTeam = Team.Player,
+                Map = map,
+                ActiveUnits = units,
+            };
+
+            // 形状单点
+            VAssert("SingleUnit 返回点选单位",
+                () => TargetResolver.ResolveUnits(
+                    new ShapeTargetFilter { Shape = TargetShape.SingleUnit },
+                    new Context { TargetUnit = e1 }) is { Length: 1 } arr1 && arr1[0] == e1);
+            VAssert("SingleUnit 死亡单位不返回",
+                () =>
+                {
+                    e1.IsDead = true;
+                    var r = TargetResolver.ResolveUnits(
+                        new ShapeTargetFilter { Shape = TargetShape.SingleUnit },
+                        new Context { TargetUnit = e1 });
+                    e1.IsDead = false;
+                    return r.Length == 0;
+                });
+
+            // And[All, 敌方]：全部敌方
+            var enemyFilter = new AndTargetFilter
+            {
+                Filters = new TargetFilter[]
+                {
+                    new ShapeTargetFilter { Shape = TargetShape.All },
+                    new TeamTargetFilter { Team = TeamFilter.Enemy },
+                },
+            };
+            VAssert("And[All, 敌方] 只出敌方",
+                () =>
+                {
+                    var r = TargetResolver.ResolveUnits(enemyFilter, ctx);
+                    return r.Length == 4 && System.Array.TrueForAll(r, u => u.Team == Team.Enemy);
+                });
+
+            // And 顺序无关
+            var reversedFilter = new AndTargetFilter
+            {
+                Filters = new TargetFilter[]
+                {
+                    new TeamTargetFilter { Team = TeamFilter.Enemy },
+                    new ShapeTargetFilter { Shape = TargetShape.All },
+                },
+            };
+            VAssert("And 顺序无关",
+                () => TargetResolver.ResolveUnits(enemyFilter, ctx).Length ==
+                      TargetResolver.ResolveUnits(reversedFilter, ctx).Length);
+
+            // 单位类型过滤
+            var buildingFilter = new AndTargetFilter
+            {
+                Filters = new TargetFilter[]
+                {
+                    new ShapeTargetFilter { Shape = TargetShape.All },
+                    new UnitTypeTargetFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.Building } },
+                },
+            };
+            VAssert("Attr 单位类型=建筑 只出建筑",
+                () =>
+                {
+                    var r = TargetResolver.ResolveUnits(buildingFilter, ctx);
+                    return r.Length == 1 && r[0] == building;
+                });
+
+            // 标签过滤（任一匹配）
+            var tagFilter = new AndTargetFilter
+            {
+                Filters = new TargetFilter[]
+                {
+                    new ShapeTargetFilter { Shape = TargetShape.All },
+                    new TagTargetFilter { Tags = new Godot.Collections.Array<Tag> { Tag.科技 } },
+                },
+            };
+            VAssert("Attr 标签=科技 只出科技兵",
+                () =>
+                {
+                    var r = TargetResolver.ResolveUnits(tagFilter, ctx);
+                    return r.Length == 1 && r[0] == techie;
+                });
+
+            // 条件过滤（运行时属性：HP ≤ 50% MaxHP）
+            var lowHp = MakeUnit("残血", 3, 10); lowHp.Team = Team.Enemy; lowHp.CurrentHP = 3;
+            units.Add(lowHp);
+            var condFilter = new AndTargetFilter
+            {
+                Filters = new TargetFilter[]
+                {
+                    new ShapeTargetFilter { Shape = TargetShape.All },
+                    new TeamTargetFilter { Team = TeamFilter.Enemy },
+                    new ConditionTargetFilter
+                    {
+                        Conditions = new Condition[]
+                        {
+                            new CompareCondition
+                            {
+                                Left = new UnitStatValue { Unit = ValueTarget.Target, Stat = ModifyStatType.MaxHP, CurrentHP = true },
+                                Op = CompareOp.LessEqual,
+                                Right = new FormulaValue
+                                {
+                                    Op = FormulaOp.Percent,
+                                    Left = new UnitStatValue { Unit = ValueTarget.Target, Stat = ModifyStatType.MaxHP },
+                                    Right = new ConstantValue { Value = 50 },
+                                },
+                            }
+                        },
+                    },
+                },
+            };
+            VAssert("Cond 残血过滤（HP≤50%Max）只出残血",
+                () =>
+                {
+                    var r = TargetResolver.ResolveUnits(condFilter, ctx);
+                    return r.Length == 1 && r[0] == lowHp;
+                });
+
+            // Or 组合：建筑 或 科技标签
+            var orFilter = new OrTargetFilter
+            {
+                Filters = new TargetFilter[]
+                {
+                    new UnitTypeTargetFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.Building } },
+                    new TagTargetFilter { Tags = new Godot.Collections.Array<Tag> { Tag.科技 } },
+                },
+            };
+            VAssert("Or[建筑, 科技] 出建筑+科技兵",
+                () => TargetResolver.ResolveUnits(orFilter, ctx).Length == 2);
+
+            // Not 组合：排除敌方
+            var notFilter = new NotTargetFilter
+            {
+                Filter = new TeamTargetFilter { Team = TeamFilter.Enemy },
+            };
+            VAssert("Not[敌方] 只剩友方",
+                () =>
+                {
+                    var r = TargetResolver.ResolveUnits(notFilter, ctx);
+                    return r.Length == 1 && r[0] == ally;
+                });
+
+            // GetShape / GetAreaRange 穿透组合
+            var andAreaFilter = new AndTargetFilter
+            {
+                Filters = new TargetFilter[]
+                {
+                    new ShapeTargetFilter { Shape = TargetShape.AreaDiamond, AreaRange = 2 },
+                    new TeamTargetFilter { Team = TeamFilter.Enemy },
+                },
+            };
+            VAssert("And GetShape 穿透=AreaDiamond", () => andAreaFilter.GetShape() == TargetShape.AreaDiamond);
+            VAssert("And GetAreaRange 穿透=2", () => andAreaFilter.GetAreaRange() == 2);
+
+            // ResolveCells 区域格子（Kind=Cell）
+            var areaCellsFilter = new ShapeTargetFilter
+            {
+                Shape = TargetShape.AreaDiamond,
+                AreaRange = 1,
+                Kind = TargetKind.Cell,
+            };
+            VAssert("ResolveCells 菱形1 = 5 格",
+                () => TargetResolver.ResolveCells(
+                    areaCellsFilter,
+                    new Context { TargetCell = map[new Vector2I(2, 2)], Map = map }).Length == 5);
+
+            // 单挂过滤类 = 从全量开始
+            VAssert("单挂 Attr(敌方) ≡ 全体敌方",
+                () => TargetResolver.ResolveUnits(
+                    new TeamTargetFilter { Team = TeamFilter.Enemy }, ctx).Length == 5);
+
+            // null filter = 空
+            VAssert("null filter 返回空", () => TargetResolver.ResolveUnits(null, ctx).Length == 0);
+
+            // ── 数组默认 And（CombineAnd） ──────────────────────
+            var combined = TargetFilter.CombineAnd(new TargetFilter[]
+            {
+                new ShapeTargetFilter { Shape = TargetShape.All },
+                new TeamTargetFilter { Team = TeamFilter.Enemy },
+            });
+            VAssert("CombineAnd 数组默认 And ≡ AndTargetFilter",
+                () => combined is AndTargetFilter &&
+                      TargetResolver.ResolveUnits(combined, ctx).Length ==
+                      TargetResolver.ResolveUnits(enemyFilter, ctx).Length);
+            VAssert("CombineAnd 单元素原样返回",
+                () => TargetFilter.CombineAnd(
+                    new[] { new ShapeTargetFilter { Shape = TargetShape.All } }) is ShapeTargetFilter);
+            VAssert("CombineAnd 空数组 → null",
+                () => TargetFilter.CombineAnd(null) == null &&
+                      TargetFilter.CombineAnd(new TargetFilter[0]) == null);
+
+            // Card 运行时组合（CardData.TargetFilters → Card.TargetFilter）
+            var spellData = new SpellCardData
+            {
+                CardID = "数组测试",
+                CardName = "数组测试",
+                TargetFilters = new TargetFilter[]
+                {
+                    new ShapeTargetFilter { Shape = TargetShape.All },
+                    new TeamTargetFilter { Team = TeamFilter.Enemy },
+                },
+            };
+            var runtimeCard = new Card(spellData);
+            VAssert("Card 运行时 CombineAnd 生效",
+                () => runtimeCard.TargetFilter is AndTargetFilter &&
+                      TargetResolver.ResolveUnits(runtimeCard.TargetFilter, ctx).Length == 4);
+
+            // ── 势力 / 世界观过滤 ──────────────────────────────
+            var holyUnit = MakeUnit("圣徒", 3, 10);
+            holyUnit.Team = Team.Enemy;
+            holyUnit.UnitData = new UnitData
+            {
+                UnitName = "圣徒",
+                UnitID = "圣徒",
+                AttackPower = 3,
+                HealthPoints = 10,
+                Faction = Faction.圣主教,
+            };
+            units.Add(holyUnit);
+
+            var factionFilter = new AndTargetFilter
+            {
+                Filters = new TargetFilter[]
+                {
+                    new ShapeTargetFilter { Shape = TargetShape.All },
+                    new FactionTargetFilter { Faction = Faction.圣主教 },
+                },
+            };
+            VAssert("Attr 势力=圣主教 只出圣徒",
+                () =>
+                {
+                    var r = TargetResolver.ResolveUnits(factionFilter, ctx);
+                    return r.Length == 1 && r[0] == holyUnit;
+                });
+
+            var worldFilter = new AndTargetFilter
+            {
+                Filters = new TargetFilter[]
+                {
+                    new ShapeTargetFilter { Shape = TargetShape.All },
+                    new WorldTargetFilter { World = World.曼斯维森 },
+                },
+            };
+            VAssert("Attr 世界观=曼斯维森 无匹配",
+                () => TargetResolver.ResolveUnits(worldFilter, ctx).Length == 0);
+
+            // 势力 + 阵营组合
+            var holyEnemyFilter = new AndTargetFilter
+            {
+                Filters = new TargetFilter[]
+                {
+                    new ShapeTargetFilter { Shape = TargetShape.All },
+                    new TeamTargetFilter { Team = TeamFilter.Enemy },
+                    new FactionTargetFilter { Faction = Faction.圣主教 },
+                },
+            };
+            VAssert("Attr[势力=圣主教, 阵营=敌方] 只出圣徒",
+                () =>
+                {
+                    var r = TargetResolver.ResolveUnits(holyEnemyFilter, ctx);
+                    return r.Length == 1 && r[0] == holyUnit;
+                });
+
+            // ── 单位 ID 过滤 ────────────────────────────────────
+            var idFilter = new AndTargetFilter
+            {
+                Filters = new TargetFilter[]
+                {
+                    new ShapeTargetFilter { Shape = TargetShape.All },
+                    new UnitIDTargetFilter
+                    {
+                        UnitIDs = new Godot.Collections.Array<string> { "圣徒" },
+                    },
+                },
+            };
+            VAssert("UnitID=圣徒 只出圣徒",
+                () =>
+                {
+                    var r = TargetResolver.ResolveUnits(idFilter, ctx);
+                    return r.Length == 1 && r[0] == holyUnit;
+                });
+
+            // Not[UnitID]：排除某单位
+            var notIdFilter = new AndTargetFilter
+            {
+                Filters = new TargetFilter[]
+                {
+                    new ShapeTargetFilter { Shape = TargetShape.All },
+                    new NotTargetFilter
+                    {
+                        Filter = new UnitIDTargetFilter
+                        {
+                            UnitIDs = new Godot.Collections.Array<string> { "圣徒" },
+                        },
+                    },
+                },
+            };
+            VAssert("Not[UnitID=圣徒] 排除圣徒",
+                () =>
+                {
+                    var r = TargetResolver.ResolveUnits(notIdFilter, ctx);
+                    foreach (var u in r)
+                        if (u == holyUnit) return false;
+                    return r.Length == units.Count - 1;
+                });
+
+            // ── 极值筛选 ────────────────────────────────────────
+            var healTargets = new List<Unit>();
+            for (int i = 1; i <= 5; i++)
+            {
+                var u = MakeUnit($"病人{i}", 1, 10);
+                u.Team = Team.Player;   // 友方
+                u.CurrentHP = i * 2;    // HP: 2,4,6,8,10
+                healTargets.Add(u);
+            }
+            var extremeCtx = new Context
+            {
+                SourceUnit = ally,
+                SourceTeam = Team.Player,
+                Map = map,
+                ActiveUnits = healTargets,
+            };
+            var lowestHpFilter = new AndTargetFilter
+            {
+                Filters = new TargetFilter[]
+                {
+                    new ShapeTargetFilter { Shape = TargetShape.All },
+                    new ExtremeTargetFilter
+                    {
+                        Value = MakeUnitStat(ValueTarget.Target, ModifyStatType.MaxHP, true),
+                        Mode = ExtremeMode.Lowest,
+                        Count = 3,
+                    },
+                },
+            };
+            VAssert("极值：生命最低的 3 个友方",
+                () =>
+                {
+                    var r = TargetResolver.ResolveUnits(lowestHpFilter, extremeCtx);
+                    return r.Length == 3 && r[0].CurrentHP == 2 && r[1].CurrentHP == 4 && r[2].CurrentHP == 6;
+                });
+
+            VAssert("极值：数量不足全要",
+                () => TargetResolver.ResolveUnits(
+                    new ExtremeTargetFilter { Count = 10 }, extremeCtx).Length == 5);
+
+            VAssert("极值：最高模式取前 2（平局稳定）",
+                () => TargetResolver.ResolveUnits(
+                    new AndTargetFilter
+                    {
+                        Filters = new TargetFilter[]
+                        {
+                            new ShapeTargetFilter { Shape = TargetShape.All },
+                            new ExtremeTargetFilter
+                            {
+                                Value = MakeUnitStat(ValueTarget.Target, ModifyStatType.AttackPower),
+                                Mode = ExtremeMode.Highest,
+                                Count = 2,
+                            },
+                        },
+                    }, extremeCtx).Length == 2);
+        });
+
         // ── 汇总输出 ────────────────────────────────────────────
         GD.PrintRaw($"\n==============================\n");
         GD.PrintRaw($"  完成: {_passed} 通过, {_failed} 失败 (共 {_total} 项)\n");

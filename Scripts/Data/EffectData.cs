@@ -15,15 +15,10 @@ public partial class EffectData : Resource
     [Export] public PassiveTarget Target { get; set; } = PassiveTarget.Self;
 
     /// <summary>
-    /// 范围形状。不为 None 时使用 TargetResolver 自动搜索目标，忽略 Target 字段。
+    /// 目标筛选器数组（默认 And 组合）。为 null/空时使用 Target（Self/EventTarget）选择目标。
+    /// 替代旧 Shape + Filter + AreaRange 三个字段。
     /// </summary>
-    [Export] public TargetShape Shape { get; set; } = TargetShape.None;
-
-    /// <summary>目标阵营过滤（Shape!=None 时生效）</summary>
-    [Export] public TargetFilter Filter { get; set; } = TargetFilter.All;
-
-    /// <summary>范围扩散半径（Shape 为 AreaDiamond/AreaSquare 时）</summary>
-    [Export] public int AreaRange { get; set; } = 1;
+    [Export] public TargetFilter[] TargetFilters { get; set; }
 
     /// <summary>每回合最大触发次数，0=不限制</summary>
     [Export] public int MaxTriggerCount { get; set; } = 0;

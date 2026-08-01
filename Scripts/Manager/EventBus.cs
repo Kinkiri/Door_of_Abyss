@@ -22,9 +22,7 @@ public partial class EventBus : Node
         public Unit Owner;
         public GameAction[] Actions;
         public PassiveTarget PassiveTarget;
-        public TargetShape Shape;
-        public TargetFilter Filter;
-        public int AreaRange;
+        public TargetFilter TargetFilter;
         public int MaxTriggerCount;
         public Condition[] Conditions;
         public string Tag;
@@ -70,9 +68,7 @@ public partial class EventBus : Node
                 Owner = owner,
                 Actions = effect.Actions,
                 PassiveTarget = effect.Target,
-                Shape = effect.Shape,
-                Filter = effect.Filter,
-                AreaRange = effect.AreaRange,
+                TargetFilter = TargetFilter.CombineAnd(effect.TargetFilters),
                 MaxTriggerCount = effect.MaxTriggerCount,
                 Conditions = effect.Conditions,
                 Tag = tag,
@@ -86,7 +82,7 @@ public partial class EventBus : Node
             }
 
             GD.Print($"[EventBus]   注册 {effect.TriggerEvent} target={effect.Target} " +
-                     $"shape={effect.Shape} filter={effect.Filter} maxTrigger={effect.MaxTriggerCount} " +
+                     $"targetFilter={TargetFilter.CombineAnd(effect.TargetFilters)?.GetType().Name ?? "null"} maxTrigger={effect.MaxTriggerCount} " +
                      $"action={string.Join(",", Array.ConvertAll(effect.Actions, a => a?.GetType().Name ?? "null"))}");
         }
     }
@@ -188,29 +184,49 @@ public partial class EventBus : Node
             // ── 创建效果上下文 ──────────────────────────────
             Context effectCtx;
 
-            if (entry.Shape != TargetShape.None)
+            if (entry.TargetFilter != null)
             {
-                // 使用 TargetResolver 自动搜索目标
+                // 使用 TargetFilter 自动搜索目标
                 Cell centerCell = null;
                 var map = MapManager.Instance?.Map;
                 if (map != null)
                     map.TryGetValue(owner.GridPos, out centerCell);
 
-                var targets = TargetResolver.Resolve(
-                    entry.Shape, entry.Filter,
-                    owner, null, centerCell, owner.Team, entry.AreaRange,
-                    map, UnitManager.Instance?.ActiveUnits);
-
-                GD.Print($"[EventBus]   -> 触发: {owner.UnitData?.UnitName} ID={owner.ID} " +
-                         $"shape={entry.Shape} filter={entry.Filter} 找到目标={targets?.Length ?? 0}");
-
-                effectCtx = new Context
+                var resolveCtx = new Context
                 {
                     SourceUnit = owner,
-                    TargetUnits = targets,
+                    TargetCell = centerCell,
                     SourceTeam = owner.Team,
-                    TargetTeam = Team.Neutral,
+                    Map = map,
+                    ActiveUnits = UnitManager.Instance?.ActiveUnits,
                 };
+
+                if (entry.TargetFilter.GetKind() == TargetKind.Cell)
+                {
+                    var cells = TargetResolver.ResolveCells(entry.TargetFilter, resolveCtx);
+                    GD.Print($"[EventBus]   -> 触发: {owner.UnitData?.UnitName} ID={owner.ID} " +
+                             $"filter={entry.TargetFilter.GetType().Name} 找到格子={cells?.Length ?? 0}");
+                    effectCtx = new Context
+                    {
+                        SourceUnit = owner,
+                        TargetCells = cells,
+                        SourceTeam = owner.Team,
+                        TargetTeam = Team.Neutral,
+                    };
+                }
+                else
+                {
+                    var targets = TargetResolver.ResolveUnits(entry.TargetFilter, resolveCtx);
+                    GD.Print($"[EventBus]   -> 触发: {owner.UnitData?.UnitName} ID={owner.ID} " +
+                             $"filter={entry.TargetFilter.GetType().Name} 找到目标={targets?.Length ?? 0}");
+                    effectCtx = new Context
+                    {
+                        SourceUnit = owner,
+                        TargetUnits = targets,
+                        SourceTeam = owner.Team,
+                        TargetTeam = Team.Neutral,
+                    };
+                }
             }
             else
             {

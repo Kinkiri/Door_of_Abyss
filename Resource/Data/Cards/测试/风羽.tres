@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_d5ua7"]
 [ext_resource type="Script" uid="uid://dnlsqjf0bupsk" path="res://Scripts/Data/Actions/DrawCardAction.cs" id="1_mjs7r"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="1_tf_shape"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="1_tf_team"]
 [ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="2_sbqb3"]
 [ext_resource type="Script" uid="uid://b3sdoj1kcep0a" path="res://Scripts/Data/BuffData.cs" id="3_fmrdh"]
 [ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="4_0k4fr"]
@@ -15,6 +17,7 @@ metadata/_custom_type_script = "uid://dnlsqjf0bupsk"
 script = ExtResource("2_sbqb3")
 TargetStat = 3
 Value = 1
+RequiredTags = null
 metadata/_custom_type_script = "uid://qlng65nfa7th"
 
 [sub_resource type="Resource" id="Resource_nvsh4"]
@@ -34,14 +37,22 @@ script = ExtResource("4_0k4fr")
 BuffData = SubResource("Resource_nvsh4")
 metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
 
+[sub_resource type="Resource" id="Resource_tf_shape"]
+script = ExtResource("1_tf_shape")
+Shape = 5
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_tf_attr_team"]
+script = ExtResource("1_tf_team")
+Team = 1
+
 [resource]
 script = ExtResource("1_d5ua7")
 CardID = "风羽"
 CardName = "风羽"
 Description = "令所有己方单位本回合攻击范围+1:抽一张牌"
 Type = 1
-Shape = 5
-Filter = 2
+TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_attr_team")])
 Tags = null
 Cost = 2
 Conditions = null

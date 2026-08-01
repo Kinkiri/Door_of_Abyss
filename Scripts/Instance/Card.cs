@@ -27,11 +27,8 @@ public partial class Card
     /// <summary>卡牌类型</summary>
     public CardType Type { get; set; }
 
-    /// <summary>目标范围形状</summary>
-    public TargetShape Shape { get; set; }
-
-    /// <summary>目标阵营过滤</summary>
-    public TargetFilter Filter { get; set; }
+    /// <summary>目标筛选器（模板数组按 And 组合后的结果，运行时共享）</summary>
+    public TargetFilter TargetFilter { get; set; }
 
     public Card() { }
 
@@ -49,7 +46,6 @@ public partial class Card
         Description = CardData.Description;
         Cost = CardData.Cost;
         Type = CardData.Type;
-        Shape = CardData.Shape;
-        Filter = CardData.Filter;
+        TargetFilter = TargetFilter.CombineAnd(CardData.TargetFilters);
     }
 }

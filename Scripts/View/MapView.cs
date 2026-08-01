@@ -168,15 +168,18 @@ public partial class MapView : Node2D
     {
         if (CardPreviewLayer == null) return;
 
+        var tf = card.TargetFilter;
+        if (tf == null) return;
+
         // 单位卡：渲染门的部署范围（图集坐标 0,0）
-        if (card.Shape == TargetShape.SingleCell && card.Type == CardType.Unit)
+        if (tf.GetShape() == TargetShape.SingleCell && card.Type == CardType.Unit)
             RenderDeployRange();
 
-        // 根据 Filter 选择不同图集坐标，区分敌友
-        var atlas = card.Filter switch
+        // 根据 TeamFilter 选择不同图集坐标，区分敌友
+        var atlas = tf.GetTeamFilter() switch
         {
-            TargetFilter.Ally => new Vector2I(0, 0),   // 友方（治疗/增益）
-            TargetFilter.Enemy => new Vector2I(16, 0),  // 敌方（伤害）
+            TeamFilter.Ally => new Vector2I(0, 0),   // 友方（治疗/增益）
+            TeamFilter.Enemy => new Vector2I(16, 0),  // 敌方（伤害）
             _ => new Vector2I(8, 0),                     // 其他（召唤等）
         };
 

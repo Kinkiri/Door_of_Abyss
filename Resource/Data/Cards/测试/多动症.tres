@@ -1,13 +1,25 @@
 [gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://devamvw6um62p"]
 
 [ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="1_kyjyi"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="1_tf_shape"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="1_tf_team"]
 [ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_tpdoh"]
 
 [sub_resource type="Resource" id="Resource_kyjyi"]
 script = ExtResource("1_kyjyi")
 TargetStat = 4
 Value = 1
+RequiredTags = null
 metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_tf_shape"]
+script = ExtResource("1_tf_shape")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_tf_attr_team"]
+script = ExtResource("1_tf_team")
+Team = 1
 
 [resource]
 script = ExtResource("1_tpdoh")
@@ -15,9 +27,7 @@ CardID = "多动症"
 CardName = "多动症"
 Description = "使一名友方单位行动点数+1"
 Type = 1
-Shape = 1
-Filter = 2
-AreaRange = 1
+TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_attr_team")])
 Tags = null
 Cost = 2
 Conditions = null

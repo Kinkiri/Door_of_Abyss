@@ -61,6 +61,21 @@ Scripts/                         ~7300 行 C#
 │   │   ├── RemoveBuffAction.cs  驱散 Buff
 │   │   ├── MoveUnitAction.cs    强制位移（传送/击退/拉拽）
 │   │   └── SetStatAction.cs     设置属性为精确值（不可逆）
+│   ├── Targeting/               目标筛选器（抽象基类 + 多态子类，替代 Shape+Filter 枚举）
+│   │   ├── TargetFilter.cs      抽象基类：ApplyUnits/ApplyCells/GetShape/IsUnitMatch
+│   │   ├── ShapeTargetFilter.cs 形状候选源：Shape + AreaRange
+│   │   ├── PropertyTargetFilter.cs 静态属性筛选中间基类
+│   │   ├── TeamTargetFilter.cs  相对阵营筛选
+│   │   ├── UnitTypeTargetFilter.cs 单位类型筛选
+│   │   ├── TagTargetFilter.cs   标签筛选（任一匹配）
+│   │   ├── WorldTargetFilter.cs 世界观筛选（无=不限制）
+│   │   ├── FactionTargetFilter.cs 势力筛选（无=不限制）
+│   │   ├── UnitIDTargetFilter.cs 单位 ID 筛选（任一匹配）
+│   │   ├── ConditionTargetFilter.cs 动态过滤：Conditions（配合值源筛运行时属性）
+│   │   ├── ExtremeTargetFilter.cs 极值筛选（值源排序取最高/最低 N 个）
+│   │   ├── AndTargetFilter.cs   AND 组合（形状节点生成 + 其余过滤）
+│   │   ├── OrTargetFilter.cs    OR 组合（任一命中）
+│   │   └── NotTargetFilter.cs   NOT 组合（补集）
 │   ├── Condition/               条件系统（ECA）
 │   │   ├── Condition.cs         抽象基类：IsMet(Context)
 │   │   ├── CompareCondition.cs  通用比较（两个 ValueSource）
@@ -81,7 +96,7 @@ Scripts/                         ~7300 行 C#
 │   │   ├── DistanceValue.cs     曼哈顿距离
 │   │   └── BattleCostValue.cs   费用
 │   ├── Card/
-│   │   ├── CardData.cs          卡牌基类（Shape/Filter/AreaRange/Conditions）
+│   │   ├── CardData.cs          卡牌基类（TargetFilter/Conditions/Actions）
 │   │   ├── DeckData.cs          卡组
 │   │   ├── SpellCardData.cs     法术
 │   │   ├── UnitCardData.cs      单位卡（含 UnitData）
@@ -117,8 +132,9 @@ Scripts/                         ~7300 行 C#
 │   ├── PassiveTarget.cs         PassiveTarget
 │   ├── Rarity.cs                Rarity（稀有度）
 │   ├── Tag.cs                   Tag（标签）
-│   ├── TargetFilter.cs          TargetFilter
+│   ├── TargetKind.cs            TargetKind（目标结果类型：Unit/Cell）
 │   ├── TargetShape.cs           TargetShape
+│   ├── TeamFilter.cs            TeamFilter（相对阵营过滤，原 TargetFilter 改名）
 │   ├── UnitTybe.cs              UnitType
 │   ├── ValueTarget.cs           ValueTarget
 │   └── World.cs                 World（世界观）
@@ -183,7 +199,7 @@ View（Node/Control）        ← 事件驱动渲染，订阅 Manager 事件自�
 EventBus.Fire(EventType, Context, subject)
   → 遍历订阅者
 	→ 触发次数检查（MaxTriggerCount）
-	→ 创建 effectCtx（目标解析：PassiveTarget 或 Shape/Filter）
+	→ 创建 effectCtx（目标解析：PassiveTarget 或 TargetFilter）
 	→ 条件检查（Conditions，任意不满足则 skip）
 	→ 执行 Actions
 ```
@@ -484,8 +500,8 @@ ModifyBuffAction(StacksDelta=-1) -> 减 1 层，还原 1 次 -> ATK-1。
 | 字段 | 说明 |
 |---|---|
 | TriggerEvent | 触发事件 |
-| Target | Self=自身, EventTarget=事件另一方 |
-| Shape/Filter/AreaRange | 范围模式 |
+| Target | Self=自身, EventTarget=事件另一方（TargetFilters 为空时生效） |
+| TargetFilters | 目标筛选器数组（默认 And；非空时自动解析目标，忽略 Target） |
 | MaxTriggerCount | 每回合最多 N 次，0=不限制 |
 | Conditions | ECA 条件 |
 | Actions | 动作序列 |
@@ -539,47 +555,96 @@ Actions=[AutoAttackAction]
 
 ### 卡牌示例
 
-**火球术：** `Type=Spell, Shape=SingleUnit, Filter=Enemy, Cost=1`
+**火球术：** `Type=Spell, Cost=1`
+`TargetFilters=[Shape(单体), Team(敌方)]`
 `Actions=[DamageAction{Value=2}]`
 
-**小兵：** `Type=Unit, Shape=SingleCell, Cost=2`
+**小兵：** `Type=Unit, Cost=2`
+`TargetFilters=[Shape(单体格子)]`（Kind=Cell）
 `Actions=[SummonUnitAction]`
 
-**变强：** `Type=Spell, Shape=SingleUnit, Filter=Ally, Cost=1`
+**变强：** `Type=Spell, Cost=1`
+`TargetFilters=[Shape(单体), Team(友方)]`
 `Actions=[ApplyBuffAction{BuffData=<强壮.tres>, InitialStacks=2}]`
 
-**风羽：** `Type=Spell, Shape=All, Filter=Ally, Cost=2`
+**风羽：** `Type=Spell, Cost=2`
+`TargetFilters=[Shape(全体), Team(友方)]`
 `Actions=[DrawCardAction{Value=1}, ApplyBuffAction{BuffData=<风羽.tres>}]`
 说明：全体友方本回合攻击距离+1 并抽 1 张牌。
 
 ### 7.4 全图目标（Shape=All）
 
-Shape=All 时预览高亮只显示 Filter 匹配且有存活单位的格子，不会全地图渲染。
+Shape=All 时预览高亮只显示 TargetFilters 匹配且有存活单位的格子，不会全地图渲染。
 
 ### 7.5 资源校验
 
 打开游戏时 `CardLibrary.ValidateAll()` 自动校验所有卡牌：
-- `UnitCardData` 的 Shape 必须为 `SingleCell`
+- `UnitCardData` 的 TargetFilters 形状必须为 `SingleCell`
+- `EquipmentCardData` 的 TargetFilters 形状必须为 `SingleUnit`
 - `CardID` 不能为空/重复
-- `Cost`、`AreaRange` 等 int 字段不能为负
+- `Cost` 不能为负、TargetFilters 扩散半径不能为负
 - 问题项输出警告，不影响加载流程
 
 ## 8. 目标系统
 
-### Shape
+目标选择由 **TargetFilter**（Resource）描述：抽象基类 + 多态子类，可组合嵌套（与 Condition/ValueSource 同风格）。替代旧 Shape + Filter 两个枚举。
+
+### 类层次
+
+```
+TargetFilter（抽象基类）
+│  Kind: Unit / Cell（结果集是单位还是格子）
+│  ApplyUnits / ApplyCells / GetShape / GetAreaRange / IsUnitMatch / GetTeamFilter
+│
+├── ShapeTargetFilter        // 形状候选源：Shape + AreaRange（唯一的形状节点，生成候选）
+├── PropertyTargetFilter     // 静态属性筛选的中间基类（复用遍历过滤/格子透传）
+│   ├── TeamTargetFilter     // 相对阵营 Team（Ally/Enemy 相对来源）
+│   ├── UnitTypeTargetFilter // 单位类型 UnitTypes
+│   ├── TagTargetFilter      // 标签 Tags（任一匹配）
+│   ├── WorldTargetFilter    // 世界观 World（无=不限制）
+│   ├── FactionTargetFilter  // 势力 Faction（无=不限制）
+│   └── UnitIDTargetFilter   // 单位 ID UnitIDs（任一匹配；排除用 Not 组合）
+├── ConditionTargetFilter    // 动态过滤：Conditions（配合值源筛运行时属性，如 HP≤50%Max）
+├── ExtremeTargetFilter      // 极值后处理：按值源排序取最高/最低 N 个（数量不足全要）
+├── AndTargetFilter          // AND 组合：自动找第一个形状节点生成候选，其余节点全部过滤（顺序无关）
+├── OrTargetFilter           // OR 组合：任一子过滤器命中即保留
+└── NotTargetFilter          // NOT 组合：全量 − 子过滤器命中集（补集）
+```
+
+### 语义约定
+
+- **`CardData.TargetFilters` / `EffectData.TargetFilters` 是数组，默认 And 组合**：`[Shape(单体), Team(敌方)]` ≡ `And[Shape, Team]`，无需手动包 And（运行时经 `TargetFilter.CombineAnd` 组合）
+- **数组为 null/空 = 无目标**（无目标法术直接打出）；被动效果无 TargetFilters 时用 `Target`（Self/EventTarget）
+- **形状节点**（ShapeTargetFilter）忽略上游候选自行生成；**过滤节点**（Attribute/Condition/组合）对上游候选过滤
+- **单挂过滤类** = 从全量开始（`[Team(敌方)]` 单独 ≡ 全体敌方）
+- 阵营是**相对语义**（Ally/Enemy 相对效果来源阵营）；Neutral 单位不命中敌方过滤
+- `GetShape()/GetAreaRange()/GetTeamFilter()` 穿透组合递归，供 UI 预览/校验与高亮图标使用
+
+### 形状（TargetShape 枚举）
 
 | Shape | 说明 |
 |---|---|
-| None | 无目标 |
+| None | 无目标（一般直接用 TargetFilters=null 或空数组） |
 | SingleUnit / SingleCell | 点选单位/格子 |
-| AreaDiamond / AreaSquare | 菱形/方形扩散 |
+| AreaDiamond / AreaSquare | 菱形/方形扩散（半径 = ShapeTargetFilter.AreaRange） |
 | All | 全地图 |
 
-### Filter
+### 典型配置
 
-| Filter | 说明 |
+| 目标 | TargetFilters 配置（数组默认 And） |
 |---|---|
-| All / Enemy / Ally | 所有/敌方/友方 |
+| 敌方单体 | `[Shape(单体), Team(敌方)]` |
+| 友方单体 | `[Shape(单体), Team(友方)]` |
+| 菱形 2 格敌方 | `[Shape(菱形,2), Team(敌方)]` |
+| 全体友方 | `[Shape(全体), Team(友方)]` |
+| 残血敌方（HP≤50%Max） | `[Shape(全体), Team(敌方), Cond(HP≤50%Max)]` |
+| 生命最低的 3 个友方 | `[Shape(全体), Team(友方), Extreme(生命值, 最低, 3)]`（值源+方向+数量；不足全要） |
+| 建筑或科技标签 | `[Shape(全体), Or(Type(建筑), Tag(科技))]` |
+| 圣主教势力 | `[Shape(全体), Faction(圣主教)]`（World/Faction 默认"无"=不限制） |
+| 只对小兵生效 | `[Shape(全体), UnitID(小兵)]` |
+| 不对小兵生效 | `[Shape(全体), Not(UnitID(小兵))]` |
+| 召唤格子（Kind=Cell） | `[Shape(单体格子)]` |
+| 无目标法术 | `null` 或空数组 |
 
 选中卡牌悬停地图自动预览目标范围。
 
@@ -687,14 +752,15 @@ Actions=[HealAction{Value=2}]
 ### 11.4 范围献祭 - 菱形 2 格所有敌方 3 伤
 
 ```
-TriggerEvent=RoundEnd, Shape=AreaDiamond, Filter=Enemy, AreaRange=2
+TriggerEvent=RoundEnd
+TargetFilters=[Shape(菱形,2), Team(敌方)]
 Actions=[DamageAction{Value=3}]
 ```
 
 ### 11.5 意外之财 - 获得 3 费
 
 ```
-Type=Spell, Shape=None, Cost=0
+Type=Spell, Cost=0, TargetFilters=null
 Actions=[ModifyCostAction{Value=3}]
 ```
 
@@ -750,7 +816,8 @@ UnitData PassiveEffects=[EffectData{
 ### 11.10 强风术 - 击退 2 格
 
 ```
-Shape=SingleUnit, Filter=Enemy, Cost=1
+Type=Spell, Cost=1
+TargetFilters=[Shape(单体), Team(敌方)]
 Actions=[MoveUnitAction{Mode=Push, Distance=2}]
 ```
 
@@ -765,7 +832,8 @@ Actions=[DamageAction{
 ### 11.12 整齐划一 - 全体友方攻击力设为 5
 
 ```
-Shape=All, Filter=Ally, Cost=2
+Type=Spell, Cost=2
+TargetFilters=[Shape(全体), Team(友方)]
 Actions=[SetStatAction{TargetStat=AttackPower, Value=5}]
 ```
 
@@ -789,13 +857,17 @@ Actions=[SetStatAction{TargetStat=AttackPower, Value=5}]
 ID | 类型 | 目标形状 | 过滤 | 费用 | 范围 | 世界观 | 势力 | 标签 | 稀有度 | 描述 | 条件 | 动作
 ```
 
+> "目标形状" + "过滤" 两列由 importer 自动生成 TargetFilters 数组（默认 And）：
+> 有过滤时 → `[Shape(形状,范围), Team(过滤)]`；无过滤时 → `[Shape]`；
+> "无" → null（无目标法术）。范围列仅对菱形/方形生效。
+
 | 列 | 可选值 | 示例 |
 |---|---|---|
 | 类型 | 法术, 单位, 装备, 环境, 特殊 | 法术 |
 | 目标形状 | 敌方单体, 友方单体, 格子, 全体, 菱形, 方形, 无 | 敌方单体 |
 | 过滤 | 敌方, 友方, 所有 | 敌方 |
 | 费用 | 数字+"费" | 1费 |
-| 范围 | "范围"+数字 | 范围1 |
+| 范围 | "范围"+数字（菱形/方形 的扩散半径） | 范围1 |
 | 世界观 | World 枚举值 | 曼斯维森 |
 | 势力 | Faction 枚举值 | 圣主教 |
 | 标签 | 逗号分隔 | 科技,宗教 |
@@ -1002,7 +1074,7 @@ Remove: 同一动作序列 → Revert（MaxHP 语义同 ModifyStatAction：卸�
 **长剑：** 攻击力+2
 ```
 EquipmentData：EquipmentID=长剑, AttackBonus=2
-装备卡：Type=Equipment, Shape=SingleUnit, Filter=Ally, Cost=1, Actions=[EquipAction]
+装备卡：Type=Equipment, Cost=1, TargetFilters=[Shape(单体), Team(友方)], Actions=[EquipAction]
 ```
 
 **护心镜：** 生命上限+3 且回合结束治疗 2

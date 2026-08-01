@@ -194,7 +194,9 @@ public partial class SelectionManager : Node2D
 
     private bool ValidateCardTarget(Card card, Context ctx)
     {
-        var shape = card.Shape;
+        var tf = card.TargetFilter;
+        if (tf == null) return true;
+        var shape = tf.GetShape();
 
         // 无目标 / 全地图 → 直接通过
         if (shape == TargetShape.None || shape == TargetShape.All)
@@ -230,7 +232,7 @@ public partial class SelectionManager : Node2D
             return true;
         }
 
-        // 需要选择单位
+        // 需要选择单位：走 TargetFilter 的完整匹配谓词（阵营/类型/标签/条件）
         if (shape == TargetShape.SingleUnit)
         {
             if (ctx.TargetUnit == null)
@@ -238,14 +240,20 @@ public partial class SelectionManager : Node2D
                 GD.Print("[Selection] 需要选择一个单位");
                 return false;
             }
-            if (card.Filter == TargetFilter.Enemy && ctx.TargetUnit.Team == BattleManager.Instance.CurrentTeam)
+            var currentTeam = BattleManager.Instance?.CurrentTeam ?? Team.Neutral;
+            var matchCtx = new Context
             {
-                GD.Print("[Selection] 需要选择一个敌方单位");
-                return false;
-            }
-            if (card.Filter == TargetFilter.Ally && ctx.TargetUnit.Team != BattleManager.Instance.CurrentTeam)
+                SourceUnit = ctx.SourceUnit,
+                TargetUnit = ctx.TargetUnit,
+                SourceTeam = currentTeam,
+                TargetTeam = ctx.TargetUnit.Team,
+                SourceCard = card,
+                Map = ctx.Map,
+                ActiveUnits = ctx.ActiveUnits,
+            };
+            if (!tf.IsUnitMatch(ctx.TargetUnit, currentTeam, matchCtx))
             {
-                GD.Print("[Selection] 需要选择一个友方单位");
+                GD.Print("[Selection] 目标单位不满足卡牌目标筛选条件");
                 return false;
             }
             return true;
@@ -362,32 +370,36 @@ public partial class SelectionManager : Node2D
         }
     }
 
-    /// <summary>根据卡牌 Shape + AreaRange 计算预览格子集合，过滤无效目标</summary>
+    /// <summary>根据卡牌 TargetFilter 计算预览格子集合，过滤无效目标</summary>
     private static HashSet<Vector2I> ComputeCardPreview(Vector2I center, Card card)
     {
-        var shape = card.Shape;
+        var tf = card.TargetFilter;
+        if (tf == null) return null;
+        var shape = tf.GetShape();
         if (shape == TargetShape.None)
             return null;
 
         var map = MapManager.Instance?.Map;
         if (map == null) return null;
 
-        // 全地图目标：根据 Filter 只显示有匹配单位的格子
+        var currentTeam = BattleManager.Instance?.CurrentTeam ?? Team.Neutral;
+        var previewCtx = new Context
+        {
+            SourceTeam = currentTeam,
+            SourceCard = card,
+            Map = map,
+            ActiveUnits = UnitManager.Instance?.ActiveUnits,
+        };
+
+        // 全地图目标：根据 TargetFilter 只显示有匹配单位的格子
         if (shape == TargetShape.All)
         {
-            var teamFilter = card.Filter switch
-            {
-                TargetFilter.Enemy => BattleManager.Instance?.CurrentTeam == Team.Player ? Team.Enemy : Team.Player,
-                TargetFilter.Ally => BattleManager.Instance?.CurrentTeam,
-                _ => (Team?)null,
-            };
-
             var result = new HashSet<Vector2I>();
             foreach (var (pos, cell) in map)
             {
                 var u = cell.OccupyingUnit;
                 if (u == null || !u.IsAlive || u.IsDead) continue;
-                if (teamFilter != null && u.Team != teamFilter) continue;
+                if (!tf.IsUnitMatch(u, currentTeam, previewCtx)) continue;
                 result.Add(pos);
             }
             return result.Count > 0 ? result : null;
@@ -402,7 +414,7 @@ public partial class SelectionManager : Node2D
             var unit = cell.OccupyingUnit;
             if (unit == null || !unit.IsAlive || unit.IsDead)
                 return null;
-            if (!IsTargetFilterMatch(card.Filter, unit))
+            if (!tf.IsUnitMatch(unit, currentTeam, previewCtx))
                 return null;
             return new HashSet<Vector2I> { center };
         }
@@ -423,7 +435,7 @@ public partial class SelectionManager : Node2D
         }
 
         // 范围形状：显示所有在范围中的格子（区域本身即是目标）
-        int range = card.CardData?.AreaRange ?? 1;
+        int range = tf.GetAreaRange();
         var cells = new HashSet<Vector2I>();
 
         if (shape == TargetShape.AreaDiamond)
@@ -454,17 +466,6 @@ public partial class SelectionManager : Node2D
             if (dist <= range) return true;
         }
         return false; // 没有门时不允许部署
-    }
-
-    private static bool IsTargetFilterMatch(TargetFilter filter, Unit target)
-    {
-        var currentTeam = BattleManager.Instance.CurrentTeam;
-        return filter switch
-        {
-            TargetFilter.Enemy => target.Team != currentTeam,
-            TargetFilter.Ally => target.Team == currentTeam,
-            _ => true,
-        };
     }
 
     private static void AddIfInMap(HashSet<Vector2I> cells, Vector2I pos, Dictionary<Vector2I, Cell> map)

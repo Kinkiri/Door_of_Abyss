@@ -3,19 +3,29 @@
 [ext_resource type="Script" uid="uid://ci5o1ouk3jcsf" path="res://Scripts/Data/Actions/EquipAction.cs" id="1_action"]
 [ext_resource type="Script" uid="uid://4ksuiqod0x18" path="res://Scripts/Data/Card/EquipmentCardData.cs" id="1_card"]
 [ext_resource type="Resource" uid="uid://b8st3tjkr7kj1" path="res://Resource/Data/Equipment/测试装备.tres" id="2_rsih0"]
+[ext_resource type="Script" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="1_tf_shape"]
+[ext_resource type="Script" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="1_tf_team"]
 
 [sub_resource type="Resource" id="Resource_equip1"]
 script = ExtResource("1_action")
 
+[sub_resource type="Resource" id="Resource_tf_shape"]
+script = ExtResource("1_tf_shape")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_tf_attr_team"]
+script = ExtResource("1_tf_team")
+Team = 1
+
 [resource]
 script = ExtResource("1_card")
+TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_attr_team")])
 EquipmentData = ExtResource("2_rsih0")
 CardID = "测试装备卡"
 CardName = "测试装备卡"
 Description = "给目标友方单位装备测试装备"
 Type = 3
-Shape = 1
-Filter = 2
 Tags = Array[int]([])
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_equip1")])

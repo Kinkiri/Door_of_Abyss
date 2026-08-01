@@ -196,24 +196,27 @@ public partial class TextToResourceImporter : EditorScript
         card.Type = type;
 
         // cols[2]=目标形状, cols[3]=过滤
+        TargetShape cardShape;
+        TeamFilter cardFilter;
         if (type == CardType.Unit)
         {
-            card.Shape = TargetShape.SingleCell;
-            card.Filter = ParseFilter(cols[3]);
+            cardShape = TargetShape.SingleCell;
+            cardFilter = ParseFilter(cols[3]);
         }
         else if (type == CardType.Equipment)
         {
-            card.Shape = TargetShape.SingleUnit;
-            card.Filter = ParseFilter(cols[3]);
+            cardShape = TargetShape.SingleUnit;
+            cardFilter = ParseFilter(cols[3]);
         }
         else
         {
-            (card.Shape, card.Filter) = ParseShapeFilter(cols[2], cols[3]);
+            (cardShape, cardFilter) = ParseShapeFilter(cols[2], cols[3]);
         }
 
         // cols[4]=费用, cols[5]=范围
         card.Cost = ParseCost(cols[4]);
-        card.AreaRange = string.IsNullOrWhiteSpace(cols[5]) ? 0 : ParseRange(cols[5]);
+        int areaRange = string.IsNullOrWhiteSpace(cols[5]) ? 0 : ParseRange(cols[5]);
+        card.TargetFilters = MakeTargetFilters(cardShape, cardFilter, areaRange);
 
         // cols[6]=世界观, cols[7]=势力
         card.World = ParseEnum<World>(cols[6]);
@@ -300,14 +303,40 @@ public partial class TextToResourceImporter : EditorScript
         return card;
     }
 
-    /// <summary>解析"目标形状"和"过滤"两列，返回 (Shape, Filter)</summary>
-    private (TargetShape, TargetFilter) ParseShapeFilter(string shapeCol, string filterCol)
+    /// <summary>解析"目标形状"和"过滤"两列，返回 (Shape, TeamFilter)</summary>
+    private (TargetShape, TeamFilter) ParseShapeFilter(string shapeCol, string filterCol)
     {
         // 先从形状列解析
         var (shape, filterFromShape) = ParseTarget(shapeCol);
         // 过滤列如果非空且有意义则覆盖
         var filter = string.IsNullOrWhiteSpace(filterCol) ? filterFromShape : ParseFilter(filterCol);
         return (shape, filter);
+    }
+
+    /// <summary>
+    /// 由形状 + 阵营 + 范围生成 TargetFilter 数组（默认 And 逻辑，无需手动包 And）：
+    /// [Shape, Attr]；无阵营 → [Shape]；Shape=None → null（无目标）。
+    /// </summary>
+    private static TargetFilter[] MakeTargetFilters(TargetShape shape, TeamFilter filter, int areaRange)
+    {
+        if (shape == TargetShape.None)
+            return null;
+
+        var shapeFilter = new ShapeTargetFilter
+        {
+            Shape = shape,
+            AreaRange = (shape == TargetShape.AreaDiamond || shape == TargetShape.AreaSquare) && areaRange > 0 ? areaRange : 1,
+            Kind = shape == TargetShape.SingleCell ? TargetKind.Cell : TargetKind.Unit,
+        };
+
+        if (filter == TeamFilter.All)
+            return new[] { shapeFilter };
+
+        return new TargetFilter[]
+        {
+            shapeFilter,
+            new TeamTargetFilter { Team = filter },
+        };
     }
 
     // ========================================================================
@@ -565,9 +594,8 @@ public partial class TextToResourceImporter : EditorScript
                 {
                     TriggerEvent = eventType,
                     MaxTriggerCount = 1,
-                    Shape = shape,
-                    Filter = filter,
-                    AreaRange = shape == TargetShape.AreaSquare || shape == TargetShape.AreaDiamond ? 1 : 0,
+                    TargetFilters = MakeTargetFilters(shape, filter,
+                        shape == TargetShape.AreaSquare || shape == TargetShape.AreaDiamond ? 1 : 0),
                     Actions = ParseActions(actionDsl),
                 };
             }
@@ -1297,41 +1325,41 @@ public partial class TextToResourceImporter : EditorScript
         _ => UnitType.Squad,
     };
 
-    private (TargetShape shape, TargetFilter filter) ParseTarget(string s)
+    private (TargetShape shape, TeamFilter filter) ParseTarget(string s)
     {
         // "敌方单体" → (SingleUnit, Enemy), "友方单体" → (SingleUnit, Ally)
         if (s.Contains("单体"))
         {
-            var filter = s.Contains("敌") ? TargetFilter.Enemy :
-                         s.Contains("友") ? TargetFilter.Ally :
-                         TargetFilter.All;
+            var filter = s.Contains("敌") ? TeamFilter.Enemy :
+                         s.Contains("友") ? TeamFilter.Ally :
+                         TeamFilter.All;
             return (TargetShape.SingleUnit, filter);
         }
         // "格子" → (SingleCell, All)
         if (s.Contains("格子"))
-            return (TargetShape.SingleCell, TargetFilter.All);
+            return (TargetShape.SingleCell, TeamFilter.All);
         // "全体" → (All, 由 Filter 列决定)
         if (s == "全体" || s.StartsWith("全体"))
-            return (TargetShape.All, TargetFilter.All);
+            return (TargetShape.All, TeamFilter.All);
         // "菱形" → (AreaDiamond, 由 Filter 列决定)
         if (s.Contains("菱形"))
-            return (TargetShape.AreaDiamond, TargetFilter.All);
+            return (TargetShape.AreaDiamond, TeamFilter.All);
         // "方形" → (AreaSquare, 由 Filter 列决定)
         if (s.Contains("方形"))
-            return (TargetShape.AreaSquare, TargetFilter.All);
+            return (TargetShape.AreaSquare, TeamFilter.All);
         // "无"
         if (s == "无" || string.IsNullOrWhiteSpace(s))
-            return (TargetShape.None, TargetFilter.All);
+            return (TargetShape.None, TeamFilter.All);
 
-        return (TargetShape.SingleUnit, TargetFilter.All);
+        return (TargetShape.SingleUnit, TeamFilter.All);
     }
 
-    private TargetFilter ParseFilter(string s) => s switch
+    private TeamFilter ParseFilter(string s) => s switch
     {
-        "敌方" or "敌人" => TargetFilter.Enemy,
-        "友方" or "友" or "友军" => TargetFilter.Ally,
-        "所有" or "全部" or "All" => TargetFilter.All,
-        _ => TargetFilter.All,
+        "敌方" or "敌人" => TeamFilter.Enemy,
+        "友方" or "友" or "友军" => TeamFilter.Ally,
+        "所有" or "全部" or "All" => TeamFilter.All,
+        _ => TeamFilter.All,
     };
 
     private TargetShape ParseShapeName(string s) => s switch
@@ -1345,12 +1373,12 @@ public partial class TextToResourceImporter : EditorScript
         _ => TargetShape.None,
     };
 
-    private TargetFilter ParseFilterName(string s) => s switch
+    private TeamFilter ParseFilterName(string s) => s switch
     {
-        "敌方" or "敌人" => TargetFilter.Enemy,
-        "友方" or "友军" => TargetFilter.Ally,
-        "所有" or "全部" => TargetFilter.All,
-        _ => TargetFilter.All,
+        "敌方" or "敌人" => TeamFilter.Enemy,
+        "友方" or "友军" => TeamFilter.Ally,
+        "所有" or "全部" => TeamFilter.All,
+        _ => TeamFilter.All,
     };
 
     private int ParseCost(string s)

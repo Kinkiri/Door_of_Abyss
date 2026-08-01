@@ -9,6 +9,7 @@
 script = ExtResource("1_jwh15")
 TargetStat = 4
 Value = 1
+RequiredTags = null
 AnimationDuration = 0.3
 metadata/_custom_type_script = "uid://qlng65nfa7th"
 
@@ -23,6 +24,7 @@ metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
 script = ExtResource("4_hi8lt")
 UnitID = "精兵"
 UnitName = "精兵"
+Tags = null
 AttackPower = 3
 HealthPoints = 4
 Stamina = 2

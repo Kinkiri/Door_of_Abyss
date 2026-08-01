@@ -3,102 +3,71 @@ using System;
 using System.Collections.Generic;
 
 /// <summary>
-/// 目标解析器：根据 TargetShape + TargetFilter 将单个目标扩散为多目标列表。
-/// 供 GameAction 入口调用，让 Damage/Heal 循环处理多个目标。
+/// 目标解析器：TargetFilter 组合树的静态入口 + 共享候选算法（纯函数，战场数据由 ctx 传入）。
+/// ResolveUnits/ResolveCells 以 null 候选调用 filter（形状节点自生成、过滤节点从全量开始）。
 /// </summary>
 public static class TargetResolver
 {
-    /// <summary>
-    /// 解析目标列表
-    /// </summary>
-    /// <param name="shape">范围形状</param>
-    /// <param name="filter">阵营过滤</param>
-    /// <param name="source">效果来源单位（用于位置/阵营参考）</param>
-    /// <param name="singleTarget">玩家点选的单个单位</param>
-    /// <param name="centerCell">范围攻击的中心格子</param>
-    /// <param name="sourceTeam">来源阵营</param>
-    /// <param name="areaRange">AreaDiamond/AreaSquare 扩散半径</param>
-    /// <param name="map">战场地图（格子字典），由调用方传入</param>
-    /// <param name="activeUnits">战场活跃单位列表，由调用方传入</param>
-    /// <returns>目标单位数组，无目标返回空数组</returns>
-    public static Unit[] Resolve(
-        TargetShape shape,
-        TargetFilter filter,
-        Unit source,
-        Unit singleTarget,
-        Cell centerCell,
-        Team sourceTeam,
-        int areaRange = 1,
-        Dictionary<Vector2I, Cell> map = null,
-        List<Unit> activeUnits = null)
-    {
-        Team? teamFilter = filter switch
-        {
-            TargetFilter.All => null,
-            TargetFilter.Enemy => sourceTeam == Team.Player ? Team.Enemy : Team.Player,
-            TargetFilter.Ally => sourceTeam,
-            _ => null,
-        };
+    /// <summary>解析单位目标；filter 为 null 时返回空数组</summary>
+    public static Unit[] ResolveUnits(TargetFilter filter, Context ctx)
+        => filter?.ApplyUnits(null, ctx) ?? Array.Empty<Unit>();
 
-        switch (shape)
-        {
-            case TargetShape.None:
-                return Array.Empty<Unit>();
+    /// <summary>解析格子目标；filter 为 null 时返回空数组</summary>
+    public static Cell[] ResolveCells(TargetFilter filter, Context ctx)
+        => filter?.ApplyCells(null, ctx) ?? Array.Empty<Cell>();
 
-            case TargetShape.SingleCell:
-                return null; // 格子目标不走单位
+    /// <summary>单位是否可作为目标（存活且未标记死亡）</summary>
+    public static bool IsValidTarget(Unit u) => u != null && u.IsAlive && !u.IsDead;
 
-            case TargetShape.SingleUnit:
-                return singleTarget != null ? new[] { singleTarget } : null;
-
-            case TargetShape.AreaDiamond:
-                return ResolveCellArea(centerCell, areaRange, teamFilter, isDiamond: true, map);
-
-            case TargetShape.AreaSquare:
-                return ResolveCellArea(centerCell, areaRange, teamFilter, isDiamond: false, map);
-
-            case TargetShape.All:
-                return FilterTeam(teamFilter, activeUnits);
-
-            default:
-                return singleTarget != null ? new[] { singleTarget } : null;
-        }
-    }
-
-    /// <summary>按阵营筛选存活单位</summary>
-    private static Unit[] FilterTeam(Team? team, List<Unit> activeUnits)
+    /// <summary>全部存活单位</summary>
+    public static Unit[] AllAliveUnits(List<Unit> activeUnits)
     {
         if (activeUnits == null) return Array.Empty<Unit>();
-
         var list = new List<Unit>(activeUnits.Count);
         foreach (var u in activeUnits)
+            if (IsValidTarget(u))
+                list.Add(u);
+        return list.ToArray();
+    }
+
+    /// <summary>地图全部格子</summary>
+    public static Cell[] AllCells(Dictionary<Vector2I, Cell> map)
+    {
+        if (map == null) return Array.Empty<Cell>();
+        var list = new List<Cell>(map.Count);
+        foreach (var c in map.Values)
+            if (c != null)
+                list.Add(c);
+        return list.ToArray();
+    }
+
+    /// <summary>区域内格子上的存活单位（菱形/方形扩散）</summary>
+    public static Unit[] UnitsInArea(Cell center, int range, bool diamond, Dictionary<Vector2I, Cell> map)
+    {
+        var cells = CellsInArea(center, range, diamond, map);
+        var list = new List<Unit>(cells.Length);
+        foreach (var c in cells)
         {
-            if (!u.IsAlive || u.IsDead) continue;
-            if (team != null && u.Team != team) continue;
-            list.Add(u);
+            var u = c.OccupyingUnit;
+            if (IsValidTarget(u))
+                list.Add(u);
         }
         return list.ToArray();
     }
 
-    /// <summary>格子范围扩散，找格子上的单位，可选按阵营过滤</summary>
-    private static Unit[] ResolveCellArea(Cell center, int range, Team? teamFilter, bool isDiamond, Dictionary<Vector2I, Cell> map)
+    /// <summary>区域内格子（菱形/方形扩散，含中心格）</summary>
+    public static Cell[] CellsInArea(Cell center, int range, bool diamond, Dictionary<Vector2I, Cell> map)
     {
-        if (center == null || map == null) return null;
-
-        var list = new List<Unit>();
+        if (center == null || map == null) return Array.Empty<Cell>();
+        var list = new List<Cell>();
         for (int dx = -range; dx <= range; dx++)
         {
             for (int dy = -range; dy <= range; dy++)
             {
-                if (isDiamond && Mathf.Abs(dx) + Mathf.Abs(dy) > range) continue;
+                if (diamond && Mathf.Abs(dx) + Mathf.Abs(dy) > range) continue;
                 var pos = new Vector2I(center.GridPos.X + dx, center.GridPos.Y + dy);
-                if (map.TryGetValue(pos, out Cell c) && c.OccupyingUnit != null)
-                {
-                    var u = c.OccupyingUnit;
-                    if (!u.IsAlive || u.IsDead) continue;
-                    if (teamFilter != null && u.Team != teamFilter) continue;
-                    list.Add(u);
-                }
+                if (map.TryGetValue(pos, out Cell c) && c != null)
+                    list.Add(c);
             }
         }
         return list.ToArray();

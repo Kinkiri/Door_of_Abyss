@@ -2,19 +2,18 @@
 
 [ext_resource type="Script" uid="uid://d2widi0p087e8" path="res://Scripts/Data/PlayerData.cs" id="1_21qan"]
 [ext_resource type="Resource" uid="uid://brrpcr8sgqo3a" path="res://Resource/Data/Units/默认门.tres" id="1_mt5ji"]
-[ext_resource type="Resource" uid="uid://xftoysy8v416" path="res://Resource/Data/Cards/圣主教/传教士.tres" id="2_mt5ji"]
-[ext_resource type="Resource" uid="uid://cjeadas7onjex" path="res://Resource/Data/Cards/圣主教/修女.tres" id="3_cge07"]
-[ext_resource type="Resource" uid="uid://imt0c6m6v8hi" path="res://Resource/Data/Cards/圣主教/癫狂教徒.tres" id="4_mj3vb"]
-[ext_resource type="Resource" uid="uid://1vn7taouefwf" path="res://Resource/Data/Cards/圣主教/赎罪券.tres" id="5_k7wen"]
+[ext_resource type="Resource" uid="uid://bu1wjbkkvgmn0" path="res://Resource/Data/Cards/测试/先锋.tres" id="2_mrntf"]
+[ext_resource type="Resource" uid="uid://dyo3pvkadycis" path="res://Resource/Data/Cards/测试/变强.tres" id="3_q6p3j"]
+[ext_resource type="Resource" uid="uid://dl8hmrc3mnmtt" path="res://Resource/Data/Cards/测试/天火！.tres" id="4_q6p3j"]
 [ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="11_ljakr"]
 
 [sub_resource type="Resource" id="Resource_h85jk"]
 script = ExtResource("11_ljakr")
-Cards = Array[Object]([ExtResource("2_mt5ji"), ExtResource("2_mt5ji"), ExtResource("2_mt5ji"), ExtResource("2_mt5ji"), ExtResource("3_cge07"), ExtResource("3_cge07"), ExtResource("3_cge07"), ExtResource("3_cge07"), ExtResource("4_mj3vb"), ExtResource("4_mj3vb"), ExtResource("4_mj3vb"), ExtResource("4_mj3vb"), ExtResource("5_k7wen"), ExtResource("5_k7wen"), ExtResource("5_k7wen"), ExtResource("5_k7wen")])
+Cards = Array[Object]([ExtResource("2_mrntf"), ExtResource("2_mrntf"), ExtResource("3_q6p3j"), ExtResource("3_q6p3j"), ExtResource("2_mrntf"), ExtResource("2_mrntf"), ExtResource("3_q6p3j"), ExtResource("3_q6p3j"), ExtResource("4_q6p3j"), ExtResource("4_q6p3j"), ExtResource("4_q6p3j"), ExtResource("4_q6p3j")])
 metadata/_custom_type_script = "uid://b1eamjx1y7exn"
 
 [resource]
 script = ExtResource("1_21qan")
 PlayerDeck = SubResource("Resource_h85jk")
-DoorDatas = Array[Object]([ExtResource("1_mt5ji"), ExtResource("1_mt5ji")])
+DoorDatas = Array[Object]([ExtResource("1_mt5ji")])
 metadata/_custom_type_script = "uid://d2widi0p087e8"

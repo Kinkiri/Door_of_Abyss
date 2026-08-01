@@ -75,14 +75,14 @@ public partial class CardLibrary : Library
                 }
             }
 
-            // 3) UnitCardData → TargetShape 必须是 SingleCell
-            if (card is UnitCardData unitCard && unitCard.Shape != TargetShape.SingleCell)
+            // 3) UnitCardData → TargetFilters 必须存在且形状为 SingleCell
+            if (card is UnitCardData unitCard && (TargetFilter.CombineAnd(unitCard.TargetFilters)?.GetShape() ?? TargetShape.None) != TargetShape.SingleCell)
             {
-                sb.AppendLine($"  [{card.CardID}] 单位卡的 Shape 应为 SingleCell，当前为 {unitCard.Shape}");
+                sb.AppendLine($"  [{card.CardID}] 单位卡的 TargetFilters 应为 SingleCell，当前={unitCard.TargetFilters?.Length ?? 0} 项");
                 errorCount++;
             }
 
-            // 4) EquipmentCardData → 必须有 EquipmentData + Shape 必须 SingleUnit + EquipmentID 非空
+            // 4) EquipmentCardData → 必须有 EquipmentData + TargetFilters 形状必须 SingleUnit + EquipmentID 非空
             if (card is EquipmentCardData equipCard)
             {
                 if (equipCard.EquipmentData == null)
@@ -96,9 +96,9 @@ public partial class CardLibrary : Library
                     errorCount++;
                 }
 
-                if (equipCard.Shape != TargetShape.SingleUnit)
+                if ((TargetFilter.CombineAnd(equipCard.TargetFilters)?.GetShape() ?? TargetShape.None) != TargetShape.SingleUnit)
                 {
-                    sb.AppendLine($"  [CardID={card.CardID}] 装备卡的 Shape 应为 SingleUnit，当前为 {equipCard.Shape}");
+                    sb.AppendLine($"  [CardID={card.CardID}] 装备卡的 TargetFilters 应为 SingleUnit，当前={equipCard.TargetFilters?.Length ?? 0} 项");
                     errorCount++;
                 }
             }
@@ -110,10 +110,10 @@ public partial class CardLibrary : Library
                 errorCount++;
             }
 
-            // 6) AreaRange 不能为负
-            if (card.AreaRange < 0)
+            // 6) 扩散半径不能为负
+            if (card.TargetFilters != null && (TargetFilter.CombineAnd(card.TargetFilters)?.GetAreaRange() ?? 0) < 0)
             {
-                sb.AppendLine($"  [{card.CardID}] AreaRange={card.AreaRange}，不能为负");
+                sb.AppendLine($"  [{card.CardID}] AreaRange={TargetFilter.CombineAnd(card.TargetFilters)?.GetAreaRange() ?? 0}，不能为负");
                 errorCount++;
             }
         }

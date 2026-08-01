@@ -1,11 +1,22 @@
 [gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://1vn7taouefwf"]
 
 [ext_resource type="Script" uid="uid://bndowl6u6n8uh" path="res://Scripts/Data/Actions/HealAction.cs" id="1_2bvyn"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="1_tf_shape"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="1_tf_team"]
 [ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="2_4nflx"]
 
 [sub_resource type="Resource" id="Resource_pdtq3"]
 script = ExtResource("1_2bvyn")
 Value = 2
+
+[sub_resource type="Resource" id="Resource_tf_shape"]
+script = ExtResource("1_tf_shape")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_tf_attr_team"]
+script = ExtResource("1_tf_team")
+Team = 1
 
 [resource]
 script = ExtResource("2_4nflx")
@@ -13,9 +24,7 @@ CardID = "赎罪券"
 CardName = "赎罪券"
 Description = "治疗目标2点血"
 Type = 1
-Shape = 1
-Filter = 2
-AreaRange = 1
+TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_attr_team")])
 World = 1
 Faction = 1
 Tags = Array[int]([1])

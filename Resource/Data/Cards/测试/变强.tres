@@ -2,7 +2,9 @@
 
 [ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_mdk1n"]
 [ext_resource type="Resource" uid="uid://ce81ji0jjv2yr" path="res://Resource/Data/Buff/强壮.tres" id="1_pkrgy"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="1_tf_team"]
 [ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_82elv"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="4_y4il5"]
 
 [sub_resource type="Resource" id="Resource_qrm4r"]
 script = ExtResource("2_82elv")
@@ -10,14 +12,23 @@ BuffData = ExtResource("1_pkrgy")
 InitialStacks = 2
 metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
 
+[sub_resource type="Resource" id="Resource_xoo06"]
+script = ExtResource("1_tf_team")
+Team = 1
+metadata/_custom_type_script = "uid://bjnrbd7iwxb5u"
+
+[sub_resource type="Resource" id="Resource_fod2w"]
+script = ExtResource("4_y4il5")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
 [resource]
 script = ExtResource("1_mdk1n")
 CardID = "变强"
 CardName = "变强"
 Description = "对一名友方单位施加2层强壮"
 Type = 1
-Shape = 1
-Filter = 2
+TargetFilters = Array[Object]([SubResource("Resource_xoo06"), SubResource("Resource_fod2w")])
 Tags = null
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_qrm4r")])

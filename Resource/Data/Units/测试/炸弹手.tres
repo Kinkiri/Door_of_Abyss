@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="1_4wbxk"]
 [ext_resource type="PackedScene" uid="uid://n2lf7klphtj5" path="res://Scenes/Prefabs/Units/中东小伙.tscn" id="1_xfodj"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="2_dduhm"]
 [ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_fggy3"]
 [ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="4_ga3er"]
 
@@ -10,11 +11,15 @@ script = ExtResource("1_4wbxk")
 Value = 3
 metadata/_custom_type_script = "uid://bcjncmte44un1"
 
+[sub_resource type="Resource" id="Resource_j04ra"]
+script = ExtResource("2_dduhm")
+Shape = 4
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
 [sub_resource type="Resource" id="Resource_0v6ps"]
 script = ExtResource("2_fggy3")
 TriggerEvent = 10
-Shape = 4
-Filter = 1
+TargetFilters = Array[Object]([SubResource("Resource_j04ra")])
 MaxTriggerCount = 1
 Actions = Array[Object]([SubResource("Resource_do3l5")])
 Conditions = null
@@ -24,6 +29,7 @@ metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
 script = ExtResource("4_ga3er")
 UnitID = "炸弹手"
 UnitName = "炸弹手"
+Tags = null
 HealthPoints = 3
 Description = "死后自爆，对周围八格的敌人造成3点伤害"
 UnitPrefab = ExtResource("1_xfodj")

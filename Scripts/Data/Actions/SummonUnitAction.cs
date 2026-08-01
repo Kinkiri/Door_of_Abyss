@@ -25,7 +25,11 @@ public partial class SummonUnitAction : GameAction
 
     protected override void Apply(Context ctx)
     {
-        if (ctx.TargetCell == null) return;
+        // 目标格子：优先遍历 TargetCells（区域召唤），单格回退 TargetCell
+        var cells = (ctx.TargetCells != null && ctx.TargetCells.Length > 0)
+            ? ctx.TargetCells
+            : (ctx.TargetCell != null ? new[] { ctx.TargetCell } : null);
+        if (cells == null) return;
 
         // 优先用动作配置的单位（UnitData 引用 → UnitID 查库），否则回退到单位卡自身的 UnitData
         var unitData = UnitData
@@ -33,37 +37,44 @@ public partial class SummonUnitAction : GameAction
             ?? (ctx.SourceCard?.CardData as UnitCardData)?.UnitData;
         if (unitData == null) return;
 
-        // 仅"单位卡路径"（未显式配 UnitData/UnitID）保留部署范围检查；通用召唤无限制
-        if (UnitData == null && string.IsNullOrEmpty(UnitID) && ctx.SourceTeam == Team.Player)
-        {
-            bool inRange = false;
-            foreach (var door in UnitManager.GetDoors(Team.Player))
-            {
-                int range = (door.UnitData as DoorData)?.DeployRange ?? 2;
-                if (IsWithinRange(ctx.TargetCell.GridPos, door.GridPos, range))
-                { inRange = true; break; }
-            }
-            if (!inRange)
-            {
-                string doorInfo = string.Join(", ", UnitManager.GetDoors(Team.Player).Select(d => $"{d.UnitData?.UnitName}@{d.GridPos}"));
-                GD.Print($"[SummonUnitAction] 超出所有门部署范围: 目标 {ctx.TargetCell.GridPos}，门: {doorInfo}");
-                return;
-            }
-        }
+        bool isUnitCardPath = UnitData == null && string.IsNullOrEmpty(UnitID);
 
-        var spawned = UnitManager.Instance.SpawnUnit(
-            unitData, ctx.TargetCell.GridPos, ctx.SourceTeam);
-        if (spawned != null)
+        foreach (var cell in cells)
         {
-            if (SpawnBuff != null)
+            if (cell == null) continue;
+
+            // 仅"单位卡路径"（未显式配 UnitData/UnitID）保留部署范围检查；通用召唤无限制
+            if (isUnitCardPath && ctx.SourceTeam == Team.Player)
             {
-                BuffManager.Instance?.ApplyBuff(spawned, SpawnBuff, ctx.SourceUnit, SpawnBuffStacks);
-                GD.Print($"[SummonUnitAction] 召唤 {unitData.UnitName} 于 {ctx.TargetCell.GridPos}" +
-                         $" +{SpawnBuffStacks}层{SpawnBuff.BuffName}");
+                bool inRange = false;
+                foreach (var door in UnitManager.GetDoors(Team.Player))
+                {
+                    int range = (door.UnitData as DoorData)?.DeployRange ?? 2;
+                    if (IsWithinRange(cell.GridPos, door.GridPos, range))
+                    { inRange = true; break; }
+                }
+                if (!inRange)
+                {
+                    string doorInfo = string.Join(", ", UnitManager.GetDoors(Team.Player).Select(d => $"{d.UnitData?.UnitName}@{d.GridPos}"));
+                    GD.Print($"[SummonUnitAction] 超出所有门部署范围: 目标 {cell.GridPos}，门: {doorInfo}");
+                    continue;
+                }
             }
-            else
+
+            var spawned = UnitManager.Instance.SpawnUnit(
+                unitData, cell.GridPos, ctx.SourceTeam);
+            if (spawned != null)
             {
-                GD.Print($"[SummonUnitAction] 召唤 {unitData.UnitName} 于 {ctx.TargetCell.GridPos}");
+                if (SpawnBuff != null)
+                {
+                    BuffManager.Instance?.ApplyBuff(spawned, SpawnBuff, ctx.SourceUnit, SpawnBuffStacks);
+                    GD.Print($"[SummonUnitAction] 召唤 {unitData.UnitName} 于 {cell.GridPos}" +
+                             $" +{SpawnBuffStacks}层{SpawnBuff.BuffName}");
+                }
+                else
+                {
+                    GD.Print($"[SummonUnitAction] 召唤 {unitData.UnitName} 于 {cell.GridPos}");
+                }
             }
         }
     }

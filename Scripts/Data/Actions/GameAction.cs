@@ -27,19 +27,25 @@ public abstract partial class GameAction : Resource
     public virtual void Revert(Context ctx) { }
 
     /// <summary>
-    /// 目标扩散：根据 SourceCard 的 TargetShape + TargetFilter 将单目标扩展为多目标数组。
-    /// 子类 Apply() 执行时 ctx.TargetUnits 已就绪。
+    /// 目标扩散：根据 SourceCard 的 TargetFilter 将单目标扩展为多目标数组（或格子数组）。
+    /// 子类 Apply() 执行时 ctx.TargetUnits / ctx.TargetCells 已就绪。
     /// </summary>
     private static void ResolveTargets(Context ctx)
     {
-        // 卡牌路径：按卡牌定义的 Shape+Filter 扩散
-        if (ctx.SourceCard != null && (ctx.TargetUnits == null || ctx.TargetUnits.Length == 0))
+        // 卡牌路径：按卡牌 TargetFilter 扩散（Kind 决定单位还是格子）
+        var tf = ctx.SourceCard?.TargetFilter;
+        if (tf != null)
         {
-            ctx.TargetUnits = TargetResolver.Resolve(
-                ctx.SourceCard.Shape, ctx.SourceCard.Filter,
-                ctx.SourceUnit, ctx.TargetUnit, ctx.TargetCell,
-                ctx.SourceTeam, ctx.SourceCard.CardData?.AreaRange ?? 1,
-                ctx.Map, ctx.ActiveUnits);
+            if (tf.GetKind() == TargetKind.Cell)
+            {
+                if (ctx.TargetCells == null || ctx.TargetCells.Length == 0)
+                    ctx.TargetCells = TargetResolver.ResolveCells(tf, ctx);
+            }
+            else
+            {
+                if (ctx.TargetUnits == null || ctx.TargetUnits.Length == 0)
+                    ctx.TargetUnits = TargetResolver.ResolveUnits(tf, ctx);
+            }
         }
 
         // 被动/非卡牌路径：单目标包装为数组
