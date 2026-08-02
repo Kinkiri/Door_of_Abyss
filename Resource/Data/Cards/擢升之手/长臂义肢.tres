@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="EquipmentCardData" format=3 uid="uid://bpx2qew5q1thk"]
+
+[ext_resource type="Script" uid="uid://ci5o1ouk3jcsf" path="res://Scripts/Data/Actions/EquipAction.cs" id="1_xnufv"]
+[ext_resource type="Script" uid="uid://4ksuiqod0x18" path="res://Scripts/Data/Card/EquipmentCardData.cs" id="1_xoy6j"]
+[ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="2_16mgd"]
+[ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="3_kr350"]
+[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="4_a8ps4"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="5_2oncy"]
+[ext_resource type="Script" uid="uid://tmoxnw3avry4" path="res://Scripts/Data/Units/EquipmentData.cs" id="6_0gdwv"]
+[ext_resource type="Resource" uid="uid://6ar1d2ju8h46" path="res://Resource/Data/选择器预设/单体我方兵种.tres" id="7_recw8"]
+
+[sub_resource type="Resource" id="Resource_cyi5u"]
+script = ExtResource("1_xnufv")
+metadata/_custom_type_script = "uid://ci5o1ouk3jcsf"
+
+[sub_resource type="Resource" id="Resource_r8d8i"]
+script = ExtResource("3_kr350")
+TargetStat = 4
+Value = 1
+RequiredTags = null
+CurrentAPOnly = true
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_c622w"]
+script = ExtResource("5_2oncy")
+BuffData = ExtResource("4_a8ps4")
+InitialStacks = 2
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_mds7w"]
+script = ExtResource("6_0gdwv")
+EquipmentID = "长臂义肢"
+EquipmentName = "长臂义肢"
+Description = "+2义肢，+1当前行动点"
+Icon = ExtResource("2_16mgd")
+AttackBonus = 0
+MaxHealthBonus = 0
+PassiveEffects = null
+OnApplyActions = Array[Object]([SubResource("Resource_r8d8i"), SubResource("Resource_c622w")])
+metadata/_custom_type_script = "uid://tmoxnw3avry4"
+
+[resource]
+script = ExtResource("1_xoy6j")
+EquipmentData = SubResource("Resource_mds7w")
+CardID = "长臂义肢"
+CardName = "长臂义肢"
+Description = ""
+Type = 3
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+Cost = 3
+TargetFilters = Array[Object]([ExtResource("7_recw8")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_cyi5u")])
+metadata/_custom_type_script = "uid://4ksuiqod0x18"

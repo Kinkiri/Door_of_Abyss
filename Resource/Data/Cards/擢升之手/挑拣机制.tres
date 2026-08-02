@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://tc3nxxbqtsaw"]
+
+[ext_resource type="Script" uid="uid://b45b7wm27ouyg" path="res://Scripts/Data/Card/Filters/CardUnitTypeFilter.cs" id="1_3umxe"]
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_r2tlb"]
+[ext_resource type="Script" uid="uid://dnlsqjf0bupsk" path="res://Scripts/Data/Actions/DrawCardAction.cs" id="2_1afnn"]
+[ext_resource type="Script" uid="uid://bh513nttrjbjn" path="res://Scripts/Data/Card/Filters/CardTypeFilter.cs" id="3_u5yrr"]
+
+[sub_resource type="Resource" id="Resource_3umxe"]
+script = ExtResource("1_3umxe")
+UnitTypes = Array[int]([0])
+metadata/_custom_type_script = "uid://b45b7wm27ouyg"
+
+[sub_resource type="Resource" id="Resource_olbjr"]
+script = ExtResource("2_1afnn")
+Value = 1
+Filters = Array[Object]([SubResource("Resource_3umxe")])
+AnimationDuration = 0.1
+metadata/_custom_type_script = "uid://dnlsqjf0bupsk"
+
+[sub_resource type="Resource" id="Resource_n4a1q"]
+script = ExtResource("3_u5yrr")
+Types = Array[int]([3])
+metadata/_custom_type_script = "uid://bh513nttrjbjn"
+
+[sub_resource type="Resource" id="Resource_1afnn"]
+script = ExtResource("2_1afnn")
+Value = 1
+Filters = Array[Object]([SubResource("Resource_n4a1q")])
+AnimationDuration = 0.1
+metadata/_custom_type_script = "uid://dnlsqjf0bupsk"
+
+[resource]
+script = ExtResource("1_r2tlb")
+CardID = "挑拣机制"
+CardName = "挑拣机制"
+Description = "抽一张兵种牌和一张装备牌"
+Type = 1
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+Cost = 2
+TargetFilters = null
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_olbjr"), SubResource("Resource_1afnn")])
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

@@ -1,0 +1,49 @@
+[gd_resource type="Resource" script_class="EquipmentCardData" format=3 uid="uid://dgedoy4lvmx0q"]
+
+[ext_resource type="Script" uid="uid://4ksuiqod0x18" path="res://Scripts/Data/Card/EquipmentCardData.cs" id="1_ptvs3"]
+[ext_resource type="Script" uid="uid://ci5o1ouk3jcsf" path="res://Scripts/Data/Actions/EquipAction.cs" id="1_u8pyk"]
+[ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="2_31hq8"]
+[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="3_j2c46"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="4_1arp0"]
+[ext_resource type="Resource" uid="uid://djm1disxpn1o1" path="res://Resource/Data/Effects/追击.tres" id="5_x37mf"]
+[ext_resource type="Script" uid="uid://tmoxnw3avry4" path="res://Scripts/Data/Units/EquipmentData.cs" id="6_xpwdv"]
+[ext_resource type="Resource" uid="uid://6ar1d2ju8h46" path="res://Resource/Data/选择器预设/单体我方兵种.tres" id="7_bwiep"]
+
+[sub_resource type="Resource" id="Resource_8fue8"]
+script = ExtResource("1_u8pyk")
+metadata/_custom_type_script = "uid://ci5o1ouk3jcsf"
+
+[sub_resource type="Resource" id="Resource_uwysc"]
+script = ExtResource("4_1arp0")
+BuffData = ExtResource("3_j2c46")
+InitialStacks = 3
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_3ggw1"]
+script = ExtResource("6_xpwdv")
+EquipmentID = "多功能铲"
+EquipmentName = "多功能铲"
+Description = "追击；义肢3"
+Icon = ExtResource("2_31hq8")
+AttackBonus = 0
+MaxHealthBonus = 0
+PassiveEffects = Array[Object]([ExtResource("5_x37mf")])
+OnApplyActions = Array[Object]([SubResource("Resource_uwysc")])
+metadata/_custom_type_script = "uid://tmoxnw3avry4"
+
+[resource]
+script = ExtResource("1_ptvs3")
+EquipmentData = SubResource("Resource_3ggw1")
+CardID = "多功能铲"
+CardName = "多功能铲"
+Description = ""
+Type = 3
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+Rarity = 1
+Cost = 4
+TargetFilters = Array[Object]([ExtResource("7_bwiep")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_8fue8")])
+metadata/_custom_type_script = "uid://4ksuiqod0x18"

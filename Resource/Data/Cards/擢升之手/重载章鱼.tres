@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://cxntvbgcftr5s"]
+
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_2n5tr"]
+[ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_464nj"]
+[ext_resource type="Resource" uid="uid://lrgqm0h2wth5" path="res://Resource/Data/Units/擢升之手/重载章鱼.tres" id="3_2n5tr"]
+[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="4_7ityk"]
+
+[sub_resource type="Resource" id="Resource_gfhjv"]
+script = ExtResource("1_2n5tr")
+AnimationDuration = 0.3
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[resource]
+script = ExtResource("4_7ityk")
+UnitData = ExtResource("3_2n5tr")
+CardID = "重载章鱼"
+CardName = "重载章鱼"
+Description = ""
+Type = 0
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+Rarity = 1
+Cost = 7
+TargetFilters = Array[Object]([ExtResource("2_464nj")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_gfhjv")])
+metadata/_custom_type_script = "uid://p1hhkgy2pem"

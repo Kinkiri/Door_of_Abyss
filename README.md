@@ -416,7 +416,7 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 
 | 动作 | 字段 | 说明 |
 |---|---|---|
-| ApplyBuffAction | BuffData, InitialStacks | 施加 Buff。**遍历 `TargetUnits` 支持多目标**（如 Shape=All）。
+| ApplyBuffAction | BuffData, InitialStacks, ValueSource | 施加 Buff。**遍历 `TargetUnits` 支持多目标**（如 Shape=All）。`ValueSource` 为动态叠层值源（设置后覆盖 `InitialStacks`，如亡语"转移与死者相同的层数"） |
 | ModifyBuffAction | BuffID, TurnsDelta, StacksDelta, WearMode | 修改回合/叠层。**回合/叠层最小减到 0，不能为负**；`RemainingTurns=-1`（永久 Buff）忽略回合修改，其他非法负值警告并按 0 处理；叠层归零移除。**`WearMode=true`（磨损模式）：减层只消耗"行动开始快照（`Buff.StacksAtActionStart`）内的旧层"**——本次行动中新增的层不因本次行动损耗（如"攻击后获得义肢"不被本次攻击磨损） |
 | RemoveBuffAction | BuffID | 无条件整个移除（驱散） |
 | **ModifyDamageAction** | Delta | 修改本次伤害事件的伤害量（正=加伤，负=减伤）。配合 **OnBeforeDamage** 事件使用：作用于 `ctx.DamageModifier`，由 `DamageAction` 结算时应用，多个加伤/减伤被动可叠加 |
@@ -532,7 +532,7 @@ ModifyBuffAction(StacksDelta=-1) -> 减 1 层，还原 1 次 -> ATK-1。
 | OnKill | 击杀 |
 | OnBuffApplied / OnBuffRemoved | Buff 施加/移除 |
 | OnUnitAct | 单位行动后（移动/攻击；**出牌不触发**），`ctx.ActType` 区分移动/攻击 |
-| **OnUseCard** | 使用卡牌后（出牌成功扣费后、卡牌动作执行前），subject=出牌单位 |
+| **OnUseCard** | 使用卡牌后（出牌成功扣费后、卡牌动作执行前），无 subject（来源单位经 `SourceUnit` 取） |
 | **OnBeforeDamage** | 伤害计算前。**攻击者侧 + 受击者侧各触发一次**（subject 分别为攻击者、受击者）：攻击者挂"加伤"被动、受击者挂"减伤"被动均生效。被动用 **`ModifyDamageAction`** 修改 `ctx.DamageModifier`（正加负减），`DamageAction` 结算时 `max(0, 伤害+修饰)`；`AutoAttackAction` 已统一走 `DamageAction` 链路 |
 | **OnUnitDeath** | 单位死亡（亡语） |
 | **OnMove** | 移动后（不含攻击/出牌） |
@@ -857,6 +857,26 @@ Type=Spell, Cost=2
 TargetFilters=[Shape(全体), Team(友方)]
 Actions=[SetStatAction{TargetStat=AttackPower, Value=5}]
 ```
+
+### 11.13 重载章鱼 - 亡语将义肢转移给义肢最少的兵种
+
+**单位（建筑，擢升之手）：** 登场自持 7 层义肢；死亡时把义肢**转移**给全场友方兵种（Squad）中**义肢层数最低**的 1 个。
+
+```
+UnitData PassiveEffects=[
+  EffectData{ TriggerEvent=OnSpawn, Target=Self
+    Actions=[ApplyBuffAction{BuffData=<义肢.tres>, InitialStacks=7}] },   // 登场 7 层
+  EffectData{ TriggerEvent=OnUnitDeath
+    TargetFilters=[Shape(全体), Team(友方), UnitType(兵种),              // 候选：友方兵种
+      Extreme(Value=BuffInfoValue{Unit=Target, BuffID=义肢},             // 按候选自身层数排序
+        Mode=Lowest, Count=1)]                                          // 义肢最少 1 个
+    Actions=[ApplyBuffAction{BuffData=<义肢.tres>,
+      ValueSource=BuffInfoValue{Unit=Source, BuffID=义肢}}] }            // 转移与死者相同层数
+]
+```
+
+- **排序值源 `Unit=Target`**：按**候选目标自身**的义肢层数取最少（若误用 `Source` 会读到死者层数，所有候选同值，"最少"失效）
+- **转移层数 `Unit=Source`**（死者）+ `ApplyBuffAction.ValueSource` 动态叠层（设置后覆盖 `InitialStacks`）
 
 ## 12. 文本转 .tres 工具（策划友好）
 

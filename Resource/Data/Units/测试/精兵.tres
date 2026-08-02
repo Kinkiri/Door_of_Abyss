@@ -16,6 +16,7 @@ metadata/_custom_type_script = "uid://qlng65nfa7th"
 [sub_resource type="Resource" id="Resource_nw7r0"]
 script = ExtResource("2_j3k15")
 TriggerEvent = 5
+TargetFilters = null
 Actions = Array[Object]([SubResource("Resource_giepe")])
 Conditions = null
 metadata/_custom_type_script = "uid://5fvxtm1dtsgk"

@@ -1,0 +1,88 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://lrgqm0h2wth5"]
+
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_cn2xx"]
+[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="1_k5i4m"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_86pjb"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_13bkb"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="4_bonqw"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="5_8i7yn"]
+[ext_resource type="Script" uid="uid://dbviswjwggeup" path="res://Scripts/Data/Targeting/UnitTypeTargetFilter.cs" id="6_oq08y"]
+[ext_resource type="Script" uid="uid://bqdiie4v7k7l7" path="res://Scripts/Data/ValueSource/BuffInfoValue.cs" id="7_nxfnt"]
+[ext_resource type="Script" uid="uid://catf8khsjdbcg" path="res://Scripts/Data/Targeting/ExtremeTargetFilter.cs" id="8_shdef"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="9_q641u"]
+
+[sub_resource type="Resource" id="Resource_8e0c5"]
+script = ExtResource("2_86pjb")
+BuffData = ExtResource("1_k5i4m")
+InitialStacks = 7
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_e6ubq"]
+script = ExtResource("3_13bkb")
+TriggerEvent = 2
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_8e0c5")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[sub_resource type="Resource" id="Resource_oos7d"]
+script = ExtResource("7_nxfnt")
+Unit = 0
+BuffID = "义肢"
+metadata/_custom_type_script = "uid://bqdiie4v7k7l7"
+
+[sub_resource type="Resource" id="Resource_lq26w"]
+script = ExtResource("2_86pjb")
+BuffData = ExtResource("1_k5i4m")
+InitialStacks = 0
+ValueSource = SubResource("Resource_oos7d")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_pegh6"]
+script = ExtResource("4_bonqw")
+Shape = 5
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_oikau"]
+script = ExtResource("5_8i7yn")
+Team = 1
+metadata/_custom_type_script = "uid://bjnrbd7iwxb5u"
+
+[sub_resource type="Resource" id="Resource_np1ww"]
+script = ExtResource("6_oq08y")
+UnitTypes = Array[int]([0])
+metadata/_custom_type_script = "uid://dbviswjwggeup"
+
+[sub_resource type="Resource" id="Resource_2deol"]
+script = ExtResource("7_nxfnt")
+BuffID = "义肢"
+metadata/_custom_type_script = "uid://bqdiie4v7k7l7"
+
+[sub_resource type="Resource" id="Resource_d6fyd"]
+script = ExtResource("8_shdef")
+Value = SubResource("Resource_2deol")
+metadata/_custom_type_script = "uid://catf8khsjdbcg"
+
+[sub_resource type="Resource" id="Resource_42tq4"]
+script = ExtResource("3_13bkb")
+TriggerEvent = 10
+TargetFilters = Array[Object]([SubResource("Resource_pegh6"), SubResource("Resource_oikau"), SubResource("Resource_np1ww"), SubResource("Resource_d6fyd")])
+Actions = Array[Object]([SubResource("Resource_lq26w")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("1_cn2xx")
+UnitID = "重载章鱼"
+UnitName = "重载章鱼"
+World = 1
+Faction = 2
+Tags = Array[int]([0, 7])
+Rarity = 1
+HealthPoints = 1
+Stamina = 2
+Type = 1
+Description = "义肢7，死后将义肢转移给义肢最少的兵种"
+UnitPrefab = ExtResource("9_q641u")
+PassiveEffects = Array[Object]([SubResource("Resource_e6ubq"), SubResource("Resource_42tq4")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

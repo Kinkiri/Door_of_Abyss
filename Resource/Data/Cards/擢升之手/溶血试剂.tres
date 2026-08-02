@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://ce7w10xgu53pc"]
+
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_fom2b"]
+[ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="1_q8vip"]
+[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="2_och5b"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="3_gtiw1"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="4_k73n8"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="5_il2v2"]
+[ext_resource type="Script" uid="uid://dbviswjwggeup" path="res://Scripts/Data/Targeting/UnitTypeTargetFilter.cs" id="6_h45lw"]
+
+[sub_resource type="Resource" id="Resource_rp33y"]
+script = ExtResource("1_q8vip")
+Value = -1
+RequiredTags = null
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_q8vip"]
+script = ExtResource("3_gtiw1")
+BuffData = ExtResource("2_och5b")
+InitialStacks = 2
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_haofv"]
+script = ExtResource("4_k73n8")
+Shape = 4
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_50f4x"]
+script = ExtResource("5_il2v2")
+Team = 1
+metadata/_custom_type_script = "uid://bjnrbd7iwxb5u"
+
+[sub_resource type="Resource" id="Resource_7ln3h"]
+script = ExtResource("6_h45lw")
+UnitTypes = Array[int]([0])
+metadata/_custom_type_script = "uid://dbviswjwggeup"
+
+[resource]
+script = ExtResource("1_fom2b")
+CardID = "溶血试剂"
+CardName = "溶血试剂"
+Description = "令3*3以内的所有己方兵种攻击力-1并获得义肢2"
+Type = 1
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+Rarity = 2
+TargetFilters = Array[Object]([SubResource("Resource_haofv"), SubResource("Resource_50f4x"), SubResource("Resource_7ln3h")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_rp33y"), SubResource("Resource_q8vip")])
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

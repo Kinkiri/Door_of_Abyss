@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="DeckData" format=3 uid="uid://b1tyd7186gfh1"]
+
+[ext_resource type="Resource" uid="uid://djiilhm1jyasb" path="res://Resource/Data/Cards/测试/无中生有.tres" id="1_1edwx"]
+[ext_resource type="Resource" uid="uid://dl8hmrc3mnmtt" path="res://Resource/Data/Cards/测试/天火！.tres" id="2_sdgvi"]
+[ext_resource type="Resource" uid="uid://dyo3pvkadycis" path="res://Resource/Data/Cards/测试/变强.tres" id="3_jdvg1"]
+[ext_resource type="Resource" uid="uid://devamvw6um62p" path="res://Resource/Data/Cards/测试/多动症.tres" id="4_w31vu"]
+[ext_resource type="Resource" uid="uid://b8oubcccs7tte" path="res://Resource/Data/Cards/测试/火球术.tres" id="5_xws2g"]
+[ext_resource type="Resource" uid="uid://d25s2ku8yh4py" path="res://Resource/Data/Cards/测试/炸弹手.tres" id="6_rkfvc"]
+[ext_resource type="Resource" uid="uid://dg3krk17fcll6" path="res://Resource/Data/Cards/测试/风羽.tres" id="7_p1lv1"]
+[ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="8_grrd2"]
+
+[resource]
+script = ExtResource("8_grrd2")
+DeckName = "中东打法"
+Cards = Array[Object]([ExtResource("1_1edwx"), ExtResource("2_sdgvi"), ExtResource("3_jdvg1"), ExtResource("4_w31vu"), ExtResource("5_xws2g"), ExtResource("2_sdgvi"), ExtResource("6_rkfvc"), ExtResource("6_rkfvc"), ExtResource("6_rkfvc"), ExtResource("7_p1lv1"), ExtResource("6_rkfvc"), ExtResource("6_rkfvc"), ExtResource("6_rkfvc"), ExtResource("6_rkfvc")])
+metadata/_custom_type_script = "uid://b1eamjx1y7exn"

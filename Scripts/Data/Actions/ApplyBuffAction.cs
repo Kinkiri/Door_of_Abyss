@@ -12,8 +12,12 @@ public partial class ApplyBuffAction : GameAction
     /// <summary>初始叠层数（新建 Buff 时的 StackCount），默认 1</summary>
     [Export] public int InitialStacks { get; set; } = 1;
 
+    /// <summary>动态值源，设置后覆盖 Value</summary>
+    [Export] public ValueSource ValueSource { get; set; }
+
     protected override void Apply(Context ctx)
     {
+        InitialStacks = ValueSource?.GetValue(ctx) ?? InitialStacks;
         if (ctx.TargetUnits == null) return;
         GD.Print($"[ApplyBuffAction] targets={ctx.TargetUnits.Length} buff={BuffData?.BuffName} stacks={InitialStacks}");
         foreach (var target in ctx.TargetUnits)

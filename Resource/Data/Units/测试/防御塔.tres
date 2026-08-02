@@ -11,6 +11,7 @@ script = ExtResource("1_action")
 [sub_resource type="Resource" id="Resource_iv3e7"]
 script = ExtResource("1_effect")
 TriggerEvent = 1
+TargetFilters = null
 MaxTriggerCount = 1
 Actions = Array[Object]([SubResource("Resource_3b85t")])
 Conditions = null

@@ -5,7 +5,6 @@
 [ext_resource type="Script" uid="uid://ci5o1ouk3jcsf" path="res://Scripts/Data/Actions/EquipAction.cs" id="1_m1jxx"]
 [ext_resource type="Script" uid="uid://4ksuiqod0x18" path="res://Scripts/Data/Card/EquipmentCardData.cs" id="1_nwipk"]
 [ext_resource type="Script" uid="uid://tmoxnw3avry4" path="res://Scripts/Data/Units/EquipmentData.cs" id="2_m1jxx"]
-[ext_resource type="Resource" uid="uid://djm1disxpn1o1" path="res://Resource/Data/Effects/追击.tres" id="3_pxvuq"]
 
 [sub_resource type="Resource" id="Resource_fnwy8"]
 script = ExtResource("1_m1jxx")
@@ -19,7 +18,7 @@ Description = "令装备的己方兵种攻击力+2"
 Icon = ExtResource("1_462yx")
 AttackBonus = 2
 MaxHealthBonus = 0
-PassiveEffects = Array[Object]([ExtResource("3_pxvuq")])
+PassiveEffects = null
 OnApplyActions = null
 metadata/_custom_type_script = "uid://tmoxnw3avry4"
 

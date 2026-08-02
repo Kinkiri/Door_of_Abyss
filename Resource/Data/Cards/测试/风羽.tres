@@ -11,6 +11,7 @@
 [sub_resource type="Resource" id="Resource_d5ua7"]
 script = ExtResource("1_mjs7r")
 Value = 1
+Filters = null
 metadata/_custom_type_script = "uid://dnlsqjf0bupsk"
 
 [sub_resource type="Resource" id="Resource_cs3pf"]
@@ -52,9 +53,9 @@ CardID = "风羽"
 CardName = "风羽"
 Description = "令所有己方单位本回合攻击范围+1:抽一张牌"
 Type = 1
-TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_attr_team")])
 Tags = null
 Cost = 2
+TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_attr_team")])
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_d5ua7"), SubResource("Resource_wp8c3")])
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"
