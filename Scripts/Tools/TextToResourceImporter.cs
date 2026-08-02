@@ -550,6 +550,8 @@ public partial class TextToResourceImporter : EditorScript
         { "击杀后", EventType.OnKill },
         { "行动后", EventType.OnUnitAct },
         { "出牌后", EventType.OnUseCard },
+        { "进入时", EventType.OnUnitEnterCell },
+        { "离开时", EventType.OnUnitLeaveCell },
         { "受伤前", EventType.OnBeforeTakeDamage },
         { "攻击前", EventType.OnBeforeAttack },
         { "移动后", EventType.OnMove },

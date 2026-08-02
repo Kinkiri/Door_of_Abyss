@@ -793,6 +793,9 @@ public partial class BattleManager : Node2D
         // Buff 回合倒计时（tick 在 RoundEnd 被动之后，归零的 Buff 触发 OnExpireActions）
         BuffManager.Instance?.TickAllBuffs();
 
+        // 环境回合倒计时（语义同 Buff：RoundEnd 被动之后，归零的环境触发 OnExpireActions）
+        EnvironmentManager.Instance?.TickAllEnvironments();
+
         CheckVictory();
 
         ScheduleAutoAdvance();

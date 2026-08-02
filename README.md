@@ -25,6 +25,7 @@
   - [12. 文本转 .tres 工具（策划友好）](#12-文本转-tres-工具策划友好)
   - [13. 动画系统](#13-动画系统)
   - [14. 装备系统](#14-装备系统)
+  - [15. 环境系统](#15-环境系统)
 
 ---
 
@@ -60,7 +61,10 @@ Scripts/                         ~7300 行 C#
 │   │   ├── RepeatAction.cs      循环（值源x次数）
 │   │   ├── RemoveBuffAction.cs  驱散 Buff
 │   │   ├── MoveUnitAction.cs    强制位移（传送/击退/拉拽）
-│   │   └── SetStatAction.cs     设置属性为精确值（不可逆）
+│   │   ├── SetStatAction.cs     设置属性为精确值（不可逆）
+│   │   ├── ApplyEnvironmentAction.cs 施加环境（目标格子，替换式覆盖）
+│   │   ├── RemoveEnvironmentAction.cs 移除环境（驱散）
+│   │   └── ModifyCellStatAction.cs  修改格子属性（MoveCost 可逆 / 布尔覆盖不可逆）
 │   ├── Targeting/               目标筛选器（抽象基类 + 多态子类，替代 Shape+Filter 枚举）
 │   │   ├── TargetFilter.cs      抽象基类：ApplyUnits/ApplyCells/GetShape/IsUnitMatch
 │   │   ├── ShapeTargetFilter.cs 形状候选源：Shape + AreaRange
@@ -73,6 +77,7 @@ Scripts/                         ~7300 行 C#
 │   │   ├── UnitIDTargetFilter.cs 单位 ID 筛选（任一匹配）
 │   │   ├── ConditionTargetFilter.cs 动态过滤：Conditions（配合值源筛运行时属性）
 │   │   ├── ExtremeTargetFilter.cs 极值筛选（值源排序取最高/最低 N 个）
+│   │   ├── RandomTargetFilter.cs 随机筛选（从已筛选目标组随机取 N 个，支持动态值源）
 │   │   ├── AndTargetFilter.cs   AND 组合（形状节点生成 + 其余过滤）
 │   │   ├── OrTargetFilter.cs    OR 组合（任一命中）
 │   │   └── NotTargetFilter.cs   NOT 组合（补集）
@@ -101,6 +106,7 @@ Scripts/                         ~7300 行 C#
 │   │   ├── SpellCardData.cs     法术
 │   │   ├── UnitCardData.cs      单位卡（含 UnitData）
 │   │   ├── EquipmentCardData.cs 装备卡
+│   │   ├── EnvironmentCardData.cs 环境卡（含 EnvironmentData）
 │   │   └── Filters/             卡牌筛选器（CardFilter 多态组合，用于筛选抽牌）
 │   │       ├── CardFilter.cs    抽象基类：IsMatch(Card) + CombineAnd（数组默认 And）
 │   │       ├── CardTypeFilter.cs  卡牌类型筛选（任一匹配）
@@ -125,6 +131,7 @@ Scripts/                         ~7300 行 C#
 │   │   ├── UnitLibrary.cs       单位库
 │   │   └── LevelLibrary.cs      关卡库
 │   ├── BuffData.cs              Buff 模板
+│   ├── EnvironmentData.cs       环境模板（格子 Buff）
 │   ├── EffectData.cs            被动效果模板
 │   └── PlayerData.cs            玩家全局数据（含门列表）
 ├── Enum/                        枚举定义（含 World/Faction/Rarity/Tag 等世界观数据）
@@ -133,7 +140,9 @@ Scripts/                         ~7300 行 C#
 │   ├── CardType.cs              CardType
 │   ├── CompareOp.cs             CompareOp
 │   ├── ConditionTarget.cs       ConditionTarget
-│   ├── EventType.cs             事件枚举（12 种）
+│   ├── CellPropertyOverride.cs  格子布尔三态覆盖（Unchanged/ForceTrue/ForceFalse）
+│   ├── CellStatType.cs          格子属性类型（MoveCost/CanStand/CanPass）
+│   ├── EventType.cs             事件枚举（20 种）
 │   ├── Faction.cs               Faction（势力）
 │   ├── FormulaOp.cs             FormulaOp
 │   ├── ModifyStatType.cs        ModifyStatType
@@ -151,6 +160,7 @@ Scripts/                         ~7300 行 C#
 │   ├── Card.cs                  卡牌运行时
 │   ├── Cell.cs                  格子运行时
 │   ├── Context.cs               ECA 上下文 DTO（含 Map/ActiveUnits 战场数据）
+│   ├── Environment.cs           环境运行时
 │   └── Unit.cs                  单位运行时
 ├── Manager/                     逻辑层（Godot Node 单例，服务定位器）
 │   ├── ActionQueue.cs           动作序列器（逐个执行 + 动画间隔 + 插队）
@@ -158,6 +168,7 @@ Scripts/                         ~7300 行 C#
 │   ├── BuffManager.cs           Buff 生命周期（发事件驱动视图）
 │   ├── CardManager.cs           牌库/手牌/弃牌（发事件驱动视图）
 │   ├── EnemyAI.cs               敌方 AI（按距玩家门排序 + 最短路径寻路 + 被堵留AP）
+│   ├── EnvironmentManager.cs    环境管理器（施加/覆盖/移除/倒计时 + 格子属性统一重算）
 │   ├── EventBus.cs              事件总线（被动效果订阅/触发，Tag 支持）
 │   ├── InitManager.cs           初始化调度
 │   ├── MapManager.cs            地图管理
@@ -167,6 +178,7 @@ Scripts/                         ~7300 行 C#
 │   ├── BuffView.cs              Buff 图标（Node2D，内含 TextureRect + Label）
 │   ├── CardView.cs              卡牌展示
 │   ├── DragCamera2D.cs          拖拽摄像机
+│   ├── EnvironmentViewManager.cs 环境图层渲染（订阅环境事件 SetCell/EraseCell）
 │   ├── HandPanel.cs             手牌面板（订阅 CardManager 事件）
 │   ├── MapView.cs               地图渲染 + 高亮
 │   ├── RoundView.cs             回合面板 + 结束回合按钮
@@ -541,6 +553,8 @@ ModifyBuffAction(StacksDelta=-1) -> 减 1 层，还原 1 次 -> ATK-1。
 | **OnBeforeTakeDamage** | **受击前**（伤害计算前，受击者视角，subject=受击者）。`SourceUnit`=受击者（自己），`TargetUnit`=攻击者，`ctx.PendingDamage`=本次基础伤害。受击者挂"减伤"被动（读 `Source`=自己），用 `ModifyDamageAction` 改 `ctx.DamageModifier`；`PendingDamageValue` 可判断"会致死"。`DamageAction` 结算时两侧修饰累加：`max(0, 基础伤害 + 攻击侧 + 受击侧)`；`AutoAttackAction` 已统一走 `DamageAction` 链路 |
 | **OnUnitDeath** | 单位死亡（亡语） |
 | **OnMove** | 移动后（不含攻击/出牌） |
+| **OnUnitEnterCell** | **单位进入格子后**（格子占用从空→有，含移动/传送/召唤）。`TargetCell`=新格子，`TargetUnit`=进入的单位。**环境被动专用**：仅"目标格子==环境所在格"的订阅者触发，`[Shape(单体)]` 命中进入的单位 |
+| **OnUnitLeaveCell** | **单位离开格子后**（格子占用从有→空，含移动/传送/死亡/移除）。`TargetCell`=原格子，`TargetUnit`=离开的单位。环境被动专用，同上 |
 
 ### 被动示例
 
@@ -629,6 +643,7 @@ TargetFilter（抽象基类）
 │   └── UnitIDTargetFilter   // 单位 ID UnitIDs（任一匹配；排除用 Not 组合）
 ├── ConditionTargetFilter    // 动态过滤：Conditions（配合值源筛运行时属性，如 HP≤50%Max）
 ├── ExtremeTargetFilter      // 极值后处理：按值源排序取最高/最低 N 个（数量不足全要）
+├── RandomTargetFilter       // 随机后处理：从已筛选目标组随机取 N 个（不重复，数量不足全要）
 ├── AndTargetFilter          // AND 组合：自动找第一个形状节点生成候选，其余节点全部过滤（顺序无关）
 ├── OrTargetFilter           // OR 组合：任一子过滤器命中即保留
 └── NotTargetFilter          // NOT 组合：全量 − 子过滤器命中集（补集）
@@ -641,6 +656,7 @@ TargetFilter（抽象基类）
 - **形状节点**（ShapeTargetFilter）忽略上游候选自行生成；**过滤节点**（Attribute/Condition/组合）对上游候选过滤
 - **单挂过滤类** = 从全量开始（`[Team(敌方)]` 单独 ≡ 全体敌方）
 - 阵营是**相对语义**（Ally/Enemy 相对效果来源阵营）；Neutral 单位不命中敌方过滤
+- **随机节点**（RandomTargetFilter）为后处理：无形状（GetShape=None），放筛选链末尾从已筛结果随机取 N 个（Fisher-Yates 不重复抽样；数量不足全要；`ValueSource` 动态数量覆盖 Count；单位/格子目标都支持）
 - `GetShape()/GetAreaRange()/GetTeamFilter()` 穿透组合递归，供 UI 预览/校验与高亮图标使用
 
 ### 形状（TargetShape 枚举）
@@ -662,6 +678,8 @@ TargetFilter（抽象基类）
 | 全体友方 | `[Shape(全体), Team(友方)]` |
 | 残血敌方（HP≤50%Max） | `[Shape(全体), Team(敌方), Cond(HP≤50%Max)]` |
 | 生命最低的 3 个友方 | `[Shape(全体), Team(友方), Extreme(生命值, 最低, 3)]`（值源+方向+数量；不足全要） |
+| 随机 1 个敌方 | `[Shape(全体), Team(敌方), Random(1)]`（随机不重复；不足全要） |
+| 随机 2 格放环境 | `[Shape(全体), Random(2)]`（Kind=Cell，随机取 2 格） |
 | 建筑或科技标签 | `[Shape(全体), Or(Type(建筑), Tag(科技))]` |
 | 圣主教势力 | `[Shape(全体), Faction(圣主教)]`（World/Faction 默认"无"=不限制） |
 | 只对小兵生效 | `[Shape(全体), UnitID(小兵)]` |
@@ -1038,6 +1056,7 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 | `攻击前` | 攻击前（伤害计算前，可修改，攻击者视角） | `攻击前:属性:攻击力-1` |
 | `受伤前` | 受击前（伤害计算前，可修改，受击者视角） | `受伤前:属性:攻击力-1` |
 | `行动后` / `移动后` | 行动事件 | |
+| `进入时` / `离开时` | 格子占用变化事件（环境被动用） | `进入时:伤害:1` |
 | `出牌后` | 出牌事件 | `出牌后:属性:攻击力+1` |
 | `Buff施加时` / `Buff移除时` | Buff 事件 | |
 
@@ -1171,3 +1190,69 @@ EquipmentData：EquipmentID=护心镜, MaxHealthBonus=3,
   PassiveEffects=[EffectData{ TriggerEvent=RoundEnd, Target=Self,
 	Actions=[HealAction{Value=2}] }]
 ```
+
+---
+
+## 15. 环境系统
+
+环境是覆盖在基础地形之上的地图图层，相当于"**格子的 Buff**"。一个格子同时最多一个环境；施加新环境时旧环境**完整还原后替换**（替换式覆盖）。环境可影响此格子的属性（移动消耗/可站立/可穿越），并通过被动效果影响其上的单位。
+
+### 15.1 EnvironmentData 字段
+
+| 字段 | 说明 |
+|---|---|
+| EnvironmentID / EnvironmentName / Description | 标识和文本 |
+| Duration | -1=永久, 0=当回合 RoundEnd 移除, N=持续 N 回合（当前回合计入） |
+| MoveCostDelta | 移动消耗修正（正=更难走，负=更好走）。移除时自动还原 |
+| CanStandOverride / CanPassOverride | 三态覆盖：Unchanged（不改，沿用基础地形）/ ForceTrue / ForceFalse。单位占据格子时仍强制不可站立/不可穿越（占据优先） |
+| AtlasSourceId / AtlasCoords | 环境图层（TileMapLayer）图集坐标，EnvironmentViewManager 渲染用 |
+| OnApplyActions | 施加时执行（ctx.TargetCell=环境格子，ctx.TargetUnit=格子上单位）；可逆动作移除时自动还原 |
+| OnExpireActions | 到期/移除时执行（一次性效果） |
+| OnRoundEndActions | 每回合结束时执行 |
+| PassiveEffects | 持续期间被动效果（复用 EffectData；TargetFilters 中心=环境格子，`[Shape(单体)]` 命中格子上单位） |
+
+### 15.2 环境动作
+
+| 动作 | 字段 | 说明 |
+|---|---|---|
+| ApplyEnvironmentAction | EnvironmentData | 对目标格子施加环境（目标为格子，TargetKind.Cell）；同格已有环境时先完整还原再替换 |
+| RemoveEnvironmentAction | EnvironmentID（留空=任意） | 移除目标格子上指定环境（驱散），属性自动还原 + 取消被动 |
+| ModifyCellStatAction | TargetStat, Value/ValueSource | 修改格子属性：MoveCost 数值加减**可逆**（Revert 对称减回）；CanStand/CanPass 布尔覆盖**不可逆**（勿放 OnApplyActions，格子布尔覆盖请用 EnvironmentData 三态字段） |
+
+### 15.3 环境被动
+
+环境的 `PassiveEffects` 订阅 EventBus，触发时**中心格子 = 环境所在格**：
+- `[Shape(单体)]`（SingleUnit）→ 命中**格子上当前单位**（如"回合结束对格子上单位造成 1 伤"）
+- `[Shape(菱形,N)]` → 以环境格为中心扩散
+- 事件如 RoundStart/RoundEnd/OnUnitAct 等均可用；来源（SourceUnit）= 环境的施加者
+- **进入/离开事件**（`OnUnitEnterCell`/`OnUnitLeaveCell`）：仅"目标格子==环境所在格"的环境触发（EventBus 自动过滤），`[Shape(单体)]` 命中**进入/离开的单位**——"踩陷阱"类效果直接用 `TriggerEvent=OnUnitEnterCell`。触发范围覆盖移动/传送/召唤（进入）、移动/传送/死亡/移除（离开），即格子的占用状态变化即触发。注意被动动作若再次移动/召唤单位会嵌套触发，用 `MaxTriggerCount` 防连锁
+
+### 15.4 环境卡配置
+
+| 字段 | 值 |
+|---|---|
+| Type | Environment |
+| Shape | SingleCell（目标为格子，CardLibrary 启动校验强制） |
+| Cost | 费用 |
+| Actions | `[ApplyEnvironmentAction]`（EnvironmentData 拖入环境模板） |
+| EnvironmentData | 拖入环境模板 |
+
+### 15.5 示例
+
+**火焰之地：** 回合结束对格子上单位造成 1 伤害（永久）
+```
+EnvironmentData：EnvironmentID=火焰之地, Duration=-1, AtlasCoords=(0,0),
+  PassiveEffects=[EffectData{ TriggerEvent=RoundEnd,
+	TargetFilters=[Shape(单体)],
+	Actions=[DamageAction{Value=1}] }]
+环境卡：Type=Environment, Cost=1, TargetFilters=[Shape(单体格子)], Actions=[ApplyEnvironmentAction]
+```
+
+**沼泽：** 移动消耗 +2 且不可站立
+```
+EnvironmentData：EnvironmentID=沼泽, Duration=-1, MoveCostDelta=2, CanStandOverride=ForceFalse
+```
+
+### 15.6 与单位占位的协调
+
+格子的 CanStand/CanPass 运行时值由 `EnvironmentManager.RefreshCellProperties()` 统一重算：**基础地形值 → 环境覆盖 → 单位占据强制 false**。单位移走/死亡释放格子时也走此入口，保证环境修正不被占位逻辑覆盖。

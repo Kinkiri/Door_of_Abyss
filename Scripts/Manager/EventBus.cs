@@ -165,9 +165,11 @@ public partial class EventBus : Node
         {
             var owner = entry.Owner;
 
-            // ── 订阅者类型分支：Unit（单位被动）/ Card（手牌被动） ──────
-            Unit sourceUnit = null;   // 效果来源单位（Card 订阅者继承事件 ctx 的来源，可能为 null）
+            // ── 订阅者类型分支：Unit（单位被动）/ Card（手牌被动）/ Environment（环境被动） ──
+            Unit sourceUnit = null;   // 效果来源单位（Card/Environment 订阅者继承事件 ctx 的来源或施加者，可能为 null）
             bool isCardOwner = false;
+            bool isEnvOwner = false;
+            Environment envOwner = null;
             if (owner is Unit unit)
             {
                 // 亡语：OnUnitDeath 允许死者触发自身的被动效果
@@ -192,6 +194,18 @@ public partial class EventBus : Node
                 isCardOwner = true;
                 sourceUnit = ctx?.SourceUnit;
             }
+            else if (owner is Environment env)
+            {
+                // 环境被动：来源 = 环境的施加者（可能为 null）；不响应 subject 定向（同 Card，由 Conditions 自行控制）
+                isEnvOwner = true;
+                envOwner = env;
+                sourceUnit = env.SourceUnit;
+
+                // 进入/离开格子事件：仅"目标格子 == 环境所在格"的订阅者触发（其余跳过）
+                if ((type == EventType.OnUnitEnterCell || type == EventType.OnUnitLeaveCell)
+                    && ctx?.TargetCell != env.Cell)
+                    continue;
+            }
             else
             {
                 continue;
@@ -211,7 +225,13 @@ public partial class EventBus : Node
 
             // ── 创建效果上下文 ──────────────────────────────
             Context effectCtx;
-            Team sourceTeam = isCardOwner ? (ctx?.SourceTeam ?? Team.Player) : ((Unit)owner).Team;
+            Team sourceTeam = Team.Neutral;
+            if (isCardOwner)
+                sourceTeam = ctx?.SourceTeam ?? Team.Player;
+            else if (owner is Unit uOwner)
+                sourceTeam = uOwner.Team;
+            else if (owner is Environment eOwner)
+                sourceTeam = eOwner.SourceUnit?.Team ?? Team.Neutral;
 
             if (entry.TargetFilter != null)
             {
@@ -219,13 +239,18 @@ public partial class EventBus : Node
                 Cell centerCell = null;
                 var map = MapManager.Instance?.Map;
 
-                // 中心格子：Unit 用自身格子；Card 继承事件 ctx 的格子或来源单位格子（无则 null）
+                // 中心格子：Unit 用自身格子；Environment 用环境所在格子；Card 继承事件 ctx 的格子或来源单位格子（无则 null）
                 Vector2I centerPos = default;
                 bool hasCenter = false;
-                if (!isCardOwner)
+                if (owner is Unit uCenter)
                 {
-                    centerPos = ((Unit)owner).GridPos;
+                    centerPos = uCenter.GridPos;
                     hasCenter = true;
+                }
+                else if (owner is Environment eCenter)
+                {
+                    centerPos = eCenter.Cell?.GridPos ?? default;
+                    hasCenter = eCenter.Cell != null;
                 }
                 else if (ctx?.TargetCell != null)
                 {
@@ -245,6 +270,8 @@ public partial class EventBus : Node
                 {
                     SourceUnit = sourceUnit,
                     TargetCell = centerCell,
+                    // 环境被动：SingleUnit 形状命中"事件单位（进入/离开）"，回退"当前格子上单位"
+                    TargetUnit = isEnvOwner ? (ctx?.TargetUnit ?? envOwner.Cell?.OccupyingUnit) : null,
                     SourceTeam = sourceTeam,
                     Map = map,
                     ActiveUnits = UnitManager.Instance?.ActiveUnits,
@@ -289,8 +316,8 @@ public partial class EventBus : Node
                 GD.Print($"[EventBus]   -> 触发: {GetOwnerName(owner)} " +
                          $"targetMode={entry.PassiveTarget} otherParty={ctx?.TargetUnit?.UnitData?.UnitName}");
 
-                // Card 订阅者无自身目标：Self → null；EventTarget → 事件另一方
-                Unit selfUnit = isCardOwner ? null : (Unit)owner;
+                // Card/Environment 订阅者无自身单位：Self → null；EventTarget → 事件另一方
+                Unit selfUnit = owner is Unit uSelf ? uSelf : null;
                 effectCtx = new Context
                 {
                     SourceUnit = sourceUnit,

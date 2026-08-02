@@ -1753,6 +1753,91 @@ public partial class TestRunner : Node
                             },
                         },
                     }, extremeCtx).Length == 2);
+
+            // ── 随机筛选 ────────────────────────────────────────
+            var randomTargets = new List<Unit>();
+            for (int i = 1; i <= 5; i++)
+            {
+                var u = MakeUnit($"随机{i}", 1, 10);
+                u.Team = Team.Player;
+                randomTargets.Add(u);
+            }
+            var randomCtx = new Context
+            {
+                SourceTeam = Team.Player,
+                ActiveUnits = randomTargets,
+            };
+
+            VAssert("随机：取 1 个且属于候选集",
+                () =>
+                {
+                    var r = TargetResolver.ResolveUnits(
+                        new AndTargetFilter
+                        {
+                            Filters = new TargetFilter[]
+                            {
+                                new ShapeTargetFilter { Shape = TargetShape.All },
+                                new RandomTargetFilter { Count = 1 },
+                            },
+                        }, randomCtx);
+                    return r.Length == 1 && randomTargets.Contains(r[0]);
+                });
+
+            VAssert("随机：取 2 个",
+                () => TargetResolver.ResolveUnits(
+                    new AndTargetFilter
+                    {
+                        Filters = new TargetFilter[]
+                        {
+                            new ShapeTargetFilter { Shape = TargetShape.All },
+                            new RandomTargetFilter { Count = 2 },
+                        },
+                    }, randomCtx).Length == 2);
+
+            VAssert("随机：数量不足全要",
+                () => TargetResolver.ResolveUnits(
+                    new RandomTargetFilter { Count = 10 }, randomCtx).Length == 5);
+
+            VAssert("随机：Count<=0 返回空",
+                () => TargetResolver.ResolveUnits(
+                    new RandomTargetFilter { Count = 0 }, randomCtx).Length == 0);
+
+            VAssert("随机：动态值源覆盖 Count",
+                () => TargetResolver.ResolveUnits(
+                    new RandomTargetFilter
+                    {
+                        ValueSource = new ConstantValue { Value = 3 },
+                    }, randomCtx).Length == 3);
+
+            // 格子版：随机取 1 格
+            var randMap = new System.Collections.Generic.Dictionary<Vector2I, Cell>();
+            for (int i = 0; i < 4; i++)
+            {
+                var c = MakeCell(new Vector2I(i, 0), new BlockData { BlockName = "地板", MoveCost = 1 });
+                randMap[c.GridPos] = c;
+            }
+            var randCellCtx = new Context { Map = randMap };
+            VAssert("随机：格子版取 1 格",
+                () =>
+                {
+                    var r = TargetResolver.ResolveCells(
+                        new RandomTargetFilter { Count = 1 }, randCellCtx);
+                    return r.Length == 1 && randMap.ContainsValue(r[0]);
+                });
+
+            // 随机性：20 次抽 1，至少出现 2 种不同结果（全相同概率 (1/5)^19 ≈ 5e-14）
+            VAssert("随机：非恒定（20 次抽样 ≥2 种结果）",
+                () =>
+                {
+                    var seen = new HashSet<Unit>();
+                    for (int i = 0; i < 20; i++)
+                    {
+                        var r = TargetResolver.ResolveUnits(
+                            new RandomTargetFilter { Count = 1 }, randomCtx);
+                        if (r.Length == 1) seen.Add(r[0]);
+                    }
+                    return seen.Count >= 2;
+                });
         });
 
         // ── CardFilter 筛选抽牌 ─────────────────────────────────
@@ -2157,6 +2242,195 @@ public partial class TestRunner : Node
             em.RemoveAllEquipments(unit);
         });
 
+        // ── 环境系统 ──────────────────────────────────────────────
+        RunGroup("环境系统", () =>
+        {
+            var em = EnvironmentManager.Instance;
+            if (em == null) { VAssert("EnvironmentManager 未就绪，跳过", () => false); return; }
+
+            // ── 施加 + 格子属性修正 ──
+            var cell = MakeCell(new Vector2I(0, 0), new BlockData { BlockName = "地板", MoveCost = 1, CanStand = true, CanPass = true });
+            var envA = new EnvironmentData
+            {
+                EnvironmentID = "沼泽",
+                EnvironmentName = "沼泽",
+                Duration = -1,
+                MoveCostDelta = 2,
+                CanStandOverride = CellPropertyOverride.ForceFalse,
+            };
+
+            em.ApplyEnvironment(cell, envA, null);
+            VAssert("施加后 MoveCost 1→3", () => cell.MoveCost == 3);
+            VAssert("施加后 CanStand 被覆盖为 false", () => cell.CanStand == false);
+            VAssert("HasEnvironment true", () => em.HasEnvironment(cell, "沼泽"));
+            VAssert("GetEnvironment 非空", () => em.GetEnvironment(cell) != null);
+
+            // ── 替换式覆盖：旧环境完整还原后替换 ──
+            var envB = new EnvironmentData
+            {
+                EnvironmentID = "熔岩",
+                EnvironmentName = "熔岩",
+                Duration = -1,
+                MoveCostDelta = 5,
+                CanStandOverride = CellPropertyOverride.Unchanged,
+            };
+            em.ApplyEnvironment(cell, envB, null);
+            VAssert("覆盖后 MoveCost 3→6（旧环境修正已还原）", () => cell.MoveCost == 6);
+            VAssert("旧环境已移除", () => !em.HasEnvironment(cell, "沼泽"));
+            VAssert("新环境生效", () => em.HasEnvironment(cell, "熔岩"));
+            VAssert("覆盖后 CanStand 恢复基础 true", () => cell.CanStand == true);
+
+            // ── 移除还原 ──
+            em.RemoveEnvironment(cell);
+            VAssert("移除后 MoveCost 还原为 1", () => cell.MoveCost == 1);
+            VAssert("移除后无环境", () => em.GetEnvironment(cell) == null);
+
+            // ── 占位协调：占据压制环境覆盖，释放后环境修正恢复 ──
+            var occupyCell = MakeCell(new Vector2I(1, 0), new BlockData { BlockName = "地板", MoveCost = 1, CanStand = true, CanPass = true });
+            var envForceTrue = new EnvironmentData
+            {
+                EnvironmentID = "陆桥",
+                Duration = -1,
+                CanStandOverride = CellPropertyOverride.ForceTrue,
+                CanPassOverride = CellPropertyOverride.ForceTrue,
+            };
+            em.ApplyEnvironment(occupyCell, envForceTrue, null);
+            VAssert("无单位时 ForceTrue 生效", () => occupyCell.CanStand && occupyCell.CanPass);
+
+            occupyCell.OccupyingUnit = MakeUnit("占位者", 1, 5);
+            em.RefreshCellProperties(occupyCell);
+            VAssert("单位占据压制环境覆盖（CanStand/CanPass=false）",
+                () => occupyCell.CanStand == false && occupyCell.CanPass == false);
+
+            occupyCell.OccupyingUnit = null;
+            em.RefreshCellProperties(occupyCell);
+            VAssert("单位释放后环境覆盖恢复", () => occupyCell.CanStand && occupyCell.CanPass);
+
+            em.RemoveEnvironment(occupyCell);
+            VAssert("移除后回基础值", () => occupyCell.CanStand && occupyCell.CanPass);
+
+            // ── Duration 倒计时 ──
+            var durCell = MakeCell(new Vector2I(2, 0), new BlockData { BlockName = "地板", MoveCost = 1 });
+            em.ApplyEnvironment(durCell, new EnvironmentData { EnvironmentID = "时效环境", Duration = 2 }, null);
+            VAssert("Duration=2 初始 RemainingTurns=2",
+                () => em.GetEnvironment(durCell)?.RemainingTurns == 2);
+
+            em.TickAllEnvironments();
+            VAssert("Tick1 后 RemainingTurns=1 仍存在",
+                () => em.GetEnvironment(durCell) != null && em.GetEnvironment(durCell).RemainingTurns == 1);
+            em.TickAllEnvironments();
+            VAssert("Tick2 后到期移除", () => em.GetEnvironment(durCell) == null);
+
+            // Duration=0 当回合移除
+            var zeroCell = MakeCell(new Vector2I(3, 0), new BlockData { BlockName = "地板", MoveCost = 1 });
+            em.ApplyEnvironment(zeroCell, new EnvironmentData { EnvironmentID = "瞬时环境", Duration = 0 }, null);
+            em.TickAllEnvironments();
+            VAssert("Duration=0 当回合移除", () => em.GetEnvironment(zeroCell) == null);
+
+            // ── ModifyCellStatAction 可逆 ──
+            var statCell = MakeCell(new Vector2I(4, 0), new BlockData { BlockName = "地板", MoveCost = 1 });
+            var statAction = new ModifyCellStatAction { TargetStat = CellStatType.MoveCost, Value = 3 };
+            statAction.Execute(new Context { TargetCell = statCell });
+            VAssert("ModifyCellStatAction MoveCost 1→4", () => statCell.MoveCost == 4);
+            statAction.Revert(new Context { TargetCell = statCell });
+            VAssert("Revert 后 MoveCost 还原为 1", () => statCell.MoveCost == 1);
+
+            // ── 环境被动：回合结束对格子上单位造成伤害 ──
+            if (UnitManager.Instance != null)
+            {
+                var fireCell = MakeCell(new Vector2I(5, 0), new BlockData { BlockName = "地板", MoveCost = 1 });
+                var victim = MakeUnit("环境受害者", 0, 5);
+                fireCell.OccupyingUnit = victim;
+
+                var fireEnv = new EnvironmentData
+                {
+                    EnvironmentID = "火焰",
+                    Duration = -1,
+                    PassiveEffects = new EffectData[]
+                    {
+                        new EffectData
+                        {
+                            TriggerEvent = EventType.RoundEnd,
+                            TargetFilters = new TargetFilter[] { new ShapeTargetFilter { Shape = TargetShape.SingleUnit } },
+                            Actions = new GameAction[] { new DamageAction { Value = 1 } },
+                        },
+                    },
+                };
+                em.ApplyEnvironment(fireCell, fireEnv, null);
+                EventBus.Instance?.Fire(EventType.RoundEnd, new Context());
+                VAssert("回合结束对格子上单位造成1伤（5→4）", () => victim.CurrentHP == 4);
+
+                // 清理环境与被动订阅（避免残留）
+                em.RemoveEnvironment(fireCell);
+                VAssert("被动环境移除后无环境", () => em.GetEnvironment(fireCell) == null);
+            }
+
+            // ── 环境进入/离开格子事件 ──
+            if (UnitManager.Instance != null)
+            {
+                var enterCell = MakeCell(new Vector2I(6, 0), new BlockData { BlockName = "地板", MoveCost = 1 });
+                var walker = MakeUnit("进入者", 0, 5);
+
+                var trapEnv = new EnvironmentData
+                {
+                    EnvironmentID = "陷阱",
+                    Duration = -1,
+                    PassiveEffects = new EffectData[]
+                    {
+                        new EffectData
+                        {
+                            TriggerEvent = EventType.OnUnitEnterCell,
+                            TargetFilters = new TargetFilter[] { new ShapeTargetFilter { Shape = TargetShape.SingleUnit } },
+                            Actions = new GameAction[] { new DamageAction { Value = 1 } },
+                        },
+                        new EffectData
+                        {
+                            TriggerEvent = EventType.OnUnitLeaveCell,
+                            TargetFilters = new TargetFilter[] { new ShapeTargetFilter { Shape = TargetShape.SingleUnit } },
+                            Actions = new GameAction[] { new DamageAction { Value = 1 } },
+                        },
+                    },
+                };
+                em.ApplyEnvironment(enterCell, trapEnv, null);
+
+                // 进入：事件单位 = ctx.TargetUnit（Fire 时格子可能尚未绑定或刚绑定）
+                EventBus.Instance.Fire(EventType.OnUnitEnterCell,
+                    new Context { TargetCell = enterCell, TargetUnit = walker }, subject: walker);
+                VAssert("进入事件：环境被动对进入单位造成1伤（5→4）", () => walker.CurrentHP == 4);
+
+                // 离开：格子已释放，事件单位仍取 ctx.TargetUnit
+                EventBus.Instance.Fire(EventType.OnUnitLeaveCell,
+                    new Context { TargetCell = enterCell, TargetUnit = walker }, subject: walker);
+                VAssert("离开事件：环境被动对离开单位造成1伤（4→3）", () => walker.CurrentHP == 3);
+
+                // 格子匹配过滤：Fire 到 enterCell，其他格子的环境不被触发
+                var otherCell = MakeCell(new Vector2I(7, 0), new BlockData { BlockName = "地板", MoveCost = 1 });
+                var otherEnv = new EnvironmentData
+                {
+                    EnvironmentID = "别处环境",
+                    Duration = -1,
+                    PassiveEffects = new EffectData[]
+                    {
+                        new EffectData
+                        {
+                            TriggerEvent = EventType.OnUnitEnterCell,
+                            TargetFilters = new TargetFilter[] { new ShapeTargetFilter { Shape = TargetShape.SingleUnit } },
+                            Actions = new GameAction[] { new DamageAction { Value = 5 } },
+                        },
+                    },
+                };
+                em.ApplyEnvironment(otherCell, otherEnv, null);
+                var bystander = MakeUnit("路人", 0, 10);
+                EventBus.Instance.Fire(EventType.OnUnitEnterCell,
+                    new Context { TargetCell = enterCell, TargetUnit = bystander }, subject: bystander);
+                VAssert("格子过滤：非目标格环境不被触发（路人仍 10HP）", () => bystander.CurrentHP == 10);
+
+                // 清理
+                em.RemoveEnvironment(enterCell);
+                em.RemoveEnvironment(otherCell);
+            }
+        });
+
         // ── 汇总输出 ────────────────────────────────────────────
         GD.PrintRaw($"\n==============================\n");
         GD.PrintRaw($"  完成: {_passed} 通过, {_failed} 失败 (共 {_total} 项)\n");
@@ -2228,6 +2502,11 @@ public partial class TestRunner : Node
             HealthPoints = hp,
         };
         return new Unit(data, Vector2I.Zero, Team.Player);
+    }
+
+    private static Cell MakeCell(Vector2I pos, BlockData block)
+    {
+        return new Cell(block, pos, Vector2.Zero);
     }
 
     private static Card MakeCard(string id, CardType type, params Tag[] tags)

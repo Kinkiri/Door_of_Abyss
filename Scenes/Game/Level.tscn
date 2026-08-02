@@ -27,6 +27,8 @@
 [ext_resource type="Script" uid="uid://bw32r0still1t" path="res://Scripts/Manager/EquipmentManager.cs" id="25_eqmgr"]
 [ext_resource type="PackedScene" uid="uid://coqvtxojvdx33" path="res://Scenes/Prefabs/装备视图.tscn" id="26_eqview"]
 [ext_resource type="Script" uid="uid://b5fhpwj0l58n6" path="res://Scripts/Tests/TestRunner.cs" id="27_73o0s"]
+[ext_resource type="Script" uid="uid://x5xamxum5fcx" path="res://Scripts/Manager/EnvironmentManager.cs" id="28_envmgr"]
+[ext_resource type="Script" uid="uid://b5ay1q0j1ieb6" path="res://Scripts/View/EnvironmentViewManager.cs" id="29_envview"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8od7v"]
 texture = ExtResource("19_pu45w")
@@ -94,6 +96,9 @@ script = ExtResource("15_vmp7b")
 [node name="Equipment" type="Node" parent="Manager" unique_id=477498847]
 script = ExtResource("25_eqmgr")
 
+[node name="Environment" type="Node" parent="Manager" unique_id=477498848]
+script = ExtResource("28_envmgr")
+
 [node name="Map" type="Node2D" parent="." unique_id=315899385 node_paths=PackedStringArray("BaseTerrainLayer", "MoveMapLayer", "AttackMapLayer", "CardPreviewLayer")]
 script = ExtResource("16_eklyj")
 BaseTerrainLayer = NodePath("BaseMapLayer")
@@ -107,9 +112,16 @@ BuffViewPrefab = ExtResource("14_8vj8p")
 EquipmentViewPrefab = ExtResource("26_eqview")
 UnitLayer = NodePath("../BaseMapLayer")
 
+[node name="EnvironmentViewManager" type="Node" parent="Map" unique_id=1266638465 node_paths=PackedStringArray("EnvironmentLayer")]
+script = ExtResource("29_envview")
+EnvironmentLayer = NodePath("../BaseMapLayer/EnvironmentLayer")
+
 [node name="BaseMapLayer" type="TileMapLayer" parent="Map" unique_id=795475500]
 tile_map_data = PackedByteArray("AAAAAAAAAgAAAAAAAAABAAAAAgAIAAAAAAACAAAAAgAAAAAAAAADAAAAAgAIAAAAAAAFAAAAAgAIAAAAAAAGAAAAAgAAAAAAAAAEAAAAAgAAAAAAAAAAAAEAAgAIAAAAAAADAAEAAgAAAAAAAAACAAIAAgAAAAAAAAACAAEAAgAIAAAAAAABAAIAAgAIAAAAAAAFAAEAAgAAAAAAAAAEAAIAAgAAAAAAAAAEAAEAAgAIAAAAAAADAAIAAgAIAAAAAAAGAAEAAgAIAAAAAAAFAAIAAgAIAAAAAAAGAAIAAgAAAAAAAAABAAEAAgAAAAAAAAAAAAIAAgAAAAAAAAAAAAMAAgAIAAAAAAACAAMAAgAIAAAAAAABAAQAAgAIAAAAAAAAAAUAAgAIAAAAAAAEAAMAAgAIAAAAAAADAAQAAgAIAAAAAAACAAUAAgAIAAAAAAAGAAMAAgAIAAAAAAAFAAQAAgAIAAAAAAAEAAUAAgAIAAAAAAAGAAUAAgAIAAAAAAAFAAYAAgAIAAAAAAADAAYAAgAIAAAAAAABAAYAAgAIAAAAAAAAAAYAAgAAAAAAAAAGAAYAAgAAAAAAAAAEAAYAAgAAAAAAAAACAAYAAgAAAAAAAAABAAUAAgAAAAAAAAAAAAQAAgAAAAAAAAABAAMAAgAAAAAAAAACAAQAAgAAAAAAAAADAAMAAgAAAAAAAAADAAUAAgAAAAAAAAAEAAQAAgAAAAAAAAAFAAMAAgAAAAAAAAAFAAUAAgAAAAAAAAAGAAQAAgAAAAAAAAA=")
 tile_set = SubResource("TileSet_fw11u")
+
+[node name="EnvironmentLayer" type="TileMapLayer" parent="Map/BaseMapLayer" unique_id=795475501]
+tile_set = ExtResource("20_y0p6s")
 
 [node name="UILayer" type="Node2D" parent="Map" unique_id=1954588854]
 

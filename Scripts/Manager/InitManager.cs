@@ -28,6 +28,7 @@ public partial class InitManager : Node
         SelectionManager.Instance?.Init();
         BuffManager.Instance?.Init();
         EquipmentManager.Instance?.Init();
+        EnvironmentManager.Instance?.Init();
         ActionQueue.Instance?.Init();
 
         // 依赖 SelectionManager 的事件订阅

@@ -103,6 +103,27 @@ public partial class CardLibrary : Library
                 }
             }
 
+            // 4.5) EnvironmentCardData → 必须有 EnvironmentData + TargetFilters 形状必须 SingleCell
+            if (card is EnvironmentCardData envCard)
+            {
+                if (envCard.EnvironmentData == null)
+                {
+                    sb.AppendLine($"  [CardID={card.CardID}] 环境卡未配置 EnvironmentData");
+                    errorCount++;
+                }
+                else if (string.IsNullOrWhiteSpace(envCard.EnvironmentData.EnvironmentID))
+                {
+                    sb.AppendLine($"  [CardID={card.CardID}] 环境的 EnvironmentID 未配置");
+                    errorCount++;
+                }
+
+                if ((TargetFilter.CombineAnd(envCard.TargetFilters)?.GetShape() ?? TargetShape.None) != TargetShape.SingleCell)
+                {
+                    sb.AppendLine($"  [CardID={card.CardID}] 环境卡的 TargetFilters 应为 SingleCell，当前={envCard.TargetFilters?.Length ?? 0} 项");
+                    errorCount++;
+                }
+            }
+
             // 5) Cost 不能为负
             if (card.Cost < 0)
             {

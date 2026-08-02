@@ -60,4 +60,22 @@ public enum EventType
     /// ctx.PendingDamage=本次基础伤害。受击者挂"减伤"被动（读 Source=自己）。
     /// </summary>
     OnBeforeTakeDamage,
+
+    /// <summary>环境施加后（TargetCell=环境格子，SourceUnit=施加者）</summary>
+    OnEnvironmentApplied,
+
+    /// <summary>环境移除后（TargetCell=环境格子）</summary>
+    OnEnvironmentRemoved,
+
+    /// <summary>
+    /// 单位进入格子后（格子的占用从空→有，含移动/传送/召唤）。TargetCell=新格子，TargetUnit=进入的单位，subject=进入单位。
+    /// 环境被动专用：EventBus 仅触发"目标格子==环境所在格"的订阅者。
+    /// </summary>
+    OnUnitEnterCell,
+
+    /// <summary>
+    /// 单位离开格子后（格子的占用从有→空，含移动/传送/死亡/移除）。TargetCell=原格子，TargetUnit=离开的单位，subject=离开单位。
+    /// 环境被动专用：EventBus 仅触发"目标格子==环境所在格"的订阅者。
+    /// </summary>
+    OnUnitLeaveCell,
 }

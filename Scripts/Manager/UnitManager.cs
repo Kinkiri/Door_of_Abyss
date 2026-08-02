@@ -85,6 +85,11 @@ public partial class UnitManager : Node
         EventBus.Instance?.Subscribe(unit, unitData.PassiveEffects);
         EventBus.Instance?.Fire(EventType.OnSpawn, new Context(), subject: unit);
 
+        // 单位出现在格子（占用从空→有）：触发环境"进入"被动（TargetCell=该格，TargetUnit=单位）
+        EventBus.Instance?.Fire(EventType.OnUnitEnterCell,
+            new Context { TargetCell = cell, TargetUnit = unit, SourceUnit = unit, SourceTeam = team },
+            subject: unit);
+
         return unit;
     }
 
@@ -105,6 +110,26 @@ public partial class UnitManager : Node
     // ======================================================================
     // 伤害 / 治疗 / 死亡
     // ======================================================================
+
+    /// <summary>
+    /// 释放格子占用：置 OccupyingUnit=null + 统一重算属性（基础值+环境修正）+ 触发 OnUnitLeaveCell。
+    /// 仅当格子当前被指定单位占据时动作（幂等——DestroyUnit 后 RemoveUnit 重复调用安全）。
+    /// </summary>
+    private static void ReleaseCell(Cell cell, Unit unit)
+    {
+        if (cell == null || unit == null) return;
+        if (cell.OccupyingUnit != unit) return;
+
+        cell.OccupyingUnit = null;
+        // 运行时 CanPass/CanStand 由 UnitManager 动态管理——
+        // 单位占据时设为 false，移走时经 EnvironmentManager 统一重算（基础值+环境修正）
+        EnvironmentManager.Instance?.RefreshCellProperties(cell);
+
+        // 占用从有→空：触发环境"离开"被动（TargetCell=原格子，TargetUnit=离开的单位）
+        EventBus.Instance?.Fire(EventType.OnUnitLeaveCell,
+            new Context { TargetCell = cell, TargetUnit = unit, SourceUnit = unit, SourceTeam = unit.Team },
+            subject: unit);
+    }
 
     /// <summary>对单位造成伤害，HP 归零则自动移除</summary>
     public int DamageUnit(Unit unit, int damage)
@@ -145,15 +170,8 @@ public partial class UnitManager : Node
 
         // 先释放所在格子（亡语被动可能原地召唤新单位；RemoveUnit 内重复清理幂等保留）
         Cell deathCell = null;
-        if (MapManager.Instance.TryGetCell(unit.GridPos, out deathCell)
-            && deathCell.OccupyingUnit == unit)
-        {
-            deathCell.OccupyingUnit = null;
-            // 运行时 CanPass/CanStand 由 UnitManager 动态管理——
-            // 单位占据时设为 false，移走时恢复为 BaseBlock 原始值
-            deathCell.CanPass = deathCell.BaseBlock?.CanPass ?? true;
-            deathCell.CanStand = deathCell.BaseBlock?.CanStand ?? true;
-        }
+        if (MapManager.Instance.TryGetCell(unit.GridPos, out deathCell))
+            ReleaseCell(deathCell, unit);
 
         // 触发死亡事件（subject=死者；附格子/阵营，供亡语原地召唤/同阵营效果使用）
         EventBus.Instance?.Fire(EventType.OnUnitDeath,
@@ -182,14 +200,8 @@ public partial class UnitManager : Node
         {
             if (cell.OccupyingUnit == unit)
             {
-
                 GD.Print($"UnitManager: 移除单位 {unit.ID}");
-                cell.OccupyingUnit = null;
-                // 注意：运行时 CanPass/CanStand 由 UnitManager 动态管理——
-                // 单位占据时设为 false，移走时恢复为 BaseBlock 原始值。
-                // PathFinder 依赖这些运行时值判断路径
-                cell.CanPass = cell.BaseBlock?.CanPass ?? true;
-                cell.CanStand = cell.BaseBlock?.CanStand ?? true;
+                ReleaseCell(cell, unit);
             }
         }
 
@@ -237,22 +249,18 @@ public partial class UnitManager : Node
             return false;
         }
 
-        // 清理旧格子
+        // 清理旧格子（释放占用 + 触发环境"离开"被动）
         if (MapManager.Instance.TryGetCell(unit.GridPos, out Cell oldCell))
-        {
-            if (oldCell.OccupyingUnit == unit)
-            {
-                oldCell.OccupyingUnit = null;
-                oldCell.CanPass = oldCell.BaseBlock?.CanPass ?? true;   // 恢复旧格子
-                oldCell.CanStand = oldCell.BaseBlock?.CanStand ?? true;
-            }
-        }
+            ReleaseCell(oldCell, unit);
 
-        // 绑定新格子
+        // 绑定新格子（占用从空→有，触发环境"进入"被动）
         unit.GridPos = targetGridPos;
         targetCell.OccupyingUnit = unit;
         targetCell.CanPass = false;   // 占据新格子
         targetCell.CanStand = false;
+        EventBus.Instance?.Fire(EventType.OnUnitEnterCell,
+            new Context { TargetCell = targetCell, TargetUnit = unit, SourceUnit = unit, SourceTeam = unit.Team },
+            subject: unit);
 
         unit.UpdateUnit();
         return true;
@@ -264,24 +272,20 @@ public partial class UnitManager : Node
     /// </summary>
     public void TeleportUnit(Unit unit, Vector2I targetGridPos)
     {
-        // 清理旧格子
+        // 清理旧格子（释放占用 + 触发环境"离开"被动）
         if (MapManager.Instance.TryGetCell(unit.GridPos, out Cell oldCell))
-        {
-            if (oldCell.OccupyingUnit == unit)
-            {
-                oldCell.OccupyingUnit = null;
-                oldCell.CanPass = oldCell.BaseBlock?.CanPass ?? true;
-                oldCell.CanStand = oldCell.BaseBlock?.CanStand ?? true;
-            }
-        }
+            ReleaseCell(oldCell, unit);
 
-        // 绑定新格子
+        // 绑定新格子（占用从空→有，触发环境"进入"被动）
         if (MapManager.Instance.TryGetCell(targetGridPos, out Cell newCell))
         {
             unit.GridPos = targetGridPos;
             newCell.OccupyingUnit = unit;
             newCell.CanPass = false;
             newCell.CanStand = false;
+            EventBus.Instance?.Fire(EventType.OnUnitEnterCell,
+                new Context { TargetCell = newCell, TargetUnit = unit, SourceUnit = unit, SourceTeam = unit.Team },
+                subject: unit);
         }
 
         unit.UpdateUnit();

@@ -18,6 +18,9 @@ public partial class Cell
     /// <summary>当前站立在该格子上的单位</summary>
     public Unit OccupyingUnit { get; set; }
 
+    /// <summary>当前覆盖在该格子上的环境（无则 null）</summary>
+    public Environment Environment { get; set; }
+
     /// <summary>从 BaseBlock 拷贝过来的运行时属性</summary>
     public int MoveCost { get; set; }
     /// <summary>

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="EnvironmentCardData" format=3 uid="uid://clrlrcov33xi7"]
+
+[ext_resource type="Script" uid="uid://b2pjt30c5oyw2" path="res://Scripts/Data/Card/EnvironmentCardData.cs" id="1_card"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="2_shape"]
+[ext_resource type="Script" uid="uid://dslk7uvnawnj5" path="res://Scripts/Data/Actions/ApplyEnvironmentAction.cs" id="3_action"]
+[ext_resource type="Resource" uid="uid://cjejmedpg47cy" path="res://Resource/Data/Environments/火焰之地.tres" id="4_env"]
+
+[sub_resource type="Resource" id="Resource_action"]
+script = ExtResource("3_action")
+EnvironmentData = ExtResource("4_env")
+
+[sub_resource type="Resource" id="Resource_shape"]
+script = ExtResource("2_shape")
+Shape = 2
+Kind = 1
+
+[resource]
+script = ExtResource("1_card")
+EnvironmentData = ExtResource("4_env")
+CardID = "火焰之地"
+CardName = "火焰之地"
+Description = "在目标格子放置火焰之地，回合结束对其上单位造成1点伤害"
+Type = 2
+Tags = null
+TargetFilters = Array[Object]([SubResource("Resource_shape")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_action")])
+PassiveEffects = null
