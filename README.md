@@ -100,7 +100,15 @@ Scripts/                         ~7300 行 C#
 │   │   ├── DeckData.cs          卡组
 │   │   ├── SpellCardData.cs     法术
 │   │   ├── UnitCardData.cs      单位卡（含 UnitData）
-│   │   └── EquipmentCardData.cs 装备卡
+│   │   ├── EquipmentCardData.cs 装备卡
+│   │   └── Filters/             卡牌筛选器（CardFilter 多态组合，用于筛选抽牌）
+│   │       ├── CardFilter.cs    抽象基类：IsMatch(Card) + CombineAnd（数组默认 And）
+│   │       ├── CardTypeFilter.cs  卡牌类型筛选（任一匹配）
+│   │       ├── CardTagFilter.cs   卡牌标签筛选（任一匹配）
+│   │       ├── CardUnitTypeFilter.cs 单位卡单位类型筛选（任一匹配，非单位卡不命中）
+│   │       ├── AndCardFilter.cs   AND 组合
+│   │       ├── OrCardFilter.cs    OR 组合
+│   │       └── NotCardFilter.cs   NOT 组合（补集）
 │   ├── Levels/
 │   │   ├── LevelData.cs         关卡配置
 │   │   └── WaveData.cs          波次配置
@@ -371,7 +379,7 @@ OrCondition
 |---|---|---|---|
 | DamageAction | Value/ValueSource | x | 伤害，触发战斗被动。遍历 `TargetUnits` 支持多目标 |
 | HealAction | Value/ValueSource | x | 治疗。遍历 `TargetUnits` 支持多目标 |
-| DrawCardAction | Value/ValueSource | x | 抽牌 |
+| DrawCardAction | Value/ValueSource, Filters | x | 抽牌。配置 `Filters`（CardFilter 数组，默认 And）时**只从牌库随机抽取匹配的牌**（无匹配不抽、不足全要）；不配置则抽牌库顶 |
 | ModifyCostAction | Value/ValueSource | x | 增减费用 |
 
 ### 3.2 召唤

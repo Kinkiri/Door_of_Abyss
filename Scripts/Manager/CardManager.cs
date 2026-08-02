@@ -118,6 +118,49 @@ public partial class CardManager : Node
         NotifyCardsUpdated();
         return card;
     }
+
+    /// <summary>
+    /// 按筛选条件从牌库中随机抽取多张牌。
+    /// 仅检索牌库 DrawPile（不洗弃牌堆、不重建）；匹配不足 N 张时抽全部匹配（不足全要）；无匹配不抽。
+    /// </summary>
+    public List<Card> DrawCards(int count, CardFilter filter)
+    {
+        if (filter == null) return DrawCards(count);
+
+        var drawn = new List<Card>();
+        for (int i = 0; i < count; i++)
+        {
+            var card = DrawCard(filter);
+            if (card != null)
+                drawn.Add(card);
+        }
+        return drawn;
+    }
+
+    /// <summary>按筛选条件从牌库中随机抽一张牌到手牌；无匹配返回 null（不足全要由调用方循环自然满足）</summary>
+    public Card DrawCard(CardFilter filter)
+    {
+        if (filter == null) return DrawCard();
+
+        // 收集牌库中匹配的牌，随机取一张（不放回）
+        var matched = new List<Card>();
+        foreach (var c in DrawPile)
+            if (c != null && filter.IsMatch(c))
+                matched.Add(c);
+
+        if (matched.Count == 0)
+        {
+            GD.Print("[CardManager] 筛选抽牌: 牌库无匹配，不抽");
+            return null;
+        }
+
+        var card = matched[new System.Random().Next(matched.Count)];
+        DrawPile.Remove(card);
+        HandCards.Add(card);
+        GD.Print($"[CardManager] 筛选抽牌: [{card.CardID}] {card.CardName}  手牌={HandCards.Count}");
+        NotifyCardsUpdated();
+        return card;
+    }
     /// <summary>
     /// 造一张牌并加入手牌
     /// </summary>

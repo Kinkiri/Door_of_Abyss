@@ -1755,6 +1755,163 @@ public partial class TestRunner : Node
                     }, extremeCtx).Length == 2);
         });
 
+        // ── CardFilter 筛选抽牌 ─────────────────────────────────
+        RunGroup("CardFilter 筛选抽牌", () =>
+        {
+            // ── 纯谓词测试（不依赖 Manager） ────────────────────
+            var fireball = MakeCard("火球术", CardType.Spell);
+            var techCard = MakeCard("科技卡", CardType.Spell, Tag.科技);
+            var unitCard = MakeCard("小兵", CardType.Unit);
+
+            VAssert("CardTypeFilter 匹配类型",
+                () => new CardTypeFilter { Types = new Godot.Collections.Array<CardType> { CardType.Spell } }.IsMatch(fireball));
+            VAssert("CardTypeFilter 不匹配类型",
+                () => !new CardTypeFilter { Types = new Godot.Collections.Array<CardType> { CardType.Spell } }.IsMatch(unitCard));
+            VAssert("CardTypeFilter 多类型任一匹配",
+                () => new CardTypeFilter { Types = new Godot.Collections.Array<CardType> { CardType.Unit, CardType.Equipment } }.IsMatch(unitCard));
+            VAssert("CardTypeFilter 空数组不限制",
+                () => new CardTypeFilter().IsMatch(unitCard));
+
+            VAssert("CardTagFilter 匹配标签",
+                () => new CardTagFilter { Tags = new Godot.Collections.Array<Tag> { Tag.科技 } }.IsMatch(techCard));
+            VAssert("CardTagFilter 无标签不匹配",
+                () => !new CardTagFilter { Tags = new Godot.Collections.Array<Tag> { Tag.科技 } }.IsMatch(fireball));
+            VAssert("CardTagFilter 空标签不限制",
+                () => new CardTagFilter().IsMatch(fireball));
+
+            VAssert("AndCardFilter 全部命中",
+                () => new AndCardFilter
+                {
+                    Filters = new CardFilter[]
+                    {
+                        new CardTypeFilter { Types = new Godot.Collections.Array<CardType> { CardType.Spell } },
+                        new CardTagFilter { Tags = new Godot.Collections.Array<Tag> { Tag.科技 } },
+                    },
+                }.IsMatch(techCard));
+            VAssert("AndCardFilter 部分不命中",
+                () => !new AndCardFilter
+                {
+                    Filters = new CardFilter[]
+                    {
+                        new CardTypeFilter { Types = new Godot.Collections.Array<CardType> { CardType.Unit } },
+                        new CardTagFilter { Tags = new Godot.Collections.Array<Tag> { Tag.科技 } },
+                    },
+                }.IsMatch(techCard));
+
+            VAssert("OrCardFilter 任一命中",
+                () => new OrCardFilter
+                {
+                    Filters = new CardFilter[]
+                    {
+                        new CardTypeFilter { Types = new Godot.Collections.Array<CardType> { CardType.Unit } },
+                        new CardTagFilter { Tags = new Godot.Collections.Array<Tag> { Tag.科技 } },
+                    },
+                }.IsMatch(techCard));
+
+            VAssert("NotCardFilter 取反",
+                () => new NotCardFilter
+                {
+                    Filter = new CardTypeFilter { Types = new Godot.Collections.Array<CardType> { CardType.Unit } },
+                }.IsMatch(fireball));
+            VAssert("NotCardFilter 补集不误伤",
+                () => !new NotCardFilter
+                {
+                    Filter = new CardTypeFilter { Types = new Godot.Collections.Array<CardType> { CardType.Unit } },
+                }.IsMatch(unitCard));
+
+            // 单位卡单位类型筛选
+            var buildingCard = new Card(new UnitCardData
+            {
+                CardID = "城墙卡",
+                CardName = "城墙卡",
+                Type = CardType.Unit,
+                UnitData = new UnitData { UnitID = "城墙", UnitName = "城墙", Type = UnitType.Building },
+            });
+            VAssert("CardUnitTypeFilter 匹配建筑单位卡",
+                () => new CardUnitTypeFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.Building } }
+                    .IsMatch(buildingCard));
+            VAssert("CardUnitTypeFilter 不匹配其他类型",
+                () => !new CardUnitTypeFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.Building } }
+                    .IsMatch(unitCard));
+            VAssert("CardUnitTypeFilter 法术卡不匹配（非单位卡）",
+                () => !new CardUnitTypeFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.Building } }
+                    .IsMatch(fireball));
+            VAssert("CardUnitTypeFilter 空数组不限制",
+                () => new CardUnitTypeFilter().IsMatch(fireball));
+
+            VAssert("CombineAnd 数组默认 And",
+                () =>
+                {
+                    var f = CardFilter.CombineAnd(new CardFilter[]
+                    {
+                        new CardTypeFilter { Types = new Godot.Collections.Array<CardType> { CardType.Spell } },
+                        new CardTagFilter { Tags = new Godot.Collections.Array<Tag> { Tag.科技 } },
+                    });
+                    return f != null && f.IsMatch(techCard) && !f.IsMatch(fireball);
+                });
+            VAssert("CombineAnd null 返回 null",
+                () => CardFilter.CombineAnd(null) == null);
+
+            // ── 集成测试（依赖 CardManager，未就绪跳过） ────────
+            if (CardManager.Instance == null)
+            {
+                VAssert("CardManager 未就绪，跳过筛选抽牌集成测试", () => true);
+                return;
+            }
+
+            var cm = CardManager.Instance;
+            // 重建牌库：3 法术（含 1 科技标签）+ 2 单位
+            cm.InitializeDrawPile(new List<CardData>
+            {
+                new SpellCardData { CardID = "火球术", CardName = "火球术", Type = CardType.Spell },
+                new SpellCardData { CardID = "冰霜", CardName = "冰霜", Type = CardType.Spell,
+                    Tags = new Godot.Collections.Array<Tag> { Tag.科技 } },
+                new SpellCardData { CardID = "奥术", CardName = "奥术", Type = CardType.Spell },
+                new UnitCardData { CardID = "小兵", CardName = "小兵", Type = CardType.Unit },
+                new UnitCardData { CardID = "骑兵", CardName = "骑兵", Type = CardType.Unit },
+            });
+
+            // 先筛科技标签（牌库中唯一科技牌，必中冰霜，避免随机性影响后续断言）
+            var tagDrawn = cm.DrawCards(2, new CardTagFilter { Tags = new Godot.Collections.Array<Tag> { Tag.科技 } });
+            VAssert("标签筛选抽牌",
+                () => tagDrawn.Count == 1 && tagDrawn[0].CardID == "冰霜");
+
+            // 再抽 2 法术（剩余法术恰好 2 张）
+            var spellFilter = new CardTypeFilter { Types = new Godot.Collections.Array<CardType> { CardType.Spell } };
+            int handBefore = cm.HandCards.Count;
+            var drawn = cm.DrawCards(2, spellFilter);
+            VAssert("筛选抽牌 2 张全为法术",
+                () => drawn.Count == 2 && drawn.TrueForAll(c => c.Type == CardType.Spell));
+            VAssert("筛选抽牌后牌库剩 2 张",
+                () => cm.DrawPile.Count == 2);
+            VAssert("筛选抽牌后手牌 +3",
+                () => cm.HandCards.Count == handBefore + 3);
+
+            // 无匹配不抽
+            int handBeforeNone = cm.HandCards.Count;
+            var none = cm.DrawCard(new CardTypeFilter { Types = new Godot.Collections.Array<CardType> { CardType.Equipment } });
+            VAssert("无匹配不抽，返回 null 且手牌不变",
+                () => none == null && cm.HandCards.Count == handBeforeNone);
+
+            // 不足全要（牌库剩 2 张单位卡，请求 3）
+            var few = cm.DrawCards(3, new CardTypeFilter { Types = new Godot.Collections.Array<CardType> { CardType.Unit } });
+            VAssert("不足全要：匹配 2 张只抽 2 张",
+                () => few.Count == 2 && few.TrueForAll(c => c.Type == CardType.Unit));
+
+            // 单位类型筛选（重建牌库：1 建筑单位卡 + 1 小队单位卡）
+            cm.InitializeDrawPile(new List<CardData>
+            {
+                new UnitCardData { CardID = "城墙", CardName = "城墙", Type = CardType.Unit,
+                    UnitData = new UnitData { UnitID = "城墙", UnitName = "城墙", Type = UnitType.Building } },
+                new UnitCardData { CardID = "剑士", CardName = "剑士", Type = CardType.Unit,
+                    UnitData = new UnitData { UnitID = "剑士", UnitName = "剑士", Type = UnitType.Squad } },
+            });
+            var buildingDrawn = cm.DrawCards(5,
+                new CardUnitTypeFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.Building } });
+            VAssert("单位类型筛选：只抽建筑单位卡",
+                () => buildingDrawn.Count == 1 && buildingDrawn[0].CardID == "城墙");
+        });
+
         // ── 汇总输出 ────────────────────────────────────────────
         GD.PrintRaw($"\n==============================\n");
         GD.PrintRaw($"  完成: {_passed} 通过, {_failed} 失败 (共 {_total} 项)\n");
@@ -1826,6 +1983,14 @@ public partial class TestRunner : Node
             HealthPoints = hp,
         };
         return new Unit(data, Vector2I.Zero, Team.Player);
+    }
+
+    private static Card MakeCard(string id, CardType type, params Tag[] tags)
+    {
+        var data = new SpellCardData { CardID = id, CardName = id, Type = type };
+        if (tags != null && tags.Length > 0)
+            data.Tags = new Godot.Collections.Array<Tag>(tags);
+        return new Card(data);
     }
 
     private static Context MakeCtx(Unit src, Unit tgt)
