@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="EnvironmentCardData" format=3 uid="uid://d3v0wb7qhg0fl"]
+
+[ext_resource type="Script" uid="uid://b2pjt30c5oyw2" path="res://Scripts/Data/Card/EnvironmentCardData.cs" id="1_i4rcg"]
+[ext_resource type="Script" uid="uid://lxjpnv33tlmg" path="res://Scripts/Data/EnvironmentData.cs" id="1_kiowp"]
+
+[sub_resource type="Resource" id="Resource_kiowp"]
+script = ExtResource("1_kiowp")
+EnvironmentID = "成瘾性空气"
+EnvironmentName = "成瘾性空气"
+Description = ""
+MoveCostDelta = 3
+OnApplyActions = null
+OnExpireActions = null
+OnRoundEndActions = null
+PassiveEffects = null
+metadata/_custom_type_script = "uid://lxjpnv33tlmg"
+
+[resource]
+script = ExtResource("1_i4rcg")
+EnvironmentData = SubResource("Resource_kiowp")
+CardID = "成瘾性空气"
+CardName = "成瘾性空气"
+Description = "进入+2血，离开-2血"
+Tags = null
+TargetFilters = null
+Conditions = null
+Actions = null
+PassiveEffects = null
+metadata/_custom_type_script = "uid://b2pjt30c5oyw2"

@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="EnvironmentData" format=3 uid="uid://2omlrufvxxt7"]
+
+[ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="1_1fkvp"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="2_h670a"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_rlu14"]
+[ext_resource type="Script" uid="uid://lxjpnv33tlmg" path="res://Scripts/Data/EnvironmentData.cs" id="4_27beu"]
+
+[sub_resource type="Resource" id="Resource_3dkyg"]
+script = ExtResource("1_1fkvp")
+Value = 3
+metadata/_custom_type_script = "uid://bcjncmte44un1"
+
+[sub_resource type="Resource" id="Resource_7lta1"]
+script = ExtResource("2_h670a")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_bo4wb"]
+script = ExtResource("3_rlu14")
+TriggerEvent = 1
+TargetFilters = Array[Object]([SubResource("Resource_7lta1")])
+Actions = Array[Object]([SubResource("Resource_3dkyg")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("4_27beu")
+EnvironmentID = "燃烧弹"
+EnvironmentName = "燃烧弹"
+Description = "回合末对其上单位造成3点伤害，持续两回合"
+Duration = 2
+AtlasCoords = Vector2i(16, 0)
+OnApplyActions = null
+OnExpireActions = null
+OnRoundEndActions = null
+PassiveEffects = Array[Object]([SubResource("Resource_bo4wb")])
+metadata/_custom_type_script = "uid://lxjpnv33tlmg"

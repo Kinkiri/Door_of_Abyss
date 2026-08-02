@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://dlj0i3wuk665g"]
+
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_hiaxx"]
+[ext_resource type="Script" uid="uid://p24kuxmgxsyq" path="res://Scripts/Data/Actions/RemoveEnvironmentAction.cs" id="1_y28t3"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="2_sfbcg"]
+
+[sub_resource type="Resource" id="Resource_sfbcg"]
+script = ExtResource("1_y28t3")
+EnvironmentID = "火焰之地"
+metadata/_custom_type_script = "uid://p24kuxmgxsyq"
+
+[sub_resource type="Resource" id="Resource_0duqb"]
+script = ExtResource("1_y28t3")
+EnvironmentID = "燃烧弹"
+metadata/_custom_type_script = "uid://p24kuxmgxsyq"
+
+[sub_resource type="Resource" id="Resource_y28t3"]
+script = ExtResource("2_sfbcg")
+Shape = 4
+Kind = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[resource]
+script = ExtResource("1_hiaxx")
+CardID = "灭火器喷射"
+CardName = "灭火器喷射"
+Description = "消除3*3范围内的火"
+Type = 1
+Tags = null
+TargetFilters = Array[Object]([SubResource("Resource_y28t3")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_sfbcg"), SubResource("Resource_0duqb")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"
