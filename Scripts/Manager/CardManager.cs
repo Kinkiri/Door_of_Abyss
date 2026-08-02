@@ -115,7 +115,7 @@ public partial class CardManager : Node
         DrawPile.RemoveAt(0);
         HandCards.Add(card);
         GD.Print($"[CardManager] 抽牌: [{card.CardID}] {card.CardName}  手牌={HandCards.Count}");
-        NotifyCardsUpdated();
+        OnCardDrawn(card);
         return card;
     }
 
@@ -158,7 +158,7 @@ public partial class CardManager : Node
         DrawPile.Remove(card);
         HandCards.Add(card);
         GD.Print($"[CardManager] 筛选抽牌: [{card.CardID}] {card.CardName}  手牌={HandCards.Count}");
-        NotifyCardsUpdated();
+        OnCardDrawn(card);
         return card;
     }
     /// <summary>
@@ -171,6 +171,7 @@ public partial class CardManager : Node
         var card = new Card(cardData);
         GD.Print($"[CardManager] 创建卡牌: [{card.CardID}] {card.CardName}");
         HandCards.Add(card);
+        SubscribeCardPassives(card);
         NotifyCardsUpdated();
         return card;
     }
@@ -196,6 +197,7 @@ public partial class CardManager : Node
         if (HandCards.Remove(card))
         {
             DiscardPile.Add(card);
+            EventBus.Instance?.Unsubscribe(card);
             GD.Print($"[CardManager] 弃牌: [{card.CardID}] {card.CardName}");
             NotifyCardsUpdated();
         }
@@ -207,6 +209,7 @@ public partial class CardManager : Node
         if (HandCards.Remove(card))
         {
             DiscardPile.Add(card);
+            EventBus.Instance?.Unsubscribe(card);
             GD.Print($"[CardManager] 使用卡牌: [{card.CardID}] {card.CardName}");
             NotifyCardsUpdated();
         }
@@ -217,11 +220,38 @@ public partial class CardManager : Node
     }
 
     // ======================================================================
+    // 手牌被动（Card.PassiveEffects 订阅 EventBus）
+    // ======================================================================
+
+    /// <summary>抽牌公共流程：订阅手牌被动 → 发抽牌事件（OnDrawCard）</summary>
+    private void OnCardDrawn(Card card)
+    {
+        SubscribeCardPassives(card);
+        EventBus.Instance?.Fire(EventType.OnDrawCard, new Context
+        {
+            SourceCard = card,
+            SourceTeam = Team.Player,
+        });
+        NotifyCardsUpdated();
+    }
+
+    /// <summary>订阅卡牌被动（先进退订防重复——牌会重复进出牌库/手牌）</summary>
+    private void SubscribeCardPassives(Card card)
+    {
+        if (card?.CardData?.PassiveEffects == null) return;
+        EventBus.Instance?.Unsubscribe(card);
+        EventBus.Instance?.Subscribe(card, card.CardData.PassiveEffects);
+    }
+
+    // ======================================================================
     // 内部
     // ======================================================================
 
     private void ClearAll()
     {
+        // 清三堆前退订所有在手牌卡的手牌被动
+        foreach (var c in HandCards)
+            EventBus.Instance?.Unsubscribe(c);
         DrawPile.Clear();
         DiscardPile.Clear();
         HandCards.Clear();

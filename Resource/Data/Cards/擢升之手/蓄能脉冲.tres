@@ -35,4 +35,5 @@ Tags = Array[int]([0])
 TargetFilters = Array[Object]([ExtResource("1_lyr25")])
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_fnwy8")])
+PassiveEffects = null
 metadata/_custom_type_script = "uid://4ksuiqod0x18"

@@ -419,7 +419,8 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 | ApplyBuffAction | BuffData, InitialStacks, ValueSource | 施加 Buff。**遍历 `TargetUnits` 支持多目标**（如 Shape=All）。`ValueSource` 为动态叠层值源（设置后覆盖 `InitialStacks`，如亡语"转移与死者相同的层数"） |
 | ModifyBuffAction | BuffID, TurnsDelta, StacksDelta, WearMode | 修改回合/叠层。**回合/叠层最小减到 0，不能为负**；`RemainingTurns=-1`（永久 Buff）忽略回合修改，其他非法负值警告并按 0 处理；叠层归零移除。**`WearMode=true`（磨损模式）：减层只消耗"行动开始快照（`Buff.StacksAtActionStart`）内的旧层"**——本次行动中新增的层不因本次行动损耗（如"攻击后获得义肢"不被本次攻击磨损） |
 | RemoveBuffAction | BuffID | 无条件整个移除（驱散） |
-| **ModifyDamageAction** | Delta | 修改本次伤害事件的伤害量（正=加伤，负=减伤）。配合 **OnBeforeDamage** 事件使用：作用于 `ctx.DamageModifier`，由 `DamageAction` 结算时应用，多个加伤/减伤被动可叠加 |
+| **RemoveEquipmentAction** | EquipmentID | 移除目标单位上指定 ID 的装备（驱散）。属性加成还原（可逆）+ 取消被动订阅；单位同一时间只能装备一件，ID 不匹配或未装备时不动作 |
+| **ModifyDamageAction** | Delta, ValueSource | 修改本次伤害事件的伤害量（正=加伤，负=减伤）。配合**攻击前/受击前**事件使用：攻击者挂加伤（`OnBeforeAttack`）、受击者挂减伤（`OnBeforeTakeDamage`），作用于各自 `ctx.DamageModifier`，`DamageAction` 结算时两侧累加，多个修饰被动可叠加。`ValueSource` 动态增量覆盖 `Delta`（如 `FormulaValue(Mul, PendingDamageValue, ConstantValue(-1))` 把伤害清零 → 致命免伤） |
 
 ### 3.6 控制流
 
@@ -463,6 +464,8 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 | UnitCountValue | FilterTeam=All/Player/Enemy, OnlyAlive, IncludeDoor | 单位数量 |
 | DistanceValue | From=Source/Target, To=Source/Target | **曼哈顿距离** |
 | BattleCostValue | Type=Current/Max | 当前/最大费用 |
+| **CardInfoValue** | Info=Cost/Type/World/Faction/Rarity | **读取 `ctx.SourceCard` 的卡牌属性**（卡牌被动场景=被抽/被打出的牌；Type/World/Faction/Rarity 返回枚举数值，配合 CompareCondition 做类型判断），无卡牌时返回 DefaultValue |
+| **PendingDamageValue** | - | **本次伤害的基础伤害值**（攻击前/受击前事件时由 DamageAction 填充 `ctx.PendingDamage`）。配合条件判断"会致死"（如致命免伤） |
 
 ### FormulaValue 运算
 
@@ -533,7 +536,9 @@ ModifyBuffAction(StacksDelta=-1) -> 减 1 层，还原 1 次 -> ATK-1。
 | OnBuffApplied / OnBuffRemoved | Buff 施加/移除 |
 | OnUnitAct | 单位行动后（移动/攻击；**出牌不触发**），`ctx.ActType` 区分移动/攻击 |
 | **OnUseCard** | 使用卡牌后（出牌成功扣费后、卡牌动作执行前），无 subject（来源单位经 `SourceUnit` 取） |
-| **OnBeforeDamage** | 伤害计算前。**攻击者侧 + 受击者侧各触发一次**（subject 分别为攻击者、受击者）：攻击者挂"加伤"被动、受击者挂"减伤"被动均生效。被动用 **`ModifyDamageAction`** 修改 `ctx.DamageModifier`（正加负减），`DamageAction` 结算时 `max(0, 伤害+修饰)`；`AutoAttackAction` 已统一走 `DamageAction` 链路 |
+| **OnDrawCard** | 抽牌后（`SourceCard`=被抽的牌，`SourceTeam`=抽牌方），无 subject。**手牌被动只响应"自己被抽到"**（防连锁递归），单位被动可响应任意抽牌 |
+| **OnBeforeAttack** | **攻击前**（伤害计算前，攻击者视角，subject=攻击者）。`SourceUnit`=攻击者，`TargetUnit`=受击者，`ctx.PendingDamage`=本次基础伤害。攻击者挂"加伤"被动（读 `Source`=自己），用 `ModifyDamageAction` 改 `ctx.DamageModifier` |
+| **OnBeforeTakeDamage** | **受击前**（伤害计算前，受击者视角，subject=受击者）。`SourceUnit`=受击者（自己），`TargetUnit`=攻击者，`ctx.PendingDamage`=本次基础伤害。受击者挂"减伤"被动（读 `Source`=自己），用 `ModifyDamageAction` 改 `ctx.DamageModifier`；`PendingDamageValue` 可判断"会致死"。`DamageAction` 结算时两侧修饰累加：`max(0, 基础伤害 + 攻击侧 + 受击侧)`；`AutoAttackAction` 已统一走 `DamageAction` 链路 |
 | **OnUnitDeath** | 单位死亡（亡语） |
 | **OnMove** | 移动后（不含攻击/出牌） |
 
@@ -563,6 +568,7 @@ Actions=[AutoAttackAction]
 | Cost | 费用 |
 | Actions | 打出效果 |
 | Conditions | 打出条件（不满足不出牌不扣费） |
+| PassiveEffects | **手牌被动**（EffectData 数组）：卡牌在手牌期间订阅 EventBus 响应任意事件（RoundStart/OnDrawCard/OnUseCard 等），打出或弃牌时自动退订；复用单位被动同款 EffectData |
 
 ### UnitCardData 额外
 
@@ -865,18 +871,57 @@ Actions=[SetStatAction{TargetStat=AttackPower, Value=5}]
 ```
 UnitData PassiveEffects=[
   EffectData{ TriggerEvent=OnSpawn, Target=Self
-    Actions=[ApplyBuffAction{BuffData=<义肢.tres>, InitialStacks=7}] },   // 登场 7 层
+	Actions=[ApplyBuffAction{BuffData=<义肢.tres>, InitialStacks=7}] },   // 登场 7 层
   EffectData{ TriggerEvent=OnUnitDeath
-    TargetFilters=[Shape(全体), Team(友方), UnitType(兵种),              // 候选：友方兵种
-      Extreme(Value=BuffInfoValue{Unit=Target, BuffID=义肢},             // 按候选自身层数排序
-        Mode=Lowest, Count=1)]                                          // 义肢最少 1 个
-    Actions=[ApplyBuffAction{BuffData=<义肢.tres>,
-      ValueSource=BuffInfoValue{Unit=Source, BuffID=义肢}}] }            // 转移与死者相同层数
+	TargetFilters=[Shape(全体), Team(友方), UnitType(兵种),              // 候选：友方兵种
+	  Extreme(Value=BuffInfoValue{Unit=Target, BuffID=义肢},             // 按候选自身层数排序
+		Mode=Lowest, Count=1)]                                          // 义肢最少 1 个
+	Actions=[ApplyBuffAction{BuffData=<义肢.tres>,
+	  ValueSource=BuffInfoValue{Unit=Source, BuffID=义肢}}] }            // 转移与死者相同层数
 ]
 ```
 
 - **排序值源 `Unit=Target`**：按**候选目标自身**的义肢层数取最少（若误用 `Source` 会读到死者层数，所有候选同值，"最少"失效）
 - **转移层数 `Unit=Source`**（死者）+ `ApplyBuffAction.ValueSource` 动态叠层（设置后覆盖 `InitialStacks`）
+
+### 11.14 手牌被动 - 抽到时再抽 1 张 / 回合开始抽 1 张
+
+**卡牌被动**（`CardData.PassiveEffects`）：卡牌在手牌期间订阅 EventBus，打出/弃牌自动退订。抽到时触发 = `TriggerEvent=OnDrawCard`（只响应自己被抽到，防连锁递归）：
+
+```
+CardData PassiveEffects=[EffectData{
+  TriggerEvent=OnDrawCard
+  Actions=[DrawCardAction{Value=1}]     // 抽到这张牌时再抽 1 张
+}]
+```
+
+手牌期间每回合触发（如"手牌中：回合开始抽 1 张"）：
+
+```
+CardData PassiveEffects=[EffectData{
+  TriggerEvent=RoundStart
+  Actions=[DrawCardAction{Value=1}]
+}]
+```
+
+> **OnDrawCard 语义**：手牌被动只响应"自己被抽到"（`SourceCard==自己`）；单位被动（`UnitData.PassiveEffects`）可响应任意抽牌，注意用 `MaxTriggerCount` 防连锁（"每当抽牌再抽牌"会自然连锁）。
+
+### 11.15 致命免伤 - 受到致命伤害时伤害改为 0
+
+受击者被动：`OnBeforeTakeDamage`（受击前，`Source`=自己）判断"本次伤害 ≥ 当前 HP"（会致死）→ 把伤害清零（增量 = -基础伤害）。
+
+```
+UnitData PassiveEffects=[EffectData{
+  TriggerEvent=OnBeforeTakeDamage, Target=Self
+  Conditions=[Compare(Left=PendingDamageValue, Op=GreaterEqual,
+	Right=UnitStatValue(Source, CurrentHP=true))]       // 本次伤害 ≥ 自己当前 HP → 会致死
+  Actions=[ModifyDamageAction{
+	ValueSource=FormulaValue(Mul, PendingDamageValue, ConstantValue(-1))  // 增量 = -基础伤害 → 伤害归零
+  }]
+}]
+```
+
+> 原理：`DamageAction` 触发攻击前/受击前事件时在 `ctx.PendingDamage` 暴露基础伤害（`PendingDamageValue` 值源读取）；受击前事件 `SourceUnit`=受击者（自己），条件读 `Source` 即自己的 HP。`ModifyDamageAction` 的 `ValueSource` 动态增量覆盖 `Delta`，结算时 `max(0, 基础伤害 + 两侧修饰)`。改增量即可做变体：减半 = `FormulaValue(Mul, PendingDamageValue, ConstantValue(-1))` 换成百分比、留 1 血 = 增量 `ConstantValue(1-基础伤害)` 等。
 
 ## 12. 文本转 .tres 工具（策划友好）
 
@@ -990,7 +1035,8 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 | `生成时` | 登场时 | `生成时:属性:攻击力+1` |
 | `回合开始` / `回合结束` | 回合边界 | `回合结束:菱形,友方,治疗:3` |
 | `攻击后` / `受伤时` / `击杀后` | 战斗事件 | `击杀后:属性:攻击力+1` |
-| `受伤前` | 伤害计算前（可修改） | `受伤前:属性:攻击力-1` |
+| `攻击前` | 攻击前（伤害计算前，可修改，攻击者视角） | `攻击前:属性:攻击力-1` |
+| `受伤前` | 受击前（伤害计算前，可修改，受击者视角） | `受伤前:属性:攻击力-1` |
 | `行动后` / `移动后` | 行动事件 | |
 | `出牌后` | 出牌事件 | `出牌后:属性:攻击力+1` |
 | `Buff施加时` / `Buff移除时` | Buff 事件 | |

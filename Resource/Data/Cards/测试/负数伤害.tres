@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://bn3dpe5dj1hqd"]
+
+[ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="1_0nkwq"]
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_y1ls1"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="2_gxws7"]
+
+[sub_resource type="Resource" id="Resource_0nkwq"]
+script = ExtResource("1_0nkwq")
+Value = -1
+metadata/_custom_type_script = "uid://bcjncmte44un1"
+
+[sub_resource type="Resource" id="Resource_f4rvm"]
+script = ExtResource("2_gxws7")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[resource]
+script = ExtResource("1_y1ls1")
+CardID = "负数伤害"
+CardName = "负数伤害"
+Description = "对任一单位造成-1伤害"
+Type = 1
+Tags = null
+Cost = 0
+TargetFilters = Array[Object]([SubResource("Resource_f4rvm")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_0nkwq")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

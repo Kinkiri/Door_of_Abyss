@@ -737,8 +737,8 @@ public partial class TestRunner : Node
             VAssert("DamageUnit 击杀", () => !unit.IsAlive);
         });
 
-        // ── 伤害修饰 OnBeforeDamage（加伤/减伤被动） ────────────────────
-        RunGroup("伤害修饰 OnBeforeDamage", () =>
+        // ── 伤害修饰（攻击前/受击前加伤减伤） ──────────────────────
+        RunGroup("伤害修饰 攻击前/受击前", () =>
         {
             var eb = EventBus.Instance;
             if (eb == null) { VAssert("EventBus 未就绪，跳过", () => false); return; }
@@ -751,10 +751,10 @@ public partial class TestRunner : Node
             var attacker = MakeUnit("攻击者", 10, 10);
             var victim = MakeUnit("受击者", 5, 20);
 
-            // 受击者减伤被动 -3（OnBeforeDamage 受击者侧触发）
+            // 受击者减伤被动 -3（OnBeforeTakeDamage 受击者视角，Source=自己）
             var reduce = new EffectData
             {
-                TriggerEvent = EventType.OnBeforeDamage,
+                TriggerEvent = EventType.OnBeforeTakeDamage,
                 Target = PassiveTarget.Self,
                 Actions = new GameAction[] { new ModifyDamageAction { Delta = -3 } },
             };
@@ -763,10 +763,10 @@ public partial class TestRunner : Node
             new DamageAction { Value = 10 }.Execute(new Context { SourceUnit = attacker, TargetUnits = new[] { victim } });
             VAssert("减伤-3：20→13", () => victim.CurrentHP == 13);
 
-            // 攻击者加伤被动 +2（OnBeforeDamage 攻击者侧触发）
+            // 攻击者加伤被动 +2（OnBeforeAttack 攻击者视角，Source=自己）
             var boost = new EffectData
             {
-                TriggerEvent = EventType.OnBeforeDamage,
+                TriggerEvent = EventType.OnBeforeAttack,
                 Target = PassiveTarget.Self,
                 Actions = new GameAction[] { new ModifyDamageAction { Delta = 2 } },
             };
@@ -779,7 +779,7 @@ public partial class TestRunner : Node
             var victim2 = MakeUnit("受击者2", 5, 20);
             var bigReduce = new EffectData
             {
-                TriggerEvent = EventType.OnBeforeDamage,
+                TriggerEvent = EventType.OnBeforeTakeDamage,
                 Target = PassiveTarget.Self,
                 Actions = new GameAction[] { new ModifyDamageAction { Delta = -50 } },
             };
@@ -812,10 +812,10 @@ public partial class TestRunner : Node
             var noCond = new HasActedCondition { CheckTarget = ConditionTarget.Source, HasActed = false };
             VAssert("已行动：HasActed=false 不满足", () => !noCond.IsMet(new Context { SourceUnit = attacker }));
 
-            // 集成：已行动 → 攻击加伤 +1
+            // 集成：已行动 → 攻击加伤 +1（OnBeforeAttack 攻击者视角）
             var boost = new EffectData
             {
-                TriggerEvent = EventType.OnBeforeDamage,
+                TriggerEvent = EventType.OnBeforeAttack,
                 Target = PassiveTarget.Self,
                 Conditions = new Condition[] { new HasActedCondition { CheckTarget = ConditionTarget.Source, HasActed = true } },
                 Actions = new GameAction[] { new ModifyDamageAction { Delta = 1 } },
@@ -843,17 +843,17 @@ public partial class TestRunner : Node
             var unit = MakeUnit("多被动", 5, 10);
             var victim = MakeUnit("靶子", 5, 50);
 
-            // 同一单位同一事件注册两个被动，各自 MaxTriggerCount=1
+            // 同一单位同一事件注册两个被动，各自 MaxTriggerCount=1（OnBeforeAttack 攻击者视角）
             var fx1 = new EffectData
             {
-                TriggerEvent = EventType.OnBeforeDamage,
+                TriggerEvent = EventType.OnBeforeAttack,
                 Target = PassiveTarget.Self,
                 MaxTriggerCount = 1,
                 Actions = new GameAction[] { new ModifyDamageAction { Delta = 1 } },
             };
             var fx2 = new EffectData
             {
-                TriggerEvent = EventType.OnBeforeDamage,
+                TriggerEvent = EventType.OnBeforeAttack,
                 Target = PassiveTarget.Self,
                 MaxTriggerCount = 1,
                 Actions = new GameAction[] { new ModifyDamageAction { Delta = 2 } },
@@ -1910,6 +1910,251 @@ public partial class TestRunner : Node
                 new CardUnitTypeFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.Building } });
             VAssert("单位类型筛选：只抽建筑单位卡",
                 () => buildingDrawn.Count == 1 && buildingDrawn[0].CardID == "城墙");
+        });
+
+        // ── 手牌被动（Card.PassiveEffects 订阅 EventBus） ────────
+        RunGroup("手牌被动", () =>
+        {
+            if (CardManager.Instance == null || EventBus.Instance == null)
+            {
+                VAssert("CardManager/EventBus 未就绪，跳过手牌被动测试", () => true);
+                return;
+            }
+
+            var cm = CardManager.Instance;
+            var eb = EventBus.Instance;
+
+            var drawOne = () => new DrawCardAction { Value = 1, AnimationDuration = 0f };
+            var passiveCardData = new SpellCardData
+            {
+                CardID = "抽牌被动", CardName = "抽牌被动", Type = CardType.Spell,
+                PassiveEffects = new[] { new EffectData
+                {
+                    TriggerEvent = EventType.OnDrawCard,
+                    Actions = new GameAction[] { drawOne() },
+                } },
+            };
+            var roundCardData = new SpellCardData
+            {
+                CardID = "回合被动", CardName = "回合被动", Type = CardType.Spell,
+                PassiveEffects = new[] { new EffectData
+                {
+                    TriggerEvent = EventType.RoundStart,
+                    Actions = new GameAction[] { drawOne() },
+                } },
+            };
+            var plainData = new SpellCardData { CardID = "普通", CardName = "普通", Type = CardType.Spell };
+
+            // ── 用例 A：抽到即触发（抽牌 → 订阅 → Fire OnDrawCard → 被动触发） ──
+            cm.InitializeDrawPile(new List<CardData> { passiveCardData, plainData, plainData });
+            // InitializeDrawPile 会洗牌，手动把被动卡放到牌库顶保证抽到
+            var target = cm.DrawPile.Find(c => c.CardID == "抽牌被动");
+            cm.DrawPile.Remove(target);
+            cm.DrawPile.Insert(0, target);
+
+            int h0 = cm.HandCards.Count;
+            var drawn = cm.DrawCard();
+            VAssert("抽到被动卡：OnDrawCard 触发被动再抽 1（手牌 +2）",
+                () => drawn?.CardID == "抽牌被动" && cm.HandCards.Count == h0 + 2);
+
+            // ── 用例 B：已在手牌的被动卡不响应他人抽牌（防连锁递归） ──
+            int h1 = cm.HandCards.Count;
+            cm.DrawCard();
+            VAssert("已在手牌的被动卡不响应其他抽牌（手牌 +1）",
+                () => cm.HandCards.Count == h1 + 1);
+
+            // ── 用例 C：RoundStart 手牌被动（CreateCard 进手牌即订阅） ──
+            cm.InitializeDrawPile(new List<CardData> { plainData, plainData, plainData });
+            var roundCard = cm.CreateCard(roundCardData);
+            int h2 = cm.HandCards.Count;
+            eb.Fire(EventType.RoundStart, new Context());
+            VAssert("手牌被动响应 RoundStart（手牌 +1）",
+                () => cm.HandCards.Count == h2 + 1);
+
+            // ── 用例 D：打出后退订 ──
+            int h3 = cm.HandCards.Count;
+            cm.UseCard(roundCard);
+            eb.Fire(EventType.RoundStart, new Context());
+            VAssert("打出后退订：RoundStart 不再触发",
+                () => cm.HandCards.Count == h3);
+
+            // ── 用例 E：弃牌后退订 ──
+            cm.InitializeDrawPile(new List<CardData> { plainData, plainData, plainData });
+            var discardCard = cm.CreateCard(roundCardData);
+            int h4 = cm.HandCards.Count;
+            cm.DiscardCard(discardCard);
+            eb.Fire(EventType.RoundStart, new Context());
+            VAssert("弃牌后退订：RoundStart 不再触发",
+                () => cm.HandCards.Count == h4);
+
+            // ── 用例 F：单位被动响应 OnDrawCard（事件通用性，MaxTriggerCount=1 防连锁） ──
+            cm.InitializeDrawPile(new List<CardData> { plainData, plainData, plainData });
+            var listener = MakeUnit("抽牌监听", 1, 5);
+            eb.Subscribe(listener, new[] { new EffectData
+            {
+                TriggerEvent = EventType.OnDrawCard,
+                MaxTriggerCount = 1,
+                Actions = new GameAction[] { drawOne() },
+            } });
+            int h5 = cm.HandCards.Count;
+            cm.DrawCard();
+            VAssert("单位被动响应 OnDrawCard（MaxTriggerCount=1 防连锁，手牌 +2）",
+                () => cm.HandCards.Count == h5 + 2);
+            eb.Unsubscribe(listener);
+        });
+
+        // ── CardInfoValue 卡牌值源 ───────────────────────────────
+        RunGroup("CardInfoValue 卡牌值源", () =>
+        {
+            var card = new Card(new SpellCardData
+            {
+                CardID = "测试卡",
+                CardName = "测试卡",
+                Cost = 5,
+                Type = CardType.Spell,
+                World = World.曼斯维森,
+                Faction = Faction.擢升之手,
+                Rarity = Rarity.Legendary,
+            });
+            var ctx = new Context { SourceCard = card };
+
+            VAssert("CardInfoValue 读费用",
+                () => new CardInfoValue { Info = CardInfoType.Cost }.GetValue(ctx) == 5);
+            VAssert("CardInfoValue 读卡牌类型（枚举数值）",
+                () => new CardInfoValue { Info = CardInfoType.Type }.GetValue(ctx) == (int)CardType.Spell);
+            VAssert("CardInfoValue 读世界观",
+                () => new CardInfoValue { Info = CardInfoType.World }.GetValue(ctx) == (int)World.曼斯维森);
+            VAssert("CardInfoValue 读势力",
+                () => new CardInfoValue { Info = CardInfoType.Faction }.GetValue(ctx) == (int)Faction.擢升之手);
+            VAssert("CardInfoValue 读稀有度",
+                () => new CardInfoValue { Info = CardInfoType.Rarity }.GetValue(ctx) == (int)Rarity.Legendary);
+            VAssert("CardInfoValue 无 SourceCard 返回默认值",
+                () => new CardInfoValue { Info = CardInfoType.Cost, DefaultValue = 7 }.GetValue(new Context()) == 7);
+        });
+
+        // ── 致命免伤（OnBeforeTakeDamage + PendingDamage） ────────
+        RunGroup("致命免伤", () =>
+        {
+            if (UnitManager.Instance == null || EventBus.Instance == null)
+            {
+                VAssert("UnitManager/EventBus 未就绪，跳过致命免伤测试", () => true);
+                return;
+            }
+            var eb = EventBus.Instance;
+
+            // 免死被动：本次伤害 ≥ 当前 HP 时把伤害清零（增量 = -基础伤害）。
+            // 受击前事件：Source=受击者（自己），故读 Source 的当前 HP
+            var protectEffect = new EffectData
+            {
+                TriggerEvent = EventType.OnBeforeTakeDamage,
+                Target = PassiveTarget.Self,
+                Conditions = new Condition[]
+                {
+                    new CompareCondition
+                    {
+                        Left = new PendingDamageValue(),
+                        Op = CompareOp.GreaterEqual,
+                        Right = new UnitStatValue
+                        {
+                            Unit = ValueTarget.Source,
+                            Stat = ModifyStatType.MaxHP,
+                            CurrentHP = true,
+                        },
+                    },
+                },
+                Actions = new GameAction[]
+                {
+                    new ModifyDamageAction
+                    {
+                        ValueSource = new FormulaValue
+                        {
+                            Op = FormulaOp.Mul,
+                            Left = new PendingDamageValue(),
+                            Right = new ConstantValue { Value = -1 },
+                        },
+                    },
+                },
+            };
+
+            // 用例 1：致命伤害被免伤（10 ≥ HP 5 → 伤害归零，HP 不变）
+            var victim = MakeUnit("免死单位", 1, 5);
+            var attacker = MakeUnit("攻击者", 10, 10);
+            eb.Subscribe(victim, new[] { protectEffect });
+            new DamageAction { Value = 10 }.Execute(new Context
+            {
+                SourceUnit = attacker,
+                TargetUnit = victim,
+            });
+            VAssert("致命伤害免伤：HP 不变且存活",
+                () => victim.CurrentHP == 5 && victim.IsAlive);
+
+            // 用例 2：非致命伤害正常结算（3 < HP 5）
+            new DamageAction { Value = 3 }.Execute(new Context
+            {
+                SourceUnit = attacker,
+                TargetUnit = victim,
+            });
+            VAssert("非致命伤害正常结算：HP 5→2",
+                () => victim.CurrentHP == 2);
+
+            // 用例 3：无免死被动时致命伤害致死
+            var plain = MakeUnit("普通单位", 1, 5);
+            new DamageAction { Value = 10 }.Execute(new Context
+            {
+                SourceUnit = attacker,
+                TargetUnit = plain,
+            });
+            VAssert("无免死被动：致命伤害致死",
+                () => plain.CurrentHP <= 0 && !plain.IsAlive);
+
+            eb.Unsubscribe(victim);
+        });
+
+        // ── RemoveEquipmentAction 移除装备 ─────────────────────────
+        RunGroup("移除装备 RemoveEquipmentAction", () =>
+        {
+            if (UnitManager.Instance == null || EquipmentManager.Instance == null)
+            {
+                VAssert("UnitManager/EquipmentManager 未就绪，跳过移除装备测试", () => true);
+                return;
+            }
+            var em = EquipmentManager.Instance;
+
+            // 造一件装备：ATK+2
+            var equipData = new EquipmentData
+            {
+                EquipmentID = "测试装备",
+                EquipmentName = "测试装备",
+                AttackBonus = 2,
+            };
+
+            // 用例 1：按 ID 移除成功，属性还原
+            var unit = MakeUnit("装备测试员", 1, 10);
+            em.Equip(unit, equipData, null);
+            VAssert("装备后 ATK+2（1→3）且已装备",
+                () => unit.AttackPower == 3 && em.HasEquipment(unit));
+
+            new RemoveEquipmentAction { EquipmentID = "测试装备" }
+                .Execute(new Context { TargetUnit = unit });
+            VAssert("按 ID 移除：ATK 还原为 1 且未装备",
+                () => unit.AttackPower == 1 && !em.HasEquipment(unit));
+
+            // 用例 2：ID 不匹配不动作
+            em.Equip(unit, equipData, null);
+            new RemoveEquipmentAction { EquipmentID = "其他装备" }
+                .Execute(new Context { TargetUnit = unit });
+            VAssert("ID 不匹配：装备保留",
+                () => em.HasEquipment(unit) && unit.AttackPower == 3);
+
+            // 用例 3：无装备时不动作（不报错）
+            var plain = MakeUnit("无装备者", 1, 10);
+            new RemoveEquipmentAction { EquipmentID = "测试装备" }
+                .Execute(new Context { TargetUnit = plain });
+            VAssert("无装备：不动作且无异常",
+                () => !em.HasEquipment(plain) && plain.AttackPower == 1);
+
+            // 清理（避免残留影响其他测试）
+            em.RemoveAllEquipments(unit);
         });
 
         // ── 汇总输出 ────────────────────────────────────────────

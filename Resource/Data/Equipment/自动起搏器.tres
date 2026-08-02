@@ -1,0 +1,76 @@
+[gd_resource type="Resource" script_class="EquipmentData" format=3 uid="uid://t3irda6qduar"]
+
+[ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="1_xyly7"]
+[ext_resource type="Script" uid="uid://c3uoprervqo60" path="res://Scripts/Data/Actions/ModifyDamageAction.cs" id="2_8cnu2"]
+[ext_resource type="Script" uid="uid://bndowl6u6n8uh" path="res://Scripts/Data/Actions/HealAction.cs" id="3_sth4y"]
+[ext_resource type="Script" uid="uid://cq8v06lvy3mmc" path="res://Scripts/Data/Actions/RemoveBuffAction.cs" id="4_l0451"]
+[ext_resource type="Script" uid="uid://buoqyryw34u7o" path="res://Scripts/Data/Actions/RemoveEquipmentAction.cs" id="5_p76m5"]
+[ext_resource type="Script" uid="uid://s84ks60onupf" path="res://Scripts/Data/ValueSource/UnitStatValue.cs" id="6_cwavw"]
+[ext_resource type="Script" uid="uid://bjntjn2ydt801" path="res://Scripts/Data/ValueSource/PendingDamageValue.cs" id="7_j8epc"]
+[ext_resource type="Script" uid="uid://brotjf8m2qpfx" path="res://Scripts/Data/Conditions/CompareCondition.cs" id="8_8mnpl"]
+[ext_resource type="Script" uid="uid://ce73rlwqwvo0j" path="res://Scripts/Data/Conditions/HasBuffCondition.cs" id="9_u3uoh"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="10_7s1lb"]
+[ext_resource type="Script" uid="uid://tmoxnw3avry4" path="res://Scripts/Data/Units/EquipmentData.cs" id="11_qljuc"]
+
+[sub_resource type="Resource" id="Resource_dqtl5"]
+script = ExtResource("2_8cnu2")
+Delta = -999
+metadata/_custom_type_script = "uid://c3uoprervqo60"
+
+[sub_resource type="Resource" id="Resource_7wxbn"]
+script = ExtResource("3_sth4y")
+Value = 2
+metadata/_custom_type_script = "uid://bndowl6u6n8uh"
+
+[sub_resource type="Resource" id="Resource_i635r"]
+script = ExtResource("4_l0451")
+BuffID = "义肢"
+metadata/_custom_type_script = "uid://cq8v06lvy3mmc"
+
+[sub_resource type="Resource" id="Resource_7ok1f"]
+script = ExtResource("5_p76m5")
+EquipmentID = "自动起搏器"
+metadata/_custom_type_script = "uid://buoqyryw34u7o"
+
+[sub_resource type="Resource" id="Resource_f6snt"]
+script = ExtResource("6_cwavw")
+Stat = 1
+CurrentAP = false
+metadata/_custom_type_script = "uid://s84ks60onupf"
+
+[sub_resource type="Resource" id="Resource_x7rsf"]
+script = ExtResource("7_j8epc")
+metadata/_custom_type_script = "uid://bjntjn2ydt801"
+
+[sub_resource type="Resource" id="Resource_0cme7"]
+script = ExtResource("8_8mnpl")
+Left = SubResource("Resource_f6snt")
+Op = 1
+Right = SubResource("Resource_x7rsf")
+metadata/_custom_type_script = "uid://brotjf8m2qpfx"
+
+[sub_resource type="Resource" id="Resource_prqwe"]
+script = ExtResource("9_u3uoh")
+BuffID = "义肢"
+metadata/_custom_type_script = "uid://ce73rlwqwvo0j"
+
+[sub_resource type="Resource" id="Resource_tbg3s"]
+script = ExtResource("10_7s1lb")
+TriggerEvent = 15
+TargetFilters = null
+MaxTriggerCount = 1
+Actions = Array[Object]([SubResource("Resource_dqtl5"), SubResource("Resource_7wxbn"), SubResource("Resource_i635r"), SubResource("Resource_7ok1f")])
+Conditions = Array[Object]([SubResource("Resource_0cme7"), SubResource("Resource_prqwe")])
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("11_qljuc")
+EquipmentID = "自动起搏器"
+EquipmentName = "自动起搏器"
+Description = "收到致命伤害时，通过失去所有义肢，免疫此次伤害，恢复2血"
+Icon = ExtResource("1_xyly7")
+AttackBonus = 0
+MaxHealthBonus = 0
+PassiveEffects = Array[Object]([SubResource("Resource_tbg3s")])
+OnApplyActions = null
+metadata/_custom_type_script = "uid://tmoxnw3avry4"

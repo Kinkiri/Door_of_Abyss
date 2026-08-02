@@ -20,7 +20,7 @@ metadata/_custom_type_script = "uid://dso6efmkhromg"
 
 [sub_resource type="Resource" id="Resource_vfoc4"]
 script = ExtResource("5_n2g6y")
-TriggerEvent = 9
+TriggerEvent = 14
 TargetFilters = null
 MaxTriggerCount = 1
 Actions = Array[Object]([SubResource("Resource_71yya")])

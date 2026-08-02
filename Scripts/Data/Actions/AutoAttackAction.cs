@@ -38,7 +38,7 @@ public partial class AutoAttackAction : GameAction
 
         if (nearest != null)
         {
-            // 统一走 DamageAction 攻击链路：触发 OnBeforeDamage（加伤/减伤修饰）、
+            // 统一走 DamageAction 攻击链路：触发攻击前/受击前（加伤/减伤修饰）、
             // OnDealDamage / OnTakeDamage / OnKill 等战斗被动事件
             var dmgAction = new DamageAction { Value = ctx.SourceUnit.AttackPower };
             dmgAction.Execute(new Context

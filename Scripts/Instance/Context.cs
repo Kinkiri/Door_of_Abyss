@@ -21,8 +21,11 @@ public partial class Context
     /// <summary>触发 OnUnitAct 时的行动类型（移动/攻击），供被动效果区分</summary>
     public UnitActType ActType { get; set; }
 
-    /// <summary>本次伤害事件的修饰量（正=加伤，负=减伤）。OnBeforeDamage 被动用 ModifyDamageAction 增减，DamageAction 结算时应用</summary>
+    /// <summary>本次伤害事件的修饰量（正=加伤，负=减伤）。攻击前/受击前被动用 ModifyDamageAction 增减，DamageAction 结算时两侧累加</summary>
     public int DamageModifier { get; set; }
+
+    /// <summary>本次伤害的基础伤害值（攻击前/受击前事件时由 DamageAction 填充，只读语义）。供被动判断"会致死"等条件</summary>
+    public int PendingDamage { get; set; }
 
     /// <summary>
     /// 范围攻击再用

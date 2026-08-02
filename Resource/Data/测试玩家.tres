@@ -2,29 +2,14 @@
 
 [ext_resource type="Script" uid="uid://d2widi0p087e8" path="res://Scripts/Data/PlayerData.cs" id="1_21qan"]
 [ext_resource type="Resource" uid="uid://brrpcr8sgqo3a" path="res://Resource/Data/Units/默认门.tres" id="1_mt5ji"]
-[ext_resource type="Resource" uid="uid://dx2xn83rsuc8f" path="res://Resource/Data/Cards/擢升之手/巨拳近卫.tres" id="3_egxn1"]
-[ext_resource type="Resource" uid="uid://dxccb42t2dhrl" path="res://Resource/Data/Cards/擢升之手/秒速尖兵.tres" id="5_ugbj6"]
-[ext_resource type="Resource" uid="uid://do4vvklkek6hx" path="res://Resource/Data/Cards/擢升之手/闲散员工.tres" id="6_48enm"]
-[ext_resource type="Resource" uid="uid://tc3nxxbqtsaw" path="res://Resource/Data/Cards/擢升之手/挑拣机制.tres" id="6_cge07"]
-[ext_resource type="Resource" uid="uid://ce6bu28qumhkv" path="res://Resource/Data/Cards/擢升之手/腾跃.tres" id="6_ljakr"]
-[ext_resource type="Resource" uid="uid://cmjvls1mhbuyu" path="res://Resource/Data/Cards/擢升之手/自动机械手.tres" id="7_jrwne"]
-[ext_resource type="Resource" uid="uid://bpx2qew5q1thk" path="res://Resource/Data/Cards/擢升之手/长臂义肢.tres" id="7_mj3vb"]
-[ext_resource type="Resource" uid="uid://cxntvbgcftr5s" path="res://Resource/Data/Cards/擢升之手/重载章鱼.tres" id="8_k7wen"]
-[ext_resource type="Resource" uid="uid://dgedoy4lvmx0q" path="res://Resource/Data/Cards/擢升之手/多功能铲.tres" id="9_48enm"]
-[ext_resource type="Resource" uid="uid://bvlhpxn7f4qti" path="res://Resource/Data/Cards/擢升之手/钢肢蝼蛄.tres" id="10_06r3n"]
-[ext_resource type="Resource" uid="uid://d2lx7msdme5q4" path="res://Resource/Data/Cards/擢升之手/蓄能脉冲.tres" id="11_11frr"]
+[ext_resource type="Resource" uid="uid://b7ysb884gkmw4" path="res://Resource/Data/Cards/擢升之手/自动起搏器.tres" id="2_q6p3j"]
+[ext_resource type="Resource" uid="uid://bn3dpe5dj1hqd" path="res://Resource/Data/Cards/测试/负数伤害.tres" id="4_mt5ji"]
 [ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="11_ljakr"]
 [ext_resource type="Resource" uid="uid://dkic74vua4kdh" path="res://Resource/Data/Cards/擢升之手/门卫.tres" id="12_tnsbu"]
-[ext_resource type="Resource" uid="uid://d0sm2c2orqtu2" path="res://Resource/Data/Cards/擢升之手/飞拳斗士.tres" id="14_imnhm"]
-[ext_resource type="Resource" uid="uid://djiilhm1jyasb" path="res://Resource/Data/Cards/测试/无中生有.tres" id="15_pmyom"]
-[ext_resource type="Resource" uid="uid://dl8hmrc3mnmtt" path="res://Resource/Data/Cards/测试/天火！.tres" id="16_su1j8"]
-[ext_resource type="Resource" uid="uid://b8oubcccs7tte" path="res://Resource/Data/Cards/测试/火球术.tres" id="17_266ti"]
-[ext_resource type="Resource" uid="uid://dg3krk17fcll6" path="res://Resource/Data/Cards/测试/风羽.tres" id="18_w2tx0"]
-[ext_resource type="Resource" uid="uid://ce7w10xgu53pc" path="res://Resource/Data/Cards/擢升之手/溶血试剂.tres" id="19_ugbj6"]
 
 [sub_resource type="Resource" id="Resource_h85jk"]
 script = ExtResource("11_ljakr")
-Cards = Array[Object]([ExtResource("9_48enm"), ExtResource("3_egxn1"), ExtResource("6_cge07"), ExtResource("5_ugbj6"), ExtResource("6_ljakr"), ExtResource("7_jrwne"), ExtResource("11_11frr"), ExtResource("8_k7wen"), ExtResource("10_06r3n"), ExtResource("7_mj3vb"), ExtResource("12_tnsbu"), ExtResource("6_48enm"), ExtResource("14_imnhm"), ExtResource("9_48enm"), ExtResource("3_egxn1"), ExtResource("6_cge07"), ExtResource("5_ugbj6"), ExtResource("6_ljakr"), ExtResource("7_jrwne"), ExtResource("11_11frr"), ExtResource("8_k7wen"), ExtResource("10_06r3n"), ExtResource("7_mj3vb"), ExtResource("12_tnsbu"), ExtResource("6_48enm"), ExtResource("14_imnhm"), ExtResource("15_pmyom"), ExtResource("15_pmyom"), ExtResource("16_su1j8"), ExtResource("17_266ti"), ExtResource("18_w2tx0"), ExtResource("19_ugbj6"), ExtResource("19_ugbj6")])
+Cards = Array[Object]([ExtResource("2_q6p3j"), ExtResource("2_q6p3j"), ExtResource("2_q6p3j"), ExtResource("12_tnsbu"), ExtResource("12_tnsbu"), ExtResource("12_tnsbu"), ExtResource("12_tnsbu"), ExtResource("4_mt5ji"), ExtResource("4_mt5ji"), ExtResource("4_mt5ji")])
 metadata/_custom_type_script = "uid://b1eamjx1y7exn"
 
 [resource]

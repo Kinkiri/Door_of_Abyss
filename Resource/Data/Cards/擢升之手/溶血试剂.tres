@@ -48,4 +48,5 @@ Rarity = 2
 TargetFilters = Array[Object]([SubResource("Resource_haofv"), SubResource("Resource_50f4x"), SubResource("Resource_7ln3h")])
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_rp33y"), SubResource("Resource_q8vip")])
+PassiveEffects = null
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

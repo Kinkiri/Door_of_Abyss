@@ -740,10 +740,13 @@ public partial class BattleManager : Node2D
         EmitSignal(SignalName.CostChanged, PlayerCost, MaxCost);
         GD.Print($"[Battle] 费用回复 +{totalCost}（来自门），当前 {PlayerCost}/{MaxCost}");
 
-        if (totalDraw > 0 && CardManager.Instance != null)
-            CardManager.Instance.DrawCards(totalDraw);
         if (totalDraw > 0)
-            GD.Print($"[Battle] 抽牌 {totalDraw} 张（来自门）");
+        {
+            GD.Print($"[Battle] 抽牌 {totalDraw} 张（来自门），走 DrawCardAction 队列");
+            ActionQueue.Instance?.Enqueue(
+                new[] { new DrawCardAction { Value = totalDraw, AnimationDuration = 0.3f } },
+                new Context());
+        }
 
         // 检查本回合是否有波次
         SpawnWaveForRound(RoundCount);

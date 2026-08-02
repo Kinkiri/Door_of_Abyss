@@ -19,7 +19,8 @@ public partial class EventBus : Node
 
     private class Subscription
     {
-        public Unit Owner;
+        /// <summary>订阅者：Unit（单位被动）或 Card（手牌被动）</summary>
+        public object Owner;
         public GameAction[] Actions;
         public PassiveTarget PassiveTarget;
         public TargetFilter TargetFilter;
@@ -36,22 +37,22 @@ public partial class EventBus : Node
     public void Init() { }
 
     /// <summary>
-    /// 为单位注册被动效果（无标签，用于单位原生被动）
+    /// 注册被动效果（无标签）。owner 为 Unit（单位原生被动）或 Card（手牌被动）。
     /// </summary>
-    public void Subscribe(Unit owner, EffectData[] effects)
+    public void Subscribe(object owner, EffectData[] effects)
     {
         Subscribe(owner, effects, null);
     }
 
     /// <summary>
-    /// 为单位注册被动效果（带标签，用于 Buff 等临时效果）
+    /// 注册被动效果（带标签，用于 Buff 等临时效果）
     /// </summary>
     /// <param name="tag">订阅标签，Buff 到期时通过此标签单独清理</param>
-    public void Subscribe(Unit owner, EffectData[] effects, string tag)
+    public void Subscribe(object owner, EffectData[] effects, string tag)
     {
         if (effects == null) return;
 
-        GD.Print($"[EventBus] === 订阅: {owner.UnitData?.UnitName} ID={owner.ID} tag={tag ?? "null"} ===");
+        GD.Print($"[EventBus] === 订阅: {GetOwnerName(owner)} tag={tag ?? "null"} ===");
 
         foreach (var effect in effects)
         {
@@ -88,11 +89,11 @@ public partial class EventBus : Node
     }
 
     /// <summary>
-    /// 移除单位的所有被动效果订阅（单位销毁时调用）
+    /// 移除订阅者的所有被动效果订阅（单位销毁 / 卡牌打出、弃牌时调用）
     /// </summary>
-    public void Unsubscribe(Unit owner)
+    public void Unsubscribe(object owner)
     {
-        GD.Print($"[EventBus] === 取消订阅: {owner.UnitData?.UnitName} ID={owner.ID} ===");
+        GD.Print($"[EventBus] === 取消订阅: {GetOwnerName(owner)} ===");
         int removed = 0;
         foreach (var kv in _subscriptions)
         {
@@ -156,7 +157,7 @@ public partial class EventBus : Node
         GD.Print($"[EventBus] >>> Fire({type}) subject={(subject?.UnitData?.UnitName ?? "所有人")} 订阅者数={list.Count}");
 
         int triggered = 0;
-        // 伤害修饰初值（OnBeforeDamage 被动经 ModifyDamageAction 修改后回写累加）
+        // 伤害修饰初值（攻击前/受击前被动经 ModifyDamageAction 修改后回写累加）
         int dmgBase = ctx?.DamageModifier ?? 0;
 
         // 快照遍历，防止递归 Fire 修改原 List 导致异常
@@ -164,19 +165,44 @@ public partial class EventBus : Node
         {
             var owner = entry.Owner;
 
-            // 亡语：OnUnitDeath 允许死者触发自身的被动效果
-            // 其他事件只触发存活单位的被动
-            if (type != EventType.OnUnitDeath && (!owner.IsAlive || owner.IsDead))
-                continue;
+            // ── 订阅者类型分支：Unit（单位被动）/ Card（手牌被动） ──────
+            Unit sourceUnit = null;   // 效果来源单位（Card 订阅者继承事件 ctx 的来源，可能为 null）
+            bool isCardOwner = false;
+            if (owner is Unit unit)
+            {
+                // 亡语：OnUnitDeath 允许死者触发自身的被动效果
+                // 其他事件只触发存活单位的被动
+                if (type != EventType.OnUnitDeath && (!unit.IsAlive || unit.IsDead))
+                    continue;
 
-            if (subject != null && owner != subject) continue;
+                if (subject != null && owner != subject) continue;
+                sourceUnit = unit;
+            }
+            else if (owner is Card card)
+            {
+                // 手牌被动：不在手牌不触发；subject 定向不限制（由 Conditions 自行控制，如"击杀回费"）
+                var cm = CardManager.Instance;
+                if (cm == null || !cm.HandCards.Contains(card))
+                    continue;
+
+                // OnDrawCard 只响应"自己被抽到"（SourceCard==自己），避免被动卡连锁抽牌递归
+                if (type == EventType.OnDrawCard && ctx?.SourceCard != card)
+                    continue;
+
+                isCardOwner = true;
+                sourceUnit = ctx?.SourceUnit;
+            }
+            else
+            {
+                continue;
+            }
 
             // 触发次数限制检查（按订阅条目独立计数）
             if (entry.MaxTriggerCount > 0)
             {
                 if (_triggerCounts.TryGetValue(entry, out var tc) && tc.current <= 0)
                 {
-                    GD.Print($"[EventBus]   跳过: {owner.UnitData?.UnitName} — 已达触发上限({entry.MaxTriggerCount})");
+                    GD.Print($"[EventBus]   跳过: {GetOwnerName(owner)} — 已达触发上限({entry.MaxTriggerCount})");
                     continue;
                 }
             }
@@ -185,20 +211,41 @@ public partial class EventBus : Node
 
             // ── 创建效果上下文 ──────────────────────────────
             Context effectCtx;
+            Team sourceTeam = isCardOwner ? (ctx?.SourceTeam ?? Team.Player) : ((Unit)owner).Team;
 
             if (entry.TargetFilter != null)
             {
                 // 使用 TargetFilter 自动搜索目标
                 Cell centerCell = null;
                 var map = MapManager.Instance?.Map;
-                if (map != null)
-                    map.TryGetValue(owner.GridPos, out centerCell);
+
+                // 中心格子：Unit 用自身格子；Card 继承事件 ctx 的格子或来源单位格子（无则 null）
+                Vector2I centerPos = default;
+                bool hasCenter = false;
+                if (!isCardOwner)
+                {
+                    centerPos = ((Unit)owner).GridPos;
+                    hasCenter = true;
+                }
+                else if (ctx?.TargetCell != null)
+                {
+                    centerPos = ctx.TargetCell.GridPos;
+                    hasCenter = true;
+                }
+                else if (sourceUnit != null)
+                {
+                    centerPos = sourceUnit.GridPos;
+                    hasCenter = true;
+                }
+
+                if (map != null && hasCenter)
+                    map.TryGetValue(centerPos, out centerCell);
 
                 var resolveCtx = new Context
                 {
-                    SourceUnit = owner,
+                    SourceUnit = sourceUnit,
                     TargetCell = centerCell,
-                    SourceTeam = owner.Team,
+                    SourceTeam = sourceTeam,
                     Map = map,
                     ActiveUnits = UnitManager.Instance?.ActiveUnits,
                 };
@@ -206,73 +253,85 @@ public partial class EventBus : Node
                 if (entry.TargetFilter.GetKind() == TargetKind.Cell)
                 {
                     var cells = TargetResolver.ResolveCells(entry.TargetFilter, resolveCtx);
-                    GD.Print($"[EventBus]   -> 触发: {owner.UnitData?.UnitName} ID={owner.ID} " +
+                    GD.Print($"[EventBus]   -> 触发: {GetOwnerName(owner)} " +
                              $"filter={entry.TargetFilter.GetType().Name} 找到格子={cells?.Length ?? 0}");
                     effectCtx = new Context
                     {
-                        SourceUnit = owner,
+                        SourceUnit = sourceUnit,
                         TargetCells = cells,
-                        SourceTeam = owner.Team,
+                        SourceTeam = sourceTeam,
                         TargetTeam = Team.Neutral,
                         ActType = ctx?.ActType ?? UnitActType.None,
                         DamageModifier = dmgBase,
+                        PendingDamage = ctx?.PendingDamage ?? 0,
                     };
                 }
                 else
                 {
                     var targets = TargetResolver.ResolveUnits(entry.TargetFilter, resolveCtx);
-                    GD.Print($"[EventBus]   -> 触发: {owner.UnitData?.UnitName} ID={owner.ID} " +
+                    GD.Print($"[EventBus]   -> 触发: {GetOwnerName(owner)} " +
                              $"filter={entry.TargetFilter.GetType().Name} 找到目标={targets?.Length ?? 0}");
                     effectCtx = new Context
                     {
-                        SourceUnit = owner,
+                        SourceUnit = sourceUnit,
                         TargetUnits = targets,
-                        SourceTeam = owner.Team,
+                        SourceTeam = sourceTeam,
                         TargetTeam = Team.Neutral,
                         ActType = ctx?.ActType ?? UnitActType.None,
                         DamageModifier = dmgBase,
+                        PendingDamage = ctx?.PendingDamage ?? 0,
                     };
                 }
             }
             else
             {
                 // 传统 PassiveTarget 逻辑
-                GD.Print($"[EventBus]   -> 触发: {owner.UnitData?.UnitName} ID={owner.ID} " +
+                GD.Print($"[EventBus]   -> 触发: {GetOwnerName(owner)} " +
                          $"targetMode={entry.PassiveTarget} otherParty={ctx?.TargetUnit?.UnitData?.UnitName}");
 
+                // Card 订阅者无自身目标：Self → null；EventTarget → 事件另一方
+                Unit selfUnit = isCardOwner ? null : (Unit)owner;
                 effectCtx = new Context
                 {
-                    SourceUnit = owner,
+                    SourceUnit = sourceUnit,
                     TargetUnit = entry.PassiveTarget == PassiveTarget.Self
-                        ? owner : (ctx?.TargetUnit ?? owner),
+                        ? selfUnit : (ctx?.TargetUnit ?? selfUnit),
                     TargetCell = ctx?.TargetCell,
                     SourceCell = ctx?.SourceCell,
-                    SourceCard = ctx?.SourceCard,
-                    SourceTeam = ctx?.SourceTeam ?? Team.Neutral,
+                    SourceCard = isCardOwner ? null : ctx?.SourceCard,
+                    SourceTeam = sourceTeam,
                     TargetTeam = ctx?.TargetTeam ?? Team.Neutral,
                     ActType = ctx?.ActType ?? UnitActType.None,
                     DamageModifier = dmgBase,
+                    PendingDamage = ctx?.PendingDamage ?? 0,
                 };
             }
 
-            // ── 条件检查（ECA） ──────────────────────────────
+            // ── 条件检查（ECA，逐个打印结果便于排查"条件不满足"） ────
             bool conditionsMet = true;
             if (entry.Conditions != null)
             {
                 foreach (var cond in entry.Conditions)
                 {
-                    if (cond != null && !cond.IsMet(effectCtx))
-                    {
-                        conditionsMet = false;
-                        break;
-                    }
+                    if (cond == null) continue;
+                    bool met = cond.IsMet(effectCtx);
+                    GD.Print($"[EventBus]     条件[{DescribeCondition(cond, effectCtx)}] = {met}");
+                    if (!met) conditionsMet = false;
                 }
             }
 
             if (!conditionsMet)
             {
-                GD.Print($"[EventBus]   条件不满足，跳过: {owner.UnitData?.UnitName}");
+                GD.Print($"[EventBus]   条件不满足，跳过: {GetOwnerName(owner)}");
                 continue;
+            }
+
+            // 扣减触发次数（执行前扣减：动作可能触发嵌套 Fire（如"抽牌再抽牌"），
+            // 若执行后再扣，嵌套 Fire 中计数未扣会重复触发，导致无限递归栈溢出）
+            if (entry.MaxTriggerCount > 0)
+            {
+                if (_triggerCounts.TryGetValue(entry, out var tc))
+                    _triggerCounts[entry] = (tc.max, tc.current - 1);
             }
 
             foreach (var action in entry.Actions)
@@ -305,5 +364,40 @@ public partial class EventBus : Node
             _triggerCounts[key] = (tc.max, tc.max);
         }
         GD.Print($"[EventBus] 重置 {keys.Count} 个触发计数");
+    }
+
+    /// <summary>订阅者显示名（Unit → UnitName；Card → CardID）</summary>
+    private static string GetOwnerName(object owner)
+    {
+        if (owner is Unit u) return u.UnitData?.UnitName ?? $"Unit#{u.ID}";
+        if (owner is Card c) return c.CardID;
+        return "?";
+    }
+
+    /// <summary>条件诊断描述（类型 + 关键数值/检查目标），便于排查"条件不满足"</summary>
+    private static string DescribeCondition(Condition cond, Context ctx)
+    {
+        if (cond is CompareCondition cmp)
+        {
+            int l = cmp.Left?.GetValue(ctx) ?? 0;
+            int r = cmp.Right?.GetValue(ctx) ?? 0;
+            return $"{cond.GetType().Name}: {l} {cmp.Op} {r}";
+        }
+        if (cond is HasBuffCondition hb)
+        {
+            var u = hb.CheckTarget == ConditionTarget.Target ? ctx.TargetUnit : ctx.SourceUnit;
+            return $"{cond.GetType().Name}: {hb.CheckTarget}={u?.UnitData?.UnitName ?? "null"} Buff={hb.BuffID} Has={hb.Has}";
+        }
+        if (cond is HasTagCondition ht)
+        {
+            var u = ht.CheckTarget == ConditionTarget.Target ? ctx.TargetUnit : ctx.SourceUnit;
+            return $"{cond.GetType().Name}: {ht.CheckTarget}={u?.UnitData?.UnitName ?? "null"} Tags=[{string.Join(",", ht.Tags)}] Has={ht.Has}";
+        }
+        if (cond is HasActedCondition ha)
+        {
+            var u = ha.CheckTarget == ConditionTarget.Target ? ctx.TargetUnit : ctx.SourceUnit;
+            return $"{cond.GetType().Name}: {ha.CheckTarget}={u?.UnitData?.UnitName ?? "null"} 已行动={u?.ActionsThisTurn ?? 0} 要求={ha.HasActed}";
+        }
+        return cond.GetType().Name;
     }
 }

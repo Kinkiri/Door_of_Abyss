@@ -43,6 +43,12 @@ public abstract partial class CardData : Resource
     /// <summary>打出时执行的效果列表</summary>
     [Export] public GameAction[] Actions { get; set; }
 
+    /// <summary>
+    /// 手牌被动效果。卡牌在手牌期间由 CardManager 订阅到 EventBus（响应任意事件，如 OnDrawCard/RoundStart），
+    /// 打出或弃牌时自动退订。与单位被动（UnitData.PassiveEffects）同构，复用 EffectData。
+    /// </summary>
+    [Export] public EffectData[] PassiveEffects { get; set; }
+
 
     public override string ToString()
     {
