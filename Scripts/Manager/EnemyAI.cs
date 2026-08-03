@@ -33,7 +33,7 @@ public partial class EnemyAI : Node
         {
             if (u.Team != Team.Enemy) continue;
             totalEnemy++;
-            if (u.Type == UnitType.Door) continue;
+            if (u.Type == UnitType.门) continue;
             if (u.IsAlive && !u.IsDead && u.ActionPoints > 0)
                 tempList.Add(u);
         }

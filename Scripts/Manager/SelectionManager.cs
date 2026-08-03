@@ -58,27 +58,21 @@ public partial class SelectionManager : Node2D
     // 外部调用
     // ======================================================================
 
-    /// <summary>由 HandPanel 调用：选中卡牌，进入瞄准模式</summary>
+    /// <summary>由 HandPanel 调用：选中卡牌（任意阶段可，用于查看信息），进入瞄准模式。
+    /// 打出前置检查（玩家行动阶段 + 费用足够）在出牌点击时执行。</summary>
     public void OnCardClicked(Card card)
     {
-        GD.Print($"[Selection] OnCardClicked: phase={BattleManager.Instance.CurrentPhase} team={BattleManager.Instance.CurrentTeam}");
+        if (card == null) return;
 
-        if (BattleManager.Instance.CurrentTeam != Team.Player)
-        {
-            GD.Print("[Selection] 非玩家行动阶段，不能出牌");
-            return;
-        }
-        if (card.Cost > BattleManager.Instance.PlayerCost)
-        {
-            GD.Print($"[Selection] 费用不足：需要 {card.Cost}，当前 {BattleManager.Instance.PlayerCost}");
-            return;
-        }
         SelectedCard = card;
         IsAimingMode = true;
         GD.Print($"[Selection] 选中卡牌: [{card.CardID}] {card.CardName}，请选择目标");
+        // 通知 View 层（信息面板等）卡牌选中状态变化
+        EmitSignal(SignalName.SelectionUpdated);
     }
 
-    /// <summary>由 BattleManager 调用：行为执行完后刷新范围显示</summary>
+    /// <summary>由 BattleManager / 选中单位状态更新触发：重算移动与攻击范围。
+    /// 任意阶段、AP 耗尽都保留范围显示（供查看）；单位死亡时取消选中。</summary>
     public void RecalculateRanges()
     {
         if (SelectedUnit == null)
@@ -90,12 +84,10 @@ public partial class SelectionManager : Node2D
             return;
         }
 
-        if (SelectedUnit.ActionPoints <= 0)
+        // 单位死亡：取消选中（避免死单位范围/面板残留）
+        if (SelectedUnit.IsDead || !SelectedUnit.IsAlive)
         {
-            _reachable = null;
-            _attackable = null;
-            _attackRange = null;
-            EmitSignal(SignalName.SelectionUpdated);
+            ClearSelection();
             return;
         }
 
@@ -152,16 +144,24 @@ public partial class SelectionManager : Node2D
                 SourceCard = SelectedCard,
             };
 
-            if (!ValidateCardTarget(SelectedCard, ctx))
+            bool canPlay = BattleManager.Instance?.CurrentTeam == Team.Player
+                           && SelectedCard.Cost <= BattleManager.Instance.PlayerCost;
+
+            if (canPlay && ValidateCardTarget(SelectedCard, ctx))
             {
-                GD.Print($"[Selection] 目标无效，请在合法目标上点击");
+                GD.Print($"[Selection] 出牌: [{SelectedCard.CardID}] {SelectedCard.CardName} 目标={clickGrid}");
+                CardPlayRequest?.Invoke(SelectedCard, ctx);
+                ClearSelection();
                 return;
             }
 
-            GD.Print($"[Selection] 出牌: [{SelectedCard.CardID}] {SelectedCard.CardName} 目标={clickGrid}");
-            CardPlayRequest?.Invoke(SelectedCard, ctx);
-            ClearSelection();
-            return;
+            // 无法出牌（非玩家阶段 / 费用不足 / 目标无效）：取消出牌模式，作为普通点击继续处理
+            // （点单位则选中单位、点格子则选中格子），避免卡牌信息残留在信息面板
+            GD.Print("[Selection] 无法出牌（非玩家阶段/费用不足/目标无效），取消出牌模式，作为普通点击处理");
+            SelectedCard = null;
+            IsAimingMode = false;
+            LastCardPreviewCells = null;
+            // 不 return——落入下方普通地图交互分支
         }
 
         // 正常地图交互
@@ -268,11 +268,14 @@ public partial class SelectionManager : Node2D
 
     private void HandleUnitClick(Unit clickedUnit, Vector2I gridPos)
     {
-        if (BattleManager.Instance.CurrentTeam == Team.Neutral)
-            return;
+        // 任意阶段/任意单位都可选中查看（面板 + 移动攻击高亮）；
+        // 仅玩家行动阶段且选中者仍有 AP 才触发攻击请求
+        bool canAct = BattleManager.Instance?.CurrentTeam == Team.Player
+                      && SelectedUnit != null
+                      && SelectedUnit.ActionPoints > 0;
 
         // 已选 + 可攻击 → 请求攻击
-        if (SelectedUnit != null && _attackable?.Contains(gridPos) == true)
+        if (canAct && _attackable?.Contains(gridPos) == true)
         {
             UnitAttackRequest?.Invoke(SelectedUnit, clickedUnit);
             return;
@@ -296,7 +299,10 @@ public partial class SelectionManager : Node2D
 
     private void HandleCellClick(Vector2I gridPos, Cell cell)
     {
-        if (SelectedUnit != null)
+        bool canAct = BattleManager.Instance?.CurrentTeam == Team.Player;
+
+        // 玩家行动阶段 + 选中单位有 AP：可达则移动，不可达则取消选中
+        if (SelectedUnit != null && canAct && SelectedUnit.ActionPoints > 0)
         {
             if (_reachable?.Contains(gridPos) == true)
             {
@@ -307,8 +313,17 @@ public partial class SelectionManager : Node2D
             ClearSelection();
             return;
         }
+
+        // 非行动阶段（或选中单位无 AP/非当前行动方）：选中格子查看信息，清除单位选中
+        UnsubscribeSelectedUnit();
+        SelectedUnit = null;
+        _reachable = null;
+        _attackable = null;
+        _attackRange = null;
         SelectedCell = cell;
         GD.Print($"[Selection] 选中格子 ({gridPos.X}, {gridPos.Y})");
+        // 通知 View 层（信息面板等）选中格子已变化——单位选中在 SelectUnit 内发信号，此处补齐空格子场景
+        EmitSignal(SignalName.SelectionUpdated);
     }
 
     // ======================================================================
@@ -317,25 +332,19 @@ public partial class SelectionManager : Node2D
 
     private void SelectUnit(Unit unit)
     {
+        if (unit == null) return;
+
+        UnsubscribeSelectedUnit();
         SelectedUnit = unit;
+        SubscribeSelectedUnit(unit);
         SelectedCell = null;
         MapManager.Instance.TryGetCell(unit.GridPos, out Cell cell);
         SelectedCell = cell;
 
         GD.Print($"[Selection] 选中单位 [ID={unit.ID}] {unit.UnitData?.UnitName}");
 
-        if (unit.ActionPoints <= 0)
-        {
-            _reachable = null; _attackable = null; _attackRange = null;
-            EmitSignal(SignalName.SelectionUpdated);
-            return;
-        }
-
-        _reachable = PathFinder.GetReachableCellsWithAttackTargets(
-            unit.GridPos, unit.Stamina, unit.AttackDistance,
-            unit.Team, MapManager.Instance.Map, out _attackable);
-        _attackRange = CalcAttackRange(unit);
-        EmitSignal(SignalName.SelectionUpdated);
+        // 任意阶段 / AP 耗尽都计算并显示移动与攻击范围（供查看）
+        RecalculateRanges();
     }
 
     /// <summary>计算攻击范围（排除友方格子）</summary>
@@ -485,6 +494,7 @@ public partial class SelectionManager : Node2D
 
     public void ClearSelection()
     {
+        UnsubscribeSelectedUnit();
         SelectedUnit = null;
         SelectedCell = null;
         SelectedCard = null;
@@ -494,5 +504,33 @@ public partial class SelectionManager : Node2D
         _attackable = null;
         _attackRange = null;
         EmitSignal(SignalName.SelectionUpdated);
+    }
+
+    // ======================================================================
+    // 选中单位状态订阅（状态更新 → 重算移动/攻击高亮）
+    // ======================================================================
+
+    /// <summary>当前订阅了 OnUnitUpdate 的选中单位</summary>
+    private Unit _subscribedUnit;
+
+    private void SubscribeSelectedUnit(Unit unit)
+    {
+        if (unit == null || unit == _subscribedUnit) return;
+        _subscribedUnit = unit;
+        unit.OnUnitUpdate += OnSelectedUnitUpdated;
+    }
+
+    private void UnsubscribeSelectedUnit()
+    {
+        if (_subscribedUnit == null) return;
+        _subscribedUnit.OnUnitUpdate -= OnSelectedUnitUpdated;
+        _subscribedUnit = null;
+    }
+
+    /// <summary>选中单位状态更新（HP/位置/属性/buff 变化）→ 重算移动攻击高亮</summary>
+    private void OnSelectedUnitUpdated()
+    {
+        if (_subscribedUnit == null) return;
+        RecalculateRanges();
     }
 }

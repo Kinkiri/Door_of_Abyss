@@ -13,8 +13,7 @@ public partial class UnitView : Node2D
     [Export] public Label NameLabel;
     [Export] public Label HPLabel;
     [Export] public Label ATKLabel;
-    [Export] public Panel DescriptionPanel { get; set; }
-    [Export] public Label DescriptionLabel { get; set; }
+    [Export] public Label APLabel;
     [Export] public ColorRect EnemyIndicator { get; set; }
 
     // ── 动画导出参数 ──────────────────────────────────────────────────────
@@ -64,8 +63,6 @@ public partial class UnitView : Node2D
 
         if (EnemyIndicator != null) EnemyIndicator.Visible = Unit.Team == Team.Enemy;
         if (NameLabel != null && Unit.Team == Team.Enemy) NameLabel.Modulate = Colors.Red;
-        if (DescriptionPanel != null) DescriptionPanel.Hide();
-        RefreshDescription();
 
         // 召唤入场：从 0 弹入
         Scale = Vector2.Zero;
@@ -129,7 +126,6 @@ public partial class UnitView : Node2D
     {
         GD.Print($"[Transform][View] RefreshUnitData 执行: 新模板={Unit?.UnitData?.UnitName}");
         UnitData = Unit.UnitData;
-        RefreshDescription();
         ClearUnitIcons();
         UpdateView();
     }
@@ -168,13 +164,6 @@ public partial class UnitView : Node2D
         }
     }
 
-    /// <summary>刷新描述面板文本（_Ready 设置一次；变身后模板切换必须重设）</summary>
-    private void RefreshDescription()
-    {
-        if (DescriptionLabel != null && UnitData != null)
-            DescriptionLabel.Text = $"{UnitData.Description}\nHP:{UnitData.HealthPoints} ATK:{UnitData.AttackPower} AD:{UnitData.AttackDistance} AP:{UnitData.ActionPoints}";
-    }
-
     /// <summary>
     /// Unit 数据变化时调用：更新标签 + 检测 HP/位置变化触发动画。
     /// 死亡检测也在此完成（UnitManager.RemoveUnit 设置 IsDead 后调用 UpdateUnit），
@@ -196,6 +185,7 @@ public partial class UnitView : Node2D
         if (NameLabel != null) NameLabel.Text = UnitData.UnitName;
         if (HPLabel != null) HPLabel.Text = $" {Unit.CurrentHP}/{Unit.MaxHP}";
         if (ATKLabel != null) ATKLabel.Text = $" {Unit.AttackPower}";
+        if (APLabel != null) APLabel.Text = $" {Unit.ActionPoints}";
 
         // ── HP 变化检测 ─────────────────────────────────────────────
         if (!_firstUpdate && !_isDying)
@@ -282,19 +272,5 @@ public partial class UnitView : Node2D
         {
             FloatLabel.Visible = false;
         };
-    }
-
-    // ========================================================================
-    // 鼠标悬停
-    // ========================================================================
-
-    public void OnMouseEntered()
-    {
-        if (DescriptionPanel != null) DescriptionPanel.Show();
-    }
-
-    public void OnMouseExited()
-    {
-        if (DescriptionPanel != null) DescriptionPanel.Hide();
     }
 }

@@ -24,7 +24,7 @@ public partial class UnitManager : Node
     public static IEnumerable<Unit> GetDoors(Team team)
     {
         return Instance?.ActiveUnits
-            .Where(u => u.IsAlive && !u.IsDead && u.Team == team && u.Type == UnitType.Door)
+            .Where(u => u.IsAlive && !u.IsDead && u.Team == team && u.Type == UnitType.门)
             ?? Enumerable.Empty<Unit>();
     }
 

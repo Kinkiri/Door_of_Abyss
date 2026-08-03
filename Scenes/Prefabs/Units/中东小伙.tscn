@@ -3,16 +3,12 @@
 [ext_resource type="Script" uid="uid://d7gvkpac4jmr" path="res://Scripts/View/UnitView.cs" id="1_i0h1d"]
 [ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="2_ixqmk"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_fw11u"]
-size = Vector2(118, 120)
-
-[node name="DefaultUnit" type="Node2D" unique_id=918862661 node_paths=PackedStringArray("NameLabel", "HPLabel", "ATKLabel", "DescriptionPanel", "DescriptionLabel", "EnemyIndicator", "FloatLabel")]
+[node name="DefaultUnit" type="Node2D" unique_id=918862661 node_paths=PackedStringArray("NameLabel", "HPLabel", "ATKLabel", "APLabel", "EnemyIndicator", "FloatLabel")]
 script = ExtResource("1_i0h1d")
 NameLabel = NodePath("Control/Name")
 HPLabel = NodePath("Control/HP")
 ATKLabel = NodePath("Control/ATK")
-DescriptionPanel = NodePath("Panel")
-DescriptionLabel = NodePath("Panel/Label")
+APLabel = NodePath("Control/AP")
 EnemyIndicator = NodePath("ColorRect")
 DamageFlashDuration = 0.3
 HealFlashDuration = 0.3
@@ -73,12 +69,6 @@ pivot_offset = Vector2(76.00001, 79.00001)
 theme_override_font_sizes/font_size = 109
 text = "💣"
 
-[node name="Area2D" type="Area2D" parent="." unique_id=421000204]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=653882582]
-shape = SubResource("RectangleShape2D_fw11u")
-debug_color = Color(0, 0.60705024, 0.65952575, 0.41960785)
-
 [node name="Control" type="Control" parent="." unique_id=336620384]
 layout_mode = 3
 anchors_preset = 0
@@ -138,29 +128,20 @@ offset_bottom = 59.0
 text = "0"
 horizontal_alignment = 1
 
+[node name="AP" type="Label" parent="Control" unique_id=361290592]
+layout_mode = 0
+offset_left = 29.0
+offset_top = -63.0
+offset_right = 69.0
+offset_bottom = -33.0
+theme_override_font_sizes/font_size = 21
+text = "0/0"
+
 [node name="BuffContainer" type="HBoxContainer" parent="." unique_id=259459456]
 offset_left = -64.0
 offset_top = 55.0
 offset_right = 65.0
 offset_bottom = 94.0
-
-[node name="Panel" type="Panel" parent="." unique_id=710251118]
-visible = false
-offset_left = -119.0
-offset_top = -195.0
-offset_right = 119.0
-offset_bottom = -74.0
-
-[node name="Label" type="Label" parent="Panel" unique_id=2088603210]
-layout_mode = 0
-offset_left = -1.0
-offset_top = 11.0
-offset_right = 237.0
-offset_bottom = 103.0
-text = "??"
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 1
 
 [node name="FLN" type="Label" parent="." unique_id=1231976500]
 visible = false
@@ -178,6 +159,3 @@ theme_override_font_sizes/font_size = 149
 text = "1"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[connection signal="mouse_entered" from="Area2D" to="." method="OnMouseEntered"]
-[connection signal="mouse_exited" from="Area2D" to="." method="OnMouseExited"]

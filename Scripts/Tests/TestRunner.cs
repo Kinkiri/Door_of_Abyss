@@ -1400,7 +1400,7 @@ public partial class TestRunner : Node
             var e1 = MakeUnit("敌方1", 3, 10); e1.Team = Team.Enemy;
             var e2 = MakeUnit("敌方2", 3, 10); e2.Team = Team.Enemy;
             var ally = MakeUnit("友方", 3, 10);
-            var building = MakeUnit("建筑", 3, 10); building.Team = Team.Enemy; building.Type = UnitType.Building;
+            var building = MakeUnit("建筑", 3, 10); building.Team = Team.Enemy; building.Type = UnitType.建筑;
             var techie = MakeUnit("科技兵", 3, 10);
             techie.Team = Team.Enemy;
             techie.UnitData = new UnitData
@@ -1472,7 +1472,7 @@ public partial class TestRunner : Node
                 Filters = new TargetFilter[]
                 {
                     new ShapeTargetFilter { Shape = TargetShape.All },
-                    new UnitTypeTargetFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.Building } },
+                    new UnitTypeTargetFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.建筑 } },
                 },
             };
             VAssert("Attr 单位类型=建筑 只出建筑",
@@ -1538,7 +1538,7 @@ public partial class TestRunner : Node
             {
                 Filters = new TargetFilter[]
                 {
-                    new UnitTypeTargetFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.Building } },
+                    new UnitTypeTargetFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.建筑 } },
                     new TagTargetFilter { Tags = new Godot.Collections.Array<Tag> { Tag.科技 } },
                 },
             };
@@ -1934,16 +1934,16 @@ public partial class TestRunner : Node
                 CardID = "城墙卡",
                 CardName = "城墙卡",
                 Type = CardType.Unit,
-                UnitData = new UnitData { UnitID = "城墙", UnitName = "城墙", Type = UnitType.Building },
+                UnitData = new UnitData { UnitID = "城墙", UnitName = "城墙", Type = UnitType.建筑 },
             });
             VAssert("CardUnitTypeFilter 匹配建筑单位卡",
-                () => new CardUnitTypeFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.Building } }
+                () => new CardUnitTypeFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.建筑 } }
                     .IsMatch(buildingCard));
             VAssert("CardUnitTypeFilter 不匹配其他类型",
-                () => !new CardUnitTypeFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.Building } }
+                () => !new CardUnitTypeFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.建筑 } }
                     .IsMatch(unitCard));
             VAssert("CardUnitTypeFilter 法术卡不匹配（非单位卡）",
-                () => !new CardUnitTypeFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.Building } }
+                () => !new CardUnitTypeFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.建筑 } }
                     .IsMatch(fireball));
             VAssert("CardUnitTypeFilter 空数组不限制",
                 () => new CardUnitTypeFilter().IsMatch(fireball));
@@ -2013,12 +2013,12 @@ public partial class TestRunner : Node
             cm.InitializeDrawPile(new List<CardData>
             {
                 new UnitCardData { CardID = "城墙", CardName = "城墙", Type = CardType.Unit,
-                    UnitData = new UnitData { UnitID = "城墙", UnitName = "城墙", Type = UnitType.Building } },
+                    UnitData = new UnitData { UnitID = "城墙", UnitName = "城墙", Type = UnitType.建筑 } },
                 new UnitCardData { CardID = "剑士", CardName = "剑士", Type = CardType.Unit,
-                    UnitData = new UnitData { UnitID = "剑士", UnitName = "剑士", Type = UnitType.Squad } },
+                    UnitData = new UnitData { UnitID = "剑士", UnitName = "剑士", Type = UnitType.兵种 } },
             });
             var buildingDrawn = cm.DrawCards(5,
-                new CardUnitTypeFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.Building } });
+                new CardUnitTypeFilter { UnitTypes = new Godot.Collections.Array<UnitType> { UnitType.建筑 } });
             VAssert("单位类型筛选：只抽建筑单位卡",
                 () => buildingDrawn.Count == 1 && buildingDrawn[0].CardID == "城墙");
         });
@@ -2214,12 +2214,12 @@ public partial class TestRunner : Node
                 Target = PassiveTarget.Self,
                 Conditions = new Condition[]
                 {
-                    // 死者是兵种（UnitType.Squad=0）
+                    // 死者是兵种（UnitType.兵种=0）
                     new CompareCondition
                     {
                         Left = new UnitInfoValue { Unit = ValueTarget.EventTarget, Info = UnitInfoType.Type },
                         Op = CompareOp.Equal,
-                        Right = new ConstantValue { Value = (int)UnitType.Squad },
+                        Right = new ConstantValue { Value = (int)UnitType.兵种 },
                     },
                     // 死者是友方（死者阵营 == 来源阵营）
                     new CompareCondition
@@ -2262,7 +2262,7 @@ public partial class TestRunner : Node
                 () => bm.GetBuff(mk0, "义肢") == null);
 
             // ── 用例 3：友方建筑死亡 → 类型条件不满足，不触发 ──
-            var allyBuilding = MakeUnit("友方建筑", 3, 10); allyBuilding.Type = UnitType.Building;
+            var allyBuilding = MakeUnit("友方建筑", 3, 10); allyBuilding.Type = UnitType.建筑;
             bm.ApplyBuff(allyBuilding, limbBuff, null, 2);
             EventBus.Instance.Fire(EventType.OnAnyUnitDeath,
                 new Context { TargetUnit = allyBuilding, SourceUnit = allyBuilding, SourceTeam = allyBuilding.Team });
@@ -2283,7 +2283,7 @@ public partial class TestRunner : Node
                 Type = CardType.Spell,
                 World = World.曼斯维森,
                 Faction = Faction.擢升之手,
-                Rarity = Rarity.Legendary,
+                Rarity = Rarity.顶级,
             });
             var ctx = new Context { SourceCard = card };
 
@@ -2296,7 +2296,7 @@ public partial class TestRunner : Node
             VAssert("CardInfoValue 读势力",
                 () => new CardInfoValue { Info = CardInfoType.Faction }.GetValue(ctx) == (int)Faction.擢升之手);
             VAssert("CardInfoValue 读稀有度",
-                () => new CardInfoValue { Info = CardInfoType.Rarity }.GetValue(ctx) == (int)Rarity.Legendary);
+                () => new CardInfoValue { Info = CardInfoType.Rarity }.GetValue(ctx) == (int)Rarity.顶级);
             VAssert("CardInfoValue 无 SourceCard 返回默认值",
                 () => new CardInfoValue { Info = CardInfoType.Cost, DefaultValue = 7 }.GetValue(new Context()) == 7);
         });
@@ -2305,19 +2305,19 @@ public partial class TestRunner : Node
         RunGroup("UnitInfoValue 单位信息值源", () =>
         {
             var squad = MakeUnit("兵种", 3, 10);
-            var building = MakeUnit("建筑", 3, 10); building.Type = UnitType.Building;
+            var building = MakeUnit("建筑", 3, 10); building.Type = UnitType.建筑;
 
             var ctx = new Context { SourceUnit = squad, TargetUnit = building };
             VAssert("读目标单位类型=建筑",
-                () => new UnitInfoValue { Info = UnitInfoType.Type }.GetValue(ctx) == (int)UnitType.Building);
+                () => new UnitInfoValue { Info = UnitInfoType.Type }.GetValue(ctx) == (int)UnitType.建筑);
             VAssert("读来源单位类型=兵种",
-                () => new UnitInfoValue { Unit = ValueTarget.Source, Info = UnitInfoType.Type }.GetValue(ctx) == (int)UnitType.Squad);
+                () => new UnitInfoValue { Unit = ValueTarget.Source, Info = UnitInfoType.Type }.GetValue(ctx) == (int)UnitType.兵种);
             VAssert("改类型后读取更新",
                 () =>
                 {
-                    building.Type = UnitType.Door;
-                    bool ok = new UnitInfoValue { Info = UnitInfoType.Type }.GetValue(ctx) == (int)UnitType.Door;
-                    building.Type = UnitType.Building;
+                    building.Type = UnitType.门;
+                    bool ok = new UnitInfoValue { Info = UnitInfoType.Type }.GetValue(ctx) == (int)UnitType.门;
+                    building.Type = UnitType.建筑;
                     return ok;
                 });
             VAssert("单位不存在返回 DefaultValue",
@@ -2328,7 +2328,7 @@ public partial class TestRunner : Node
                 {
                     Left = new UnitInfoValue { Info = UnitInfoType.Type },
                     Op = CompareOp.Equal,
-                    Right = new ConstantValue { Value = (int)UnitType.Building },
+                    Right = new ConstantValue { Value = (int)UnitType.建筑 },
                 }.IsMet(ctx));
         });
 

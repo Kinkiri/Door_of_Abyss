@@ -27,7 +27,7 @@ public abstract partial class CardData : Resource
     [Export] public Array<Tag> Tags { get; set; }
 
     /// <summary>稀有度</summary>
-    [Export] public Rarity Rarity { get; set; } = Rarity.Basic;
+    [Export] public Rarity Rarity { get; set; } = Rarity.初级;
 
     /// <summary>使用消耗（行动次数 / 法力值）</summary>
     [Export] public int Cost { get; set; } = 1;

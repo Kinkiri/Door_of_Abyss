@@ -415,6 +415,8 @@ OrCondition
 | TransformUnitAction | UnitData / UnitID | **变身**：将目标单位切换为指定模板并完全重置。**语义=完全重置**：清一切 buff/装备（还原加成 + 退订 + 视图销毁；`CanBeChanged=false` 固定 buff 保留）、按新模板刷新属性（满血）、旧被动退订 + 新被动订阅；位置/阵营不变。变身后触发 `OnUnitTransformed`（无 subject 定向） |
 | RandomTransformAction | Filters（CardFilter[]，默认 And） | **随机变身**：从模板库筛匹配的**单位卡**随机取一张（按卡随机、不去重，同单位多卡权重更高）变身成其单位。例：`[CardFactionFilter{擢升之手}, CardCostFilter{MaxCost=6}]` = 随机变为费用≤6 的擢升之手单位。筛选复用 CardFilter + `CardLibrary.GetCards/GetRandomCard` 通用查询（与抽牌共用体系） |
 
+> **设计要点**：变身触发即移除义肢等 buff（全清语义）→ 触发条件不再满足，天然只触发一次。示例：破碎残躯被动 = `TriggerEvent=OnBuffStackChanged`（叠层变化/设置后触发，`TargetUnit`=层数变化单位，subject 定向自己）+ 条件 `BuffInfoValue{Unit=Source, BuffID=义肢, StackCount} >= 2` + `RandomTransformAction{Filters=[CardFactionFilter{擢升之手}, CardTypeFilter{单位}, CardCostFilter{MaxCost=6}]}`。
+
 ### 3.3 自动攻击
 
 | 动作 | 说明 |
@@ -1310,34 +1312,3 @@ EnvironmentData：EnvironmentID=沼泽, Duration=-1, MoveCostDelta=2, CanStandOv
 ### 15.6 与单位占位的协调
 
 格子的 CanStand/CanPass 运行时值由 `EnvironmentManager.RefreshCellProperties()` 统一重算：**基础地形值 → 环境覆盖 → 单位占据强制 false**。单位移走/死亡释放格子时也走此入口，保证环境修正不被占位逻辑覆盖。
-
----
-
-## 16. 变身机制
-
-变身 = 单位切换模板并**完全重置**：清一切 buff/装备（属性还原 + 退订 + 视图销毁；`CanBeChanged=false` 固定 buff 保留）、按新模板刷新属性（满血）、旧被动退订 + 新被动订阅；位置/阵营不变。核心入口 `UnitManager.TransformUnit`（`Scripts/Manager/UnitManager.cs`），动作 `TransformUnitAction`（指定模板）/ `RandomTransformAction`（CardFilter 筛模板库随机）。
-
-### 16.1 变身相关事件
-
-| 事件 | 说明 |
-|---|---|
-| `OnUnitTransformed` | 变身后触发，**无 subject 定向**（所有存活单位可监听，参照 OnAnyUnitDeath），`TargetUnit`=变身单位。视图层订阅刷新名字/描述/图标 |
-| `OnBuffStackChanged` | buff 叠层变化/设置后触发（subject=自己定向），配合条件"义肢层数>2"类判断实现"叠够就变身" |
-
-### 16.2 模板库筛选（CardFilter 通用机制）
-
-从模板库按条件选模板统一走 **CardFilter + CardLibrary 通用查询**（与抽牌 `DrawCardAction.Filters` 共用一套体系，不要写死筛选逻辑）：
-- `CardFactionFilter`（势力，`无`=不限）、`CardCostFilter`（费用区间，-1=该端不限），组合 And/Or/Not
-- `CardLibrary.GetCards(filter)` / `GetRandomCard(filter)`：模板级检索（内部把模板包装成运行时 Card 做 `IsMatch`，null=不限制）
-
-### 16.3 示例：破碎残躯（义肢≥2 变身随机擢升之手单位）
-
-```
-被动: TriggerEvent=OnBuffStackChanged
-条件: BuffInfoValue{Unit=Source, BuffID=义肢, StackCount} >= 2
-动作: RandomTransformAction{
-        Filters=[CardFactionFilter{Faction=擢升之手}, CardTypeFilter{单位}, CardCostFilter{MaxCost=6}]
-      }
-```
-
-变身触发即移除义肢（全清语义）→ 条件不再满足，天然只触发一次。

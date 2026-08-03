@@ -27,7 +27,7 @@ public partial class UnitCountValue : ValueSource
         return units.Count(u =>
         {
             if (OnlyAlive && (!u.IsAlive || u.IsDead)) return false;
-            if (!IncludeDoor && u.UnitData?.Type == UnitType.Door) return false;
+            if (!IncludeDoor && u.UnitData?.Type == UnitType.门) return false;
             if (FilterTeam == UnitCountTeam.Player && u.Team != Team.Player) return false;
             if (FilterTeam == UnitCountTeam.Enemy && u.Team != Team.Enemy) return false;
             return true;

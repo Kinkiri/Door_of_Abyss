@@ -72,7 +72,7 @@ public partial class Unit
         AttackDistance = UnitData?.AttackDistance ?? 1;
         MaxActionPoints = System.Math.Max(1, UnitData?.ActionPoints ?? 1);
         ActionPoints = MaxActionPoints;
-        Type = UnitData?.Type ?? UnitType.Squad;
+        Type = UnitData?.Type ?? UnitType.兵种;
     }
 
     /// <summary>

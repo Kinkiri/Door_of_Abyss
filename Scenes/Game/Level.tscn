@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://ca7kq5v3k0av2" path="res://Scripts/View/DragCamera2D.cs" id="1_edprt"]
 [ext_resource type="Script" uid="uid://7iryg60hqk8k" path="res://Scripts/Manager/BattleManager.cs" id="2_22vck"]
-[ext_resource type="Resource" uid="uid://dosv0wy8ralmh" path="res://Resource/Data/Levels/1.tres" id="3_edprt"]
+[ext_resource type="Resource" uid="uid://c7v020abii05s" path="res://Resource/Data/Levels/变化莫测.tres" id="3_xgq3g"]
 [ext_resource type="Resource" uid="uid://bjvfgqjisq7sy" path="res://Resource/Data/测试玩家.tres" id="4_llcsm"]
 [ext_resource type="Script" uid="uid://cjfnh45i7txbs" path="res://Scripts/Manager/SelectionManager.cs" id="5_73o0s"]
 [ext_resource type="Script" uid="uid://07iqkkc7rmnd" path="res://Scripts/Manager/MapManager.cs" id="6_5eta3"]
@@ -22,13 +22,14 @@
 [ext_resource type="TileSet" uid="uid://bfmyajhvlc7gk" path="res://Resource/Data/MapSet/UIMapSet.tres" id="20_y0p6s"]
 [ext_resource type="Script" uid="uid://bg5vgujssuhmn" path="res://Scripts/View/HandPanel.cs" id="21_f2v14"]
 [ext_resource type="PackedScene" uid="uid://mwok0rnckmre" path="res://Scenes/Prefabs/卡牌视图.tscn" id="22_w3f5c"]
-[ext_resource type="Script" uid="uid://b66ib2kt0kmcv" path="res://Scripts/View/RoundView.cs" id="23_byf6f"]
 [ext_resource type="Script" uid="uid://cky1dniflsd46" path="res://Scripts/View/UnitViewManager.cs" id="24_v8m9n"]
 [ext_resource type="Script" uid="uid://bw32r0still1t" path="res://Scripts/Manager/EquipmentManager.cs" id="25_eqmgr"]
 [ext_resource type="PackedScene" uid="uid://coqvtxojvdx33" path="res://Scenes/Prefabs/装备视图.tscn" id="26_eqview"]
 [ext_resource type="Script" uid="uid://b5fhpwj0l58n6" path="res://Scripts/Tests/TestRunner.cs" id="27_73o0s"]
 [ext_resource type="Script" uid="uid://x5xamxum5fcx" path="res://Scripts/Manager/EnvironmentManager.cs" id="28_envmgr"]
 [ext_resource type="Script" uid="uid://b5ay1q0j1ieb6" path="res://Scripts/View/EnvironmentViewManager.cs" id="29_envview"]
+[ext_resource type="PackedScene" path="res://Scenes/Prefabs/UnitInfoPanel.tscn" id="30_uipanel"]
+[ext_resource type="PackedScene" path="res://Scenes/Prefabs/RoundInfoPanel.tscn" id="31_roundpanel"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8od7v"]
 texture = ExtResource("19_pu45w")
@@ -50,12 +51,17 @@ sources/2 = SubResource("TileSetAtlasSource_8od7v")
 [node name="Camera2D" type="Camera2D" parent="." unique_id=477498845]
 zoom = Vector2(0.985, 0.985)
 script = ExtResource("1_edprt")
+ZoomStep = 0.08
+MinZoom = 0.5
+MaxZoom = 5.0
+ZoomAnimationDuration = 0.6
+FollowSpeed = 3.0
 
 [node name="Manager" type="Node" parent="." unique_id=385605123]
 
 [node name="Battle" type="Node2D" parent="Manager" unique_id=142002766]
 script = ExtResource("2_22vck")
-LevelData = ExtResource("3_edprt")
+LevelData = ExtResource("3_xgq3g")
 PlayerData = ExtResource("4_llcsm")
 
 [node name="SelectionManager" type="Node2D" parent="Manager" unique_id=1946646650]
@@ -73,7 +79,7 @@ script = ExtResource("8_s72d7")
 
 [node name="EnemyAI" type="Node" parent="Manager" unique_id=1060750510]
 script = ExtResource("9_avor6")
-ActionDelay = 1.5
+ActionDelay = 1.0
 
 [node name="MapExporter" type="Node" parent="Manager" unique_id=1709305838 node_paths=PackedStringArray("SourceLayer")]
 script = ExtResource("10_g78sk")
@@ -116,7 +122,7 @@ script = ExtResource("29_envview")
 EnvironmentLayer = NodePath("../BaseMapLayer/EnvironmentLayer")
 
 [node name="BaseMapLayer" type="TileMapLayer" parent="Map" unique_id=795475500]
-tile_map_data = PackedByteArray("AAAAAAAAAgAAAAAAAAABAAAAAgAIAAAAAAACAAAAAgAAAAAAAAADAAAAAgAIAAAAAAAFAAAAAgAIAAAAAAAGAAAAAgAAAAAAAAAEAAAAAgAAAAAAAAAAAAEAAgAIAAAAAAADAAEAAgAAAAAAAAACAAIAAgAAAAAAAAACAAEAAgAIAAAAAAABAAIAAgAIAAAAAAAFAAEAAgAAAAAAAAAEAAIAAgAAAAAAAAAEAAEAAgAIAAAAAAADAAIAAgAIAAAAAAAGAAEAAgAIAAAAAAAFAAIAAgAIAAAAAAAGAAIAAgAAAAAAAAABAAEAAgAAAAAAAAAAAAIAAgAAAAAAAAAAAAMAAgAIAAAAAAACAAMAAgAIAAAAAAABAAQAAgAIAAAAAAAAAAUAAgAIAAAAAAADAAQAAgAIAAAAAAACAAUAAgAIAAAAAAAGAAMAAgAIAAAAAAAFAAQAAgAIAAAAAAAEAAUAAgAIAAAAAAAGAAUAAgAIAAAAAAAFAAYAAgAIAAAAAAADAAYAAgAIAAAAAAABAAYAAgAIAAAAAAAAAAYAAgAAAAAAAAAGAAYAAgAAAAAAAAAEAAYAAgAAAAAAAAACAAYAAgAAAAAAAAABAAUAAgAAAAAAAAAAAAQAAgAAAAAAAAABAAMAAgAAAAAAAAACAAQAAgAAAAAAAAADAAMAAgAAAAAAAAADAAUAAgAAAAAAAAAEAAQAAgAAAAAAAAAFAAMAAgAAAAAAAAAFAAUAAgAAAAAAAAAGAAQAAgAAAAAAAAAEAAMAAgAIAAAAAAA=")
+tile_map_data = PackedByteArray("AAAAAAAAAgAAAAAAAAABAAAAAgAIAAAAAAACAAAAAgAAAAAAAAAAAAEAAgAIAAAAAAADAAEAAgAAAAAAAAACAAIAAgAAAAAAAAACAAEAAgAIAAAAAAABAAIAAgAIAAAAAAAEAAIAAgAAAAAAAAADAAIAAgAIAAAAAAAGAAIAAgAAAAAAAAABAAEAAgAAAAAAAAAAAAIAAgAAAAAAAAACAAMAAgAIAAAAAAADAAQAAgAIAAAAAAAGAAMAAgAIAAAAAAAFAAQAAgAIAAAAAAAEAAUAAgAIAAAAAAAGAAUAAgAIAAAAAAAFAAYAAgAIAAAAAAADAAYAAgAIAAAAAAAGAAYAAgAAAAAAAAAEAAYAAgAAAAAAAAACAAYAAgAAAAAAAAABAAMAAgAAAAAAAAACAAQAAgAAAAAAAAADAAMAAgAAAAAAAAADAAUAAgAAAAAAAAAEAAQAAgAAAAAAAAAFAAMAAgAAAAAAAAAFAAUAAgAAAAAAAAAGAAQAAgAAAAAAAAAEAAMAAgAIAAAAAAAIAAAAAgAAAAAAAAAHAAEAAgAAAAAAAAABAAcAAgAAAAAAAAAAAAgAAgAAAAAAAAAKAAAAAgAAAAAAAAAJAAEAAgAAAAAAAAAIAAIAAgAAAAAAAAAHAAMAAgAAAAAAAAADAAcAAgAAAAAAAAACAAgAAgAAAAAAAAABAAkAAgAAAAAAAAAAAAoAAgAAAAAAAAAMAAAAAgAAAAAAAAALAAEAAgAAAAAAAAAKAAIAAgAAAAAAAAAFAAcAAgAAAAAAAAAEAAgAAgAAAAAAAAADAAkAAgAAAAAAAAACAAoAAgAAAAAAAAABAAsAAgAAAAAAAAAJAAAAAgAIAAAAAAAIAAEAAgAIAAAAAAALAAAAAgAIAAAAAAAKAAEAAgAIAAAAAAAJAAIAAgAIAAAAAAAHAAIAAgAIAAAAAAAEAAcAAgAIAAAAAAADAAgAAgAIAAAAAAACAAkAAgAIAAAAAAABAAoAAgAIAAAAAAAAAAsAAgAIAAAAAAACAAcAAgAIAAAAAAABAAgAAgAIAAAAAAAAAAkAAgAIAAAAAAAMAAEAAgAIAAAAAAALAAIAAgAIAAAAAAAKAAMAAgAIAAAAAAAHAAYAAgAIAAAAAAAGAAcAAgAIAAAAAAAFAAgAAgAIAAAAAAADAAoAAgAIAAAAAAACAAsAAgAIAAAAAAALAAMAAgAAAAAAAAAKAAQAAgAAAAAAAAAJAAUAAgAAAAAAAAAIAAYAAgAAAAAAAAAHAAcAAgAAAAAAAAAGAAgAAgAAAAAAAAAFAAkAAgAAAAAAAAALAAUAAgAAAAAAAAAKAAYAAgAAAAAAAAAJAAcAAgAAAAAAAAAHAAkAAgAAAAAAAAAGAAoAAgAAAAAAAAAMAAYAAgAAAAAAAAALAAcAAgAAAAAAAAAIAAoAAgAAAAAAAAAHAAsAAgAAAAAAAAAGAAwAAgAAAAAAAAAMAAgAAgAAAAAAAAAIAAwAAgAAAAAAAAAMAAkAAgAIAAAAAAAJAAwAAgAIAAAAAAAMAAcAAgAIAAAAAAALAAgAAgAIAAAAAAAIAAsAAgAIAAAAAAAHAAwAAgAIAAAAAAAMAAUAAgAIAAAAAAALAAYAAgAIAAAAAAAKAAcAAgAIAAAAAAAHAAoAAgAIAAAAAAAGAAsAAgAIAAAAAAALAAQAAgAIAAAAAAAKAAUAAgAIAAAAAAAJAAYAAgAIAAAAAAAHAAgAAgAIAAAAAAAGAAkAAgAIAAAAAAAFAAoAAgAIAAAAAAAIAAcAAgAIAAAAAAACAAwAAgAAAAAAAAADAAwAAgAIAAAAAAAEAAwAAgAAAAAAAAADAAsAAgAAAAAAAAA=")
 tile_set = SubResource("TileSet_fw11u")
 
 [node name="EnvironmentLayer" type="TileMapLayer" parent="Map/BaseMapLayer" unique_id=795475501]
@@ -135,13 +141,6 @@ tile_set = ExtResource("20_y0p6s")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1922849196]
 
-[node name="Button" type="Button" parent="CanvasLayer" unique_id=1167496402]
-offset_top = 1.0
-offset_right = 385.0
-offset_bottom = 130.0
-theme_override_font_sizes/font_size = 88
-text = "结束回合"
-
 [node name="Hand" type="Container" parent="CanvasLayer" unique_id=468035005]
 offset_left = 943.0
 offset_top = 950.0
@@ -150,51 +149,27 @@ offset_bottom = 990.0
 script = ExtResource("21_f2v14")
 CardViewPrefab = ExtResource("22_w3f5c")
 
-[node name="Round" type="Control" parent="CanvasLayer" unique_id=458611154 node_paths=PackedStringArray("PhaseLabel", "RoundLabel", "TeamLabel", "CostLabel")]
-layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-script = ExtResource("23_byf6f")
-PhaseLabel = NodePath("Phase")
-RoundLabel = NodePath("RC")
-TeamLabel = NodePath("Team")
-CostLabel = NodePath("Cost")
+[node name="RoundInfoPanel" parent="CanvasLayer" unique_id=864477452 instance=ExtResource("31_roundpanel")]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -560.0
+offset_top = 10.0
+offset_right = -40.0
+offset_bottom = 71.0
+grow_horizontal = 0
+scale = Vector2(1.0799997, 1.0799997)
+pivot_offset = Vector2(520, 0)
 
-[node name="Phase" type="Label" parent="CanvasLayer/Round" unique_id=2105181519]
-layout_mode = 0
-offset_left = 1434.0
-offset_top = 2.0
-offset_right = 1918.0
-offset_bottom = 158.0
-theme_override_font_sizes/font_size = 113
-text = "阶段"
-
-[node name="Team" type="Label" parent="CanvasLayer/Round" unique_id=769133364]
-layout_mode = 0
-offset_left = 1442.0
-offset_top = 163.0
-offset_right = 1914.0
-offset_bottom = 287.0
-theme_override_font_sizes/font_size = 71
-
-[node name="RC" type="Label" parent="CanvasLayer/Round" unique_id=878459376]
-layout_mode = 0
-offset_left = 1438.0
-offset_top = 294.0
-offset_right = 1915.0
-offset_bottom = 418.0
-theme_override_font_sizes/font_size = 90
-
-[node name="Cost" type="Label" parent="CanvasLayer/Round" unique_id=1233241100]
-layout_mode = 0
-offset_left = 1442.0
-offset_top = 392.0
-offset_right = 1920.0
-offset_bottom = 544.0
-theme_override_font_sizes/font_size = 81
+[node name="UnitInfoPanel" parent="CanvasLayer" unique_id=864477451 instance=ExtResource("30_uipanel")]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -509.0
+offset_right = 418.0
+offset_bottom = -10.0
+grow_vertical = 0
 
 [node name="Node" type="Node" parent="." unique_id=1273218073]
 script = ExtResource("27_73o0s")
-
-[connection signal="button_down" from="CanvasLayer/Button" to="CanvasLayer/Round" method="_on_button_button_down"]

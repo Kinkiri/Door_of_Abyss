@@ -136,11 +136,10 @@ public partial class BattleManager : Node2D
 
         EventBus.Instance?.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Move }, subject: unit);
         EventBus.Instance?.Fire(EventType.OnMove, new Context(), subject: unit);
+        UnitActed?.Invoke(unit);
 
-        if (unit.ActionPoints <= 0)
-            SelectionManager.Instance.ClearSelection();
-        else
-            SelectionManager.Instance.RecalculateRanges();
+        // AP 耗尽不取消选中（保留面板与范围显示供查看）——MoveUnit 已触发 UpdateUnit→RecalculateRanges，此处显式刷新双保险
+        SelectionManager.Instance.RecalculateRanges();
     }
 
     private void OnUnitAttack(Unit attacker, Unit target)
@@ -184,17 +183,24 @@ public partial class BattleManager : Node2D
             attacker.ActionsThisTurn++;
             CheckVictory();
             EventBus.Instance?.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack }, subject: attacker);
+            UnitActed?.Invoke(attacker);
 
-            if (attacker.ActionPoints <= 0)
-                SelectionManager.Instance.ClearSelection();
-            else
-                SelectionManager.Instance.RecalculateRanges();
+            // AP 耗尽不取消选中（保留面板与范围显示供查看）
+            SelectionManager.Instance.RecalculateRanges();
         }));
     }
 
     private void OnCardPlay(Card card, Context ctx)
     {
         GD.Print($"[Battle] 使用卡牌: [{card.CardID}] {card.CardName}，费用: {card.Cost}");
+
+        // 防御：出牌仅限玩家行动阶段（SelectionManager 已前置拦截，此处兜底其他调用路径）
+        if (CurrentTeam != Team.Player)
+        {
+            GD.Print("[Battle] 非玩家行动阶段，不能出牌");
+            SelectionManager.Instance.ClearSelection();
+            return;
+        }
 
         if (card.Cost > PlayerCost)
         {
@@ -268,6 +274,7 @@ public partial class BattleManager : Node2D
         GD.Print($"[Battle][AI] 移动 {unit.UnitData?.UnitName} 至 ({targetPos.X}, {targetPos.Y})");
         EventBus.Instance?.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Move }, subject: unit);
         EventBus.Instance?.Fire(EventType.OnMove, new Context(), subject: unit);
+        UnitActed?.Invoke(unit);
     }
 
     /// <summary>AI 攻击单位（跳过阵营检查）</summary>
@@ -299,6 +306,7 @@ public partial class BattleManager : Node2D
             attacker.ActionsThisTurn++;
             CheckVictory();
             EventBus.Instance?.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack }, subject: attacker);
+            UnitActed?.Invoke(attacker);
         }));
     }
 
@@ -308,6 +316,9 @@ public partial class BattleManager : Node2D
     [Signal] public delegate void PhaseChangedEventHandler(BattlePhase newPhase, Team currentTeam, int round);
     [Signal] public delegate void GameEndedEventHandler(Team winner, int round);
     [Signal] public delegate void CostChangedEventHandler(int currentCost, int maxCost);
+
+    /// <summary>任意单位（玩家/AI）完成一次移动或攻击行动时触发（View 层订阅，如摄像机跟随）</summary>
+    public event Action<Unit> UnitActed;
 
     // ======================================================================
 
@@ -728,7 +739,7 @@ public partial class BattleManager : Node2D
         int totalDraw = 0;
         foreach (var u in UnitManager.Instance.ActiveUnits)
         {
-            if (u.IsAlive && !u.IsDead && u.Team == Team.Player && u.Type == UnitType.Door
+            if (u.IsAlive && !u.IsDead && u.Team == Team.Player && u.Type == UnitType.门
                 && u.UnitData is DoorData doorData)
             {
                 totalCost += doorData.CostPerRound;
@@ -832,7 +843,7 @@ public partial class BattleManager : Node2D
         // 条件2：场上没有敌方单位（排除敌方门）
         foreach (var u in UnitManager.Instance.ActiveUnits)
         {
-            if (u.Team == Team.Enemy && u.IsAlive && !u.IsDead && u.Type != UnitType.Door)
+            if (u.Team == Team.Enemy && u.IsAlive && !u.IsDead && u.Type != UnitType.门)
                 return false;
         }
 

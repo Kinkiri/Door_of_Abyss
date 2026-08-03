@@ -21,7 +21,7 @@ public partial class UnitData : Resource
     [Export] public Array<Tag> Tags { get; set; }
 
     /// <summary>稀有度</summary>
-    [Export] public Rarity Rarity { get; set; } = Rarity.Basic;
+    [Export] public Rarity Rarity { get; set; } = Rarity.初级;
 
     /// <summary>攻击力</summary>
     [Export] public int AttackPower { get; set; } = 1;
@@ -36,7 +36,7 @@ public partial class UnitData : Resource
     [Export] public int AttackDistance { get; set; } = 1;
 
     /// <summary>单位类型</summary>
-    [Export] public UnitType Type { get; set; } = UnitType.Squad;
+    [Export] public UnitType Type { get; set; } = UnitType.兵种;
 
     /// <summary>行动点数</summary>
     [Export] public int ActionPoints { get; set; } = 1;

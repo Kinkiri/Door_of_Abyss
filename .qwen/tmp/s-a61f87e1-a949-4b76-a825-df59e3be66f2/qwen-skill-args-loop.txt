@@ -1,0 +1,1 @@
+检查 %TEMP%\door-test-follow.log：PowerShell Get-Content -Tail 5 看"完成: N 通过, 0 失败"；-match 查 SCRIPT ERROR。完成后向用户汇报摄像机非线性丝滑跟随的实现总结（指数平滑跟随 + 选中聚焦 + 行动跟随 + BattleManager.UnitActed 事件 + 冲突处理，用编号列表）和测试结果。若无结果再等 120 秒。

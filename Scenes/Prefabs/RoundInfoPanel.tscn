@@ -1,0 +1,66 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Scripts/View/RoundInfoPanel.cs" id="1_panel"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+bg_color = Color(0.05, 0.05, 0.08, 0.82)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="RoundInfoPanel" type="PanelContainer" node_paths=PackedStringArray("PhaseLabel", "TeamLabel", "RoundLabel", "CostLabel", "HandCountLabel", "EndTurnButton")]
+script = ExtResource("1_panel")
+PhaseLabel = NodePath("Row/Phase")
+TeamLabel = NodePath("Row/Team")
+RoundLabel = NodePath("Row/Round")
+CostLabel = NodePath("Row/Cost")
+HandCountLabel = NodePath("Row/HandCount")
+EndTurnButton = NodePath("Row/EndTurn")
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Phase" type="Label" parent="Row"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+vertical_alignment = 1
+
+[node name="Sep1" type="VSeparator" parent="Row"]
+layout_mode = 2
+
+[node name="Team" type="Label" parent="Row"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+vertical_alignment = 1
+
+[node name="Sep2" type="VSeparator" parent="Row"]
+layout_mode = 2
+
+[node name="Round" type="Label" parent="Row"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+vertical_alignment = 1
+
+[node name="Cost" type="Label" parent="Row"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+vertical_alignment = 1
+
+[node name="HandCount" type="Label" parent="Row"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+vertical_alignment = 1
+
+[node name="Sep3" type="VSeparator" parent="Row"]
+layout_mode = 2
+
+[node name="EndTurn" type="Button" parent="Row"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "结束回合"

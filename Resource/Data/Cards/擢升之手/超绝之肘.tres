@@ -1,34 +1,41 @@
 [gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://bnwyieql0puou"]
 
 [ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_2prqy"]
-[ext_resource type="Script" uid="uid://dnlsqjf0bupsk" path="res://Scripts/Data/Actions/DrawCardAction.cs" id="1_3d6hk"]
 [ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="2_3kq2h"]
+[ext_resource type="Script" uid="uid://bn4m8splfe3lb" path="res://Scripts/Data/ValueSource/ConstantValue.cs" id="3_3kq2h"]
 [ext_resource type="Script" uid="uid://bqdiie4v7k7l7" path="res://Scripts/Data/ValueSource/BuffInfoValue.cs" id="3_x7vwn"]
 [ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="4_55t0l"]
+[ext_resource type="Script" uid="uid://bgqnidmj5bjrn" path="res://Scripts/Data/ValueSource/FormulaValue.cs" id="4_x7vwn"]
 [ext_resource type="Resource" uid="uid://6ar1d2ju8h46" path="res://Resource/Data/选择器预设/单体我方兵种.tres" id="5_7kbwj"]
 
-[sub_resource type="Resource" id="Resource_dmruq"]
-script = ExtResource("1_3d6hk")
-Value = 1
-Filters = null
-metadata/_custom_type_script = "uid://dnlsqjf0bupsk"
-
-[sub_resource type="Resource" id="Resource_skyau"]
+[sub_resource type="Resource" id="Resource_o0npr"]
 script = ExtResource("3_x7vwn")
 BuffID = "义肢"
 metadata/_custom_type_script = "uid://bqdiie4v7k7l7"
 
+[sub_resource type="Resource" id="Resource_fob7r"]
+script = ExtResource("3_3kq2h")
+Value = 2
+metadata/_custom_type_script = "uid://bn4m8splfe3lb"
+
+[sub_resource type="Resource" id="Resource_cda6p"]
+script = ExtResource("4_x7vwn")
+Op = 3
+Left = SubResource("Resource_o0npr")
+Right = SubResource("Resource_fob7r")
+metadata/_custom_type_script = "uid://bgqnidmj5bjrn"
+
 [sub_resource type="Resource" id="Resource_gcgfw"]
 script = ExtResource("4_55t0l")
 BuffData = ExtResource("2_3kq2h")
-ValueSource = SubResource("Resource_skyau")
+ValueSource = SubResource("Resource_cda6p")
 metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
 
 [resource]
 script = ExtResource("1_2prqy")
 CardID = "超绝之肘"
 CardName = "超绝之肘"
-Description = "令一名己方单位的义肢层数乘2；抽一张牌"
+Description = "令一名己方单位的义肢层数乘1.5；"
 Type = 1
 World = 1
 Faction = 2
@@ -37,6 +44,6 @@ Rarity = 2
 Cost = 3
 TargetFilters = Array[Object]([ExtResource("5_7kbwj")])
 Conditions = null
-Actions = Array[Object]([SubResource("Resource_dmruq"), SubResource("Resource_gcgfw")])
+Actions = Array[Object]([SubResource("Resource_gcgfw")])
 PassiveEffects = null
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

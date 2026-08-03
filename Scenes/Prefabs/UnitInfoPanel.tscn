@@ -1,0 +1,189 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Scripts/View/UnitInfoPanel.cs" id="1_panel"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+bg_color = Color(0.05, 0.05, 0.08, 0.82)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="UnitInfoPanel" type="PanelContainer" node_paths=PackedStringArray("TitleLabel", "DescLabel", "StatsLabel", "CardUnitSection", "CardUnitLabel", "CardEnvSection", "CardEnvLabel", "CardEquipSection", "CardEquipLabel", "BuffSection", "BuffLabel", "EquipSection", "EquipLabel", "CellSection", "CellLabel", "EnvSection", "EnvLabel")]
+script = ExtResource("1_panel")
+TitleLabel = NodePath("ScrollContainer/Content/Title")
+DescLabel = NodePath("ScrollContainer/Content/Desc")
+StatsLabel = NodePath("ScrollContainer/Content/Stats")
+CardUnitSection = NodePath("ScrollContainer/Content/CardUnitSection")
+CardUnitLabel = NodePath("ScrollContainer/Content/CardUnitSection/CardUnitLabel")
+CardEnvSection = NodePath("ScrollContainer/Content/CardEnvSection")
+CardEnvLabel = NodePath("ScrollContainer/Content/CardEnvSection/CardEnvLabel")
+CardEquipSection = NodePath("ScrollContainer/Content/CardEquipSection")
+CardEquipLabel = NodePath("ScrollContainer/Content/CardEquipSection/CardEquipLabel")
+BuffSection = NodePath("ScrollContainer/Content/BuffSection")
+BuffLabel = NodePath("ScrollContainer/Content/BuffSection/BuffLabel")
+EquipSection = NodePath("ScrollContainer/Content/EquipSection")
+EquipLabel = NodePath("ScrollContainer/Content/EquipSection/EquipLabel")
+CellSection = NodePath("ScrollContainer/Content/CellSection")
+CellLabel = NodePath("ScrollContainer/Content/CellSection/CellLabel")
+EnvSection = NodePath("ScrollContainer/Content/EnvSection")
+EnvLabel = NodePath("ScrollContainer/Content/EnvSection/EnvLabel")
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Title" type="Label" parent="ScrollContainer/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 26
+autowrap_mode = 3
+
+[node name="Desc" type="Label" parent="ScrollContainer/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
+
+[node name="Sep1" type="HSeparator" parent="ScrollContainer/Content"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Stats" type="Label" parent="ScrollContainer/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
+
+[node name="Sep2" type="HSeparator" parent="ScrollContainer/Content"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="CardUnitSection" type="VBoxContainer" parent="ScrollContainer/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+visible = false
+
+[node name="CardUnitTitle" type="Label" parent="ScrollContainer/Content/CardUnitSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.78, 0.4, 1)
+theme_override_font_sizes/font_size = 22
+text = "单位"
+
+[node name="CardUnitLabel" type="Label" parent="ScrollContainer/Content/CardUnitSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="CardEnvSection" type="VBoxContainer" parent="ScrollContainer/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+visible = false
+
+[node name="CardEnvTitle" type="Label" parent="ScrollContainer/Content/CardEnvSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.95, 0.7, 1)
+theme_override_font_sizes/font_size = 22
+text = "环境"
+
+[node name="CardEnvLabel" type="Label" parent="ScrollContainer/Content/CardEnvSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="CardEquipSection" type="VBoxContainer" parent="ScrollContainer/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+visible = false
+
+[node name="CardEquipTitle" type="Label" parent="ScrollContainer/Content/CardEquipSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.78, 0.4, 1)
+theme_override_font_sizes/font_size = 22
+text = "装备"
+
+[node name="CardEquipLabel" type="Label" parent="ScrollContainer/Content/CardEquipSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="BuffSection" type="VBoxContainer" parent="ScrollContainer/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+visible = false
+
+[node name="BuffTitle" type="Label" parent="ScrollContainer/Content/BuffSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.78, 0.4, 1)
+theme_override_font_sizes/font_size = 22
+text = "Buff"
+
+[node name="BuffLabel" type="Label" parent="ScrollContainer/Content/BuffSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="EquipSection" type="VBoxContainer" parent="ScrollContainer/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+visible = false
+
+[node name="EquipTitle" type="Label" parent="ScrollContainer/Content/EquipSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.78, 0.4, 1)
+theme_override_font_sizes/font_size = 22
+text = "装备"
+
+[node name="EquipLabel" type="Label" parent="ScrollContainer/Content/EquipSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="CellSection" type="VBoxContainer" parent="ScrollContainer/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+visible = false
+
+[node name="CellTitle" type="Label" parent="ScrollContainer/Content/CellSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.9, 0.95, 1)
+theme_override_font_sizes/font_size = 22
+text = "脚下格子"
+
+[node name="CellLabel" type="Label" parent="ScrollContainer/Content/CellSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="EnvSection" type="VBoxContainer" parent="ScrollContainer/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+visible = false
+
+[node name="EnvTitle" type="Label" parent="ScrollContainer/Content/EnvSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.95, 0.7, 1)
+theme_override_font_sizes/font_size = 22
+text = "环境"
+
+[node name="EnvLabel" type="Label" parent="ScrollContainer/Content/EnvSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3

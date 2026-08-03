@@ -66,7 +66,6 @@ AttackPower = 0
 HealthPoints = 3
 Stamina = 0
 AttackDistance = 0
-Type = 1
 ActionPoints = -9
 Description = "义肢大于等于2时，变身"
 UnitPrefab = ExtResource("9_3thdq")

@@ -1321,13 +1321,13 @@ public partial class TextToResourceImporter : EditorScript
 
     private UnitType ParseUnitType(string s) => s switch
     {
-        "小队" => UnitType.Squad,
-        "建筑" => UnitType.Building,
-        "障碍" or "障碍物" => UnitType.Obstacle,
-        "召唤" => UnitType.Summon,
-        "特殊" => UnitType.Special,
-        "门" => UnitType.Door,
-        _ => UnitType.Squad,
+        "小队" or "兵种" => UnitType.兵种,
+        "建筑" => UnitType.建筑,
+        "障碍" or "障碍物" => UnitType.障碍物,
+        "召唤" or "召唤物" => UnitType.召唤物,
+        "特殊" or "特殊物" => UnitType.特殊物,
+        "门" => UnitType.门,
+        _ => UnitType.兵种,
     };
 
     private (TargetShape shape, TeamFilter filter) ParseTarget(string s)
