@@ -15,7 +15,7 @@ public partial class ApplyEnvironmentAction : GameAction
         if (ctx.TargetCells == null || ctx.TargetCells.Length == 0) return;
 
         GD.Print($"[ApplyEnvironmentAction] targets={ctx.TargetCells.Length} environment={EnvironmentData?.EnvironmentName}");
-        if (EnvironmentData == null) EnvironmentData = (ctx.SourceCard.CardData as EnvironmentCardData).EnvironmentData;
+        if (EnvironmentData == null) EnvironmentData = (ctx.SourceCard.CardData as EnvironmentCardData).EnvironmentData; // 兼容环境卡
         foreach (var cell in ctx.TargetCells)
         {
             if (cell != null && EnvironmentData != null)

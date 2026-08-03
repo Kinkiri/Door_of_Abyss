@@ -46,4 +46,5 @@ Cost = 4
 TargetFilters = Array[Object]([ExtResource("7_bwiep")])
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_8fue8")])
+PassiveEffects = null
 metadata/_custom_type_script = "uid://4ksuiqod0x18"

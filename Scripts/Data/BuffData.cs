@@ -27,10 +27,17 @@ public partial class BuffData : Resource
     /// <summary>
     /// 最大叠加层数。
     /// 0 = 直接移除（编辑器不填 0）；
+    /// 1 = 不叠加（同类 Buff 直接刷新）；
     /// N (&gt;0) = 最多 N 层；
     /// -1 = 无限叠加。
     /// </summary>
     [Export] public int MaxStack { get; set; } = 1;
+
+
+    /// <summary>
+    /// 是否允许移除（如被净化、驱散等）。默认 true = 可移除，false = 不可移除。
+    /// </summary>
+    [Export] public bool CanBeChanged { get; set; } = true;
 
     /// <summary>固定效果：OnApplyActions 只执行一次，效果与层数解耦（有层即生效，归零/移除才还原）。
     /// 层数仅作计数器（如"义肢"的耐久/磨损）。默认 false = 层数倍率（每层执行一次）</summary>

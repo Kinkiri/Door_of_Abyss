@@ -12,6 +12,7 @@ public partial class RemoveBuffAction : GameAction
 
     protected override void Apply(Context ctx)
     {
+
         if (ctx.TargetUnit == null || string.IsNullOrEmpty(BuffID)) return;
 
         var buff = BuffManager.Instance?.GetBuff(ctx.TargetUnit, BuffID);
@@ -20,7 +21,11 @@ public partial class RemoveBuffAction : GameAction
             GD.Print($"[RemoveBuffAction] 未找到 Buff: {BuffID}");
             return;
         }
-
+        if (buff.Data.CanBeChanged == false)
+        {
+            GD.Print($"[RemoveBuffAction] Buff: {BuffID} 不可移除");
+            return;
+        }
         GD.Print($"[RemoveBuffAction] 移除 {BuffID} 于 {ctx.TargetUnit.UnitData?.UnitName}");
         BuffManager.Instance.RemoveBuff(ctx.TargetUnit, buff);
     }

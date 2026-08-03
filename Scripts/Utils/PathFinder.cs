@@ -56,6 +56,7 @@ public static class PathFinder
     }
 
     /// <summary>
+    /// 弃用！
     /// 返回从起点到目标点的最短路径（含起点和目标点）。
     /// 中途格子只需 CanPass（可穿越），目标格还需 CanStand（可站立）。
     /// 体力不够、不可穿越、不可站立时返回空列表。

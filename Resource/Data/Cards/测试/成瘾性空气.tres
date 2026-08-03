@@ -1,7 +1,49 @@
 [gd_resource type="Resource" script_class="EnvironmentCardData" format=3 uid="uid://d3v0wb7qhg0fl"]
 
+[ext_resource type="Script" uid="uid://dslk7uvnawnj5" path="res://Scripts/Data/Actions/ApplyEnvironmentAction.cs" id="1_d7xgy"]
 [ext_resource type="Script" uid="uid://b2pjt30c5oyw2" path="res://Scripts/Data/Card/EnvironmentCardData.cs" id="1_i4rcg"]
 [ext_resource type="Script" uid="uid://lxjpnv33tlmg" path="res://Scripts/Data/EnvironmentData.cs" id="1_kiowp"]
+[ext_resource type="Script" uid="uid://bndowl6u6n8uh" path="res://Scripts/Data/Actions/HealAction.cs" id="2_121ty"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_d2gpk"]
+[ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="4_dcc7b"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="6_iagk7"]
+
+[sub_resource type="Resource" id="Resource_wyyee"]
+script = ExtResource("1_d7xgy")
+metadata/_custom_type_script = "uid://dslk7uvnawnj5"
+
+[sub_resource type="Resource" id="Resource_d7xgy"]
+script = ExtResource("2_121ty")
+Value = 2
+metadata/_custom_type_script = "uid://bndowl6u6n8uh"
+
+[sub_resource type="Resource" id="Resource_d2gpk"]
+script = ExtResource("2_121ty")
+Value = 2
+metadata/_custom_type_script = "uid://bndowl6u6n8uh"
+
+[sub_resource type="Resource" id="Resource_121ty"]
+script = ExtResource("3_d2gpk")
+TriggerEvent = 18
+Target = 1
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_d2gpk")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[sub_resource type="Resource" id="Resource_iagk7"]
+script = ExtResource("4_dcc7b")
+Value = 3
+metadata/_custom_type_script = "uid://bcjncmte44un1"
+
+[sub_resource type="Resource" id="Resource_dcc7b"]
+script = ExtResource("3_d2gpk")
+TriggerEvent = 19
+Target = 1
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_iagk7")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
 
 [sub_resource type="Resource" id="Resource_kiowp"]
 script = ExtResource("1_kiowp")
@@ -9,21 +51,28 @@ EnvironmentID = "成瘾性空气"
 EnvironmentName = "成瘾性空气"
 Description = ""
 MoveCostDelta = 3
-OnApplyActions = null
+OnApplyActions = Array[Object]([SubResource("Resource_d7xgy")])
 OnExpireActions = null
 OnRoundEndActions = null
-PassiveEffects = null
+PassiveEffects = Array[Object]([SubResource("Resource_121ty"), SubResource("Resource_dcc7b")])
 metadata/_custom_type_script = "uid://lxjpnv33tlmg"
+
+[sub_resource type="Resource" id="Resource_h7hyi"]
+script = ExtResource("6_iagk7")
+Shape = 2
+Kind = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
 
 [resource]
 script = ExtResource("1_i4rcg")
 EnvironmentData = SubResource("Resource_kiowp")
 CardID = "成瘾性空气"
 CardName = "成瘾性空气"
-Description = "进入+2血，离开-2血"
+Description = "打出+2血，进入+2血，离开-3血"
 Tags = null
-TargetFilters = null
+Cost = 0
+TargetFilters = Array[Object]([SubResource("Resource_h7hyi")])
 Conditions = null
-Actions = null
+Actions = Array[Object]([SubResource("Resource_wyyee")])
 PassiveEffects = null
 metadata/_custom_type_script = "uid://b2pjt30c5oyw2"

@@ -32,7 +32,11 @@ public partial class ModifyBuffAction : GameAction
             GD.Print($"[ModifyBuffAction] 未找到 Buff: {BuffID} 于 {ctx.TargetUnit.UnitData?.UnitName}");
             return;
         }
-
+        if (buff.Data.CanBeChanged == false)
+        {
+            GD.Print($"[ModifyBuffAction] Buff: {BuffID} 不可改变，无法修改");
+            return;
+        }
         // ── 回合数：先检测初始值，再修改，最小减到 0 ──
         // RemainingTurns 合法取值：-1 = 永久（哨兵值），N>=0 = 剩余回合数
         int newTurns = buff.RemainingTurns;
