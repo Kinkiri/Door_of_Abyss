@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://bxqx3ibmsjdug"]
+
+[ext_resource type="Script" uid="uid://c6euywspbjyd" path="res://Scripts/Data/Actions/AutoAttackAction.cs" id="1_c0al4"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_pm6ri"]
+[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="3_gigpn"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="4_2xcja"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="5_ab75d"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="6_s6oe8"]
+
+[sub_resource type="Resource" id="Resource_2uo0c"]
+script = ExtResource("1_c0al4")
+metadata/_custom_type_script = "uid://c6euywspbjyd"
+
+[sub_resource type="Resource" id="Resource_y6rwm"]
+script = ExtResource("2_pm6ri")
+TriggerEvent = 1
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_2uo0c")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[sub_resource type="Resource" id="Resource_rpe24"]
+script = ExtResource("4_2xcja")
+BuffData = ExtResource("3_gigpn")
+InitialStacks = 2
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_sffmf"]
+script = ExtResource("2_pm6ri")
+TriggerEvent = 4
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_rpe24")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("6_s6oe8")
+UnitID = "旋钮门"
+UnitName = "旋钮门"
+World = 1
+Faction = 2
+Tags = Array[int]([0, 6])
+Rarity = 2
+AttackPower = 3
+HealthPoints = 4
+Stamina = 0
+Type = 1
+ActionPoints = -999
+Description = "自动攻击，受击获得2义肢"
+UnitPrefab = ExtResource("5_ab75d")
+PassiveEffects = Array[Object]([SubResource("Resource_y6rwm"), SubResource("Resource_sffmf")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

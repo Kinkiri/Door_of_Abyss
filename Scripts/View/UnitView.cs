@@ -65,8 +65,7 @@ public partial class UnitView : Node2D
         if (EnemyIndicator != null) EnemyIndicator.Visible = Unit.Team == Team.Enemy;
         if (NameLabel != null && Unit.Team == Team.Enemy) NameLabel.Modulate = Colors.Red;
         if (DescriptionPanel != null) DescriptionPanel.Hide();
-        if (DescriptionLabel != null && UnitData != null)
-            DescriptionLabel.Text = $"{UnitData.Description}\nHP:{UnitData.HealthPoints} ATK:{UnitData.AttackPower} AD:{UnitData.AttackDistance} AP:{UnitData.ActionPoints}";
+        RefreshDescription();
 
         // 召唤入场：从 0 弹入
         Scale = Vector2.Zero;
@@ -118,6 +117,62 @@ public partial class UnitView : Node2D
                 }
                 break;
         }
+    }
+
+    /// <summary>
+    /// 变身后刷新模板引用与显示（UnitView 在 _Ready 缓存了 UnitData，
+    /// 变身改变 Unit.UnitData 后必须调用此方法才能显示新名字/属性/描述）。
+    /// 同时清理自身挂载的 Buff/装备图标——变身语义=全清，视图自管清理
+    /// （不依赖 UnitViewManager 的事件链路字典，RefreshUnitData 必定执行故必生效）。
+    /// </summary>
+    public void RefreshUnitData()
+    {
+        GD.Print($"[Transform][View] RefreshUnitData 执行: 新模板={Unit?.UnitData?.UnitName}");
+        UnitData = Unit.UnitData;
+        RefreshDescription();
+        ClearUnitIcons();
+        UpdateView();
+    }
+
+    /// <summary>清空自身挂载的 Buff/装备图标（BuffContainer/EquipmentContainer 子节点；装备无容器时挂视图根）</summary>
+    private void ClearUnitIcons()
+    {
+        var buffContainer = FindChild("BuffContainer", true, false);
+        GD.Print($"[Transform][View] ClearUnitIcons: BuffContainer={buffContainer?.Name ?? "null"} " +
+                 $"子节点数={buffContainer?.GetChildCount() ?? 0}");
+        if (buffContainer != null)
+        {
+            foreach (var child in buffContainer.GetChildren())
+            {
+                GD.Print($"[Transform][View]   QueueFree BuffContainer 子节点: {child.GetType().Name} {child.Name}");
+                child.QueueFree();
+            }
+        }
+
+        var equipContainer = FindChild("EquipmentContainer", true, false);
+        if (equipContainer != null)
+        {
+            GD.Print($"[Transform][View] QueueFree EquipmentContainer 子节点: {equipContainer.GetChildCount()} 个");
+            foreach (var child in equipContainer.GetChildren())
+                child.QueueFree();
+        }
+
+        // 装备无容器时挂在视图根（固定位置避让 Buff 图标）
+        foreach (var child in GetChildren())
+        {
+            if (child is EquipmentView)
+            {
+                GD.Print($"[Transform][View] QueueFree 视图根 EquipmentView: {child.Name}");
+                child.QueueFree();
+            }
+        }
+    }
+
+    /// <summary>刷新描述面板文本（_Ready 设置一次；变身后模板切换必须重设）</summary>
+    private void RefreshDescription()
+    {
+        if (DescriptionLabel != null && UnitData != null)
+            DescriptionLabel.Text = $"{UnitData.Description}\nHP:{UnitData.HealthPoints} ATK:{UnitData.AttackPower} AD:{UnitData.AttackDistance} AP:{UnitData.ActionPoints}";
     }
 
     /// <summary>

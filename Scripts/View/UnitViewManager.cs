@@ -38,6 +38,7 @@ public partial class UnitViewManager : Node
         {
             UnitManager.Instance.OnUnitSpawned += OnUnitSpawned;
             UnitManager.Instance.OnUnitRemoved += OnUnitRemoved;
+            UnitManager.Instance.OnUnitTransformed += OnUnitTransformed;
         }
         if (BuffManager.Instance != null)
         {
@@ -57,6 +58,7 @@ public partial class UnitViewManager : Node
         {
             UnitManager.Instance.OnUnitSpawned -= OnUnitSpawned;
             UnitManager.Instance.OnUnitRemoved -= OnUnitRemoved;
+            UnitManager.Instance.OnUnitTransformed -= OnUnitTransformed;
         }
         if (BuffManager.Instance != null)
         {
@@ -107,12 +109,66 @@ public partial class UnitViewManager : Node
             _unitViews.Remove(unit);
     }
 
+    private void OnUnitTransformed(Unit unit)
+    {
+        GD.Print($"[Transform][View] OnUnitTransformed 收到: unit={unit?.UnitData?.UnitName} " +
+                 $"_unitViews命中={_unitViews.ContainsKey(unit)} _buffViews条目数={_buffViews.Count}");
+        foreach (var kv in _buffViews)
+            GD.Print($"[Transform][View]   _buffViews 条目: buff={kv.Key?.Data?.BuffID} view存在={kv.Value != null}");
+
+        // 变身后刷新 UnitView 的模板引用与显示（名字/属性来自新 UnitData）
+        if (_unitViews.TryGetValue(unit, out var view))
+        {
+            GD.Print($"[Transform][View] 命中 view，执行 RefreshUnitData + ClearUnitIcons");
+            view.RefreshUnitData();
+            ClearUnitIcons(view);
+        }
+    }
+
+    /// <summary>清空单位视图下挂载的 Buff/装备图标（BuffView 挂 BuffContainer、装备挂 EquipmentContainer 或视图根）</summary>
+    private void ClearUnitIcons(UnitView view)
+    {
+        var buffContainer = view.FindChild("BuffContainer", true, false);
+        if (buffContainer != null)
+        {
+            foreach (var child in buffContainer.GetChildren())
+            {
+                if (child is BuffView bv)
+                    _buffViews.Remove(bv.Buff);
+                child.QueueFree();
+            }
+        }
+
+        var equipContainer = view.FindChild("EquipmentContainer", true, false);
+        if (equipContainer != null)
+        {
+            foreach (var child in equipContainer.GetChildren())
+            {
+                if (child is EquipmentView ev)
+                    _equipmentViews.Remove(ev.Equipment);
+                child.QueueFree();
+            }
+        }
+
+        // 装备无容器时挂在视图根（固定位置避让 Buff 图标）
+        foreach (var child in view.GetChildren())
+        {
+            if (child is EquipmentView ev)
+            {
+                _equipmentViews.Remove(ev.Equipment);
+                child.QueueFree();
+            }
+        }
+    }
+
     // ======================================================================
     // Buff 图标
     // ======================================================================
 
     private void OnBuffApplied(Unit target, Buff buff)
     {
+        GD.Print($"[Transform][View] OnBuffApplied: target={target?.UnitData?.UnitName} buff={buff?.Data?.BuffID} " +
+                 $"GetUnitView命中={GetUnitView(target) != null} BuffViewPrefab={BuffViewPrefab != null}");
         if (BuffViewPrefab == null) return;
         var unitView = GetUnitView(target);
         if (unitView == null) return;
@@ -139,14 +195,18 @@ public partial class UnitViewManager : Node
         bv.Position = new Vector2(container.GetChildCount() * 30, 0);
         container.AddChild(bv);
         _buffViews[buff] = bv;
+        GD.Print($"[Transform][View] BuffView 已创建并注册: buff={buff?.Data?.BuffID} 挂载于 {container.Name}");
     }
 
     private void OnBuffRemoved(Unit target, Buff buff)
     {
+        GD.Print($"[Transform][View] OnBuffRemoved: target={target?.UnitData?.UnitName} buff={buff?.Data?.BuffID} " +
+                 $"_buffViews命中={_buffViews.ContainsKey(buff)}");
         if (_buffViews.TryGetValue(buff, out var bv))
         {
             bv.QueueFree();
             _buffViews.Remove(buff);
+            GD.Print($"[Transform][View] BuffView 已 QueueFree: buff={buff?.Data?.BuffID}");
         }
     }
 

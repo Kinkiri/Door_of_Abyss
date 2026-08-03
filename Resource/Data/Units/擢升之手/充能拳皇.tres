@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://c3nsnpssnhx0q"]
+
+[ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="1_4nkhu"]
+[ext_resource type="Script" uid="uid://bqdiie4v7k7l7" path="res://Scripts/Data/ValueSource/BuffInfoValue.cs" id="2_ha5qf"]
+[ext_resource type="Script" uid="uid://bn4m8splfe3lb" path="res://Scripts/Data/ValueSource/ConstantValue.cs" id="3_28dxm"]
+[ext_resource type="Script" uid="uid://brotjf8m2qpfx" path="res://Scripts/Data/Conditions/CompareCondition.cs" id="4_flthe"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="5_v2b51"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="6_8qntm"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="7_tn8uu"]
+
+[sub_resource type="Resource" id="Resource_owwdw"]
+script = ExtResource("1_4nkhu")
+Value = 1
+RequiredTags = null
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_r0ci1"]
+script = ExtResource("1_4nkhu")
+TargetStat = 1
+Value = 1
+RequiredTags = null
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_bfpla"]
+script = ExtResource("2_ha5qf")
+BuffID = "义肢"
+metadata/_custom_type_script = "uid://bqdiie4v7k7l7"
+
+[sub_resource type="Resource" id="Resource_etn6x"]
+script = ExtResource("3_28dxm")
+Value = 3
+metadata/_custom_type_script = "uid://bn4m8splfe3lb"
+
+[sub_resource type="Resource" id="Resource_d7kfg"]
+script = ExtResource("4_flthe")
+Left = SubResource("Resource_bfpla")
+Right = SubResource("Resource_etn6x")
+metadata/_custom_type_script = "uid://brotjf8m2qpfx"
+
+[sub_resource type="Resource" id="Resource_v3nlb"]
+script = ExtResource("5_v2b51")
+TargetFilters = null
+MaxTriggerCount = 1
+Actions = Array[Object]([SubResource("Resource_owwdw"), SubResource("Resource_r0ci1")])
+Conditions = Array[Object]([SubResource("Resource_d7kfg")])
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("7_tn8uu")
+UnitID = "充能拳皇"
+UnitName = "充能拳皇"
+World = 1
+Faction = 2
+Tags = Array[int]([0, 3, 2])
+Rarity = 2
+AttackDistance = 2
+Description = "回合开始。若义肢>2，则+1血上限+1攻"
+UnitPrefab = ExtResource("6_8qntm")
+PassiveEffects = Array[Object]([SubResource("Resource_v3nlb")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

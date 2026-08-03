@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://ccuyks7y3yc4n"]
+
+[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="1_jml13"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_tegfg"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_s8ohy"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="4_5aj7e"]
+[ext_resource type="Script" uid="uid://dbviswjwggeup" path="res://Scripts/Data/Targeting/UnitTypeTargetFilter.cs" id="5_qusxn"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="6_pcfyd"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="7_4x66l"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="8_ujp6s"]
+
+[sub_resource type="Resource" id="Resource_3loe3"]
+script = ExtResource("2_tegfg")
+BuffData = ExtResource("1_jml13")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_c846h"]
+script = ExtResource("3_s8ohy")
+Shape = 5
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_qkw3s"]
+script = ExtResource("4_5aj7e")
+Team = 1
+metadata/_custom_type_script = "uid://bjnrbd7iwxb5u"
+
+[sub_resource type="Resource" id="Resource_g4rg6"]
+script = ExtResource("5_qusxn")
+UnitTypes = Array[int]([0])
+metadata/_custom_type_script = "uid://dbviswjwggeup"
+
+[sub_resource type="Resource" id="Resource_ukg0v"]
+script = ExtResource("6_pcfyd")
+TargetFilters = Array[Object]([SubResource("Resource_c846h"), SubResource("Resource_qkw3s"), SubResource("Resource_g4rg6")])
+Actions = Array[Object]([SubResource("Resource_3loe3")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("8_ujp6s")
+UnitID = "构造体工程师"
+UnitName = "构造体工程师"
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+Rarity = 2
+AttackPower = 3
+ActionPoints = 2
+Description = "回合开始，所有己方兵种获得义肢1"
+UnitPrefab = ExtResource("7_4x66l")
+PassiveEffects = Array[Object]([SubResource("Resource_ukg0v")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

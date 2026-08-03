@@ -107,6 +107,65 @@ public partial class UnitManager : Node
         return SpawnUnit(data, gridPos, team);
     }
 
+    /// <summary>单位变身事件（View 层订阅，刷新 UnitView 的模板显示）</summary>
+    public event System.Action<Unit> OnUnitTransformed;
+
+    /// <summary>
+    /// 单位变身：换模板 + 强制重置为模板状态（满血）+ 清除一切 buff/装备 + 换被动订阅。
+    /// 语义=完全重置：变身前生效中的 buff/装备（属性加成、被动订阅、视图图标）全部清除，
+    /// 旧模板被动退订，新模板被动生效；位置与阵营不变。
+    /// buff 走标准移除路径（RemoveBuffAction→RemoveBuff）：执行 OnExpireActions、触发
+    /// OnBuffRemoved 被动事件与 BuffRemoved 视图事件；CanBeChanged=false 的固定 buff 保留不清。
+    /// </summary>
+    public void TransformUnit(Unit unit, UnitData newData)
+    {
+        if (unit == null || newData == null) return;
+        if (unit.IsDead) return;
+
+        GD.Print($"[Transform] 开始变身: {unit.UnitData?.UnitName}(ID={unit.ID}) → {newData.UnitName}");
+
+        // ① 取消旧订阅（原生被动 + buff/装备被动一并清除）
+        EventBus.Instance?.Unsubscribe(unit);
+        GD.Print("[Transform] ① 取消旧订阅完成");
+
+        // ② 重置：清除一切 buff/装备
+        // buff 逐个走标准移除（还原加成 + 退订 + OnExpireActions + OnBuffRemoved 事件 + 视图销毁；
+        // CanBeChanged=false 的固定 buff 被 RemoveBuffAction 拒绝，保留不清）
+        var buffs = BuffManager.Instance?.GetBuffs(unit);
+        GD.Print($"[Transform] ② 待移除 buff 数: {buffs?.Count ?? -1}");
+        if (buffs != null)
+        {
+            foreach (var buff in buffs)
+            {
+                GD.Print($"[Transform] ② 执行 RemoveBuffAction: BuffID={buff.Data.BuffID}");
+                new RemoveBuffAction { BuffID = buff.Data.BuffID }
+                    .Execute(new Context { TargetUnit = unit });
+            }
+        }
+        EquipmentManager.Instance?.RemoveAllEquipments(unit);
+        GD.Print("[Transform] ② 装备清理完成");
+
+        // ③ 换模板 + 强制刷新运行时属性（全部按新模板，满血）
+        unit.UnitData = newData;
+        unit.InitializeFromData();
+        GD.Print($"[Transform] ③ 换模板完成: MaxHP={unit.MaxHP} CurrentHP={unit.CurrentHP}");
+
+        // ④ 订阅新模板的被动效果
+        EventBus.Instance?.Subscribe(unit, newData.PassiveEffects);
+        GD.Print($"[Transform] ④ 订阅新被动完成: {newData.PassiveEffects?.Length ?? 0} 条");
+
+        // ⑤ 通知视图刷新 + 触发变身事件（无 subject 定向：所有存活单位被动可监听"单位变身"，
+        //    监听者用 TargetFilters 筛目标，如 [Shape(全体), Target(事件另一方)] = 变身者）
+        unit.UpdateUnit();
+        GD.Print("[Transform] ⑤ UpdateUnit 完成");
+
+        OnUnitTransformed?.Invoke(unit);
+        GD.Print($"[Transform] ⑥ OnUnitTransformed?.Invoke 完成，订阅者数={OnUnitTransformed?.GetInvocationList().Length ?? 0}");
+        EventBus.Instance?.Fire(EventType.OnUnitTransformed,
+            new Context { TargetUnit = unit, SourceUnit = unit, SourceTeam = unit.Team });
+        GD.Print("[Transform] ⑦ Fire(OnUnitTransformed) 完成");
+    }
+
     // ======================================================================
     // 伤害 / 治疗 / 死亡
     // ======================================================================
@@ -114,8 +173,10 @@ public partial class UnitManager : Node
     /// <summary>
     /// 释放格子占用：置 OccupyingUnit=null + 统一重算属性（基础值+环境修正）+ 触发 OnUnitLeaveCell。
     /// 仅当格子当前被指定单位占据时动作（幂等——DestroyUnit 后 RemoveUnit 重复调用安全）。
+    /// destCell：移动的目标格子（用于"同环境内移动"判断，对面环境与本环境 ID 相同则不触发离开）；
+    /// 死亡/移除等无目标格场景不传（null → 起点格有环境则触发离开）。
     /// </summary>
-    private static void ReleaseCell(Cell cell, Unit unit)
+    private static void ReleaseCell(Cell cell, Unit unit, Cell destCell = null)
     {
         if (cell == null || unit == null) return;
         if (cell.OccupyingUnit != unit) return;
@@ -125,9 +186,9 @@ public partial class UnitManager : Node
         // 单位占据时设为 false，移走时经 EnvironmentManager 统一重算（基础值+环境修正）
         EnvironmentManager.Instance?.RefreshCellProperties(cell);
 
-        // 占用从有→空：触发环境"离开"被动（TargetCell=原格子，TargetUnit=离开的单位）
+        // 占用从有→空：触发环境"离开"被动（TargetCell=原格子，SourceCell=目标格子，TargetUnit=离开的单位）
         EventBus.Instance?.Fire(EventType.OnUnitLeaveCell,
-            new Context { TargetCell = cell, TargetUnit = unit, SourceUnit = unit, SourceTeam = unit.Team },
+            new Context { TargetCell = cell, TargetUnit = unit, SourceUnit = unit, SourceTeam = unit.Team, SourceCell = destCell },
             subject: unit);
     }
 
@@ -261,17 +322,17 @@ public partial class UnitManager : Node
             return false;
         }
 
-        // 清理旧格子（释放占用 + 触发环境"离开"被动）
+        // 清理旧格子（释放占用 + 触发环境"离开"被动；destCell=目标格，用于同环境移动判断）
         if (MapManager.Instance.TryGetCell(unit.GridPos, out Cell oldCell))
-            ReleaseCell(oldCell, unit);
+            ReleaseCell(oldCell, unit, targetCell);
 
-        // 绑定新格子（占用从空→有，触发环境"进入"被动）
+        // 绑定新格子（占用从空→有，触发环境"进入"被动；SourceCell=旧格，用于同环境移动判断）
         unit.GridPos = targetGridPos;
         targetCell.OccupyingUnit = unit;
         targetCell.CanPass = false;   // 占据新格子
         targetCell.CanStand = false;
         EventBus.Instance?.Fire(EventType.OnUnitEnterCell,
-            new Context { TargetCell = targetCell, TargetUnit = unit, SourceUnit = unit, SourceTeam = unit.Team },
+            new Context { TargetCell = targetCell, TargetUnit = unit, SourceUnit = unit, SourceTeam = unit.Team, SourceCell = oldCell },
             subject: unit);
 
         unit.UpdateUnit();
@@ -284,19 +345,22 @@ public partial class UnitManager : Node
     /// </summary>
     public void TeleportUnit(Unit unit, Vector2I targetGridPos)
     {
-        // 清理旧格子（释放占用 + 触发环境"离开"被动）
-        if (MapManager.Instance.TryGetCell(unit.GridPos, out Cell oldCell))
-            ReleaseCell(oldCell, unit);
+        // 提前解析目标格子（用于"同环境移动"判断与绑定）
+        MapManager.Instance.TryGetCell(targetGridPos, out Cell newCell);
 
-        // 绑定新格子（占用从空→有，触发环境"进入"被动）
-        if (MapManager.Instance.TryGetCell(targetGridPos, out Cell newCell))
+        // 清理旧格子（释放占用 + 触发环境"离开"被动；destCell=目标格，用于同环境移动判断）
+        if (MapManager.Instance.TryGetCell(unit.GridPos, out Cell oldCell))
+            ReleaseCell(oldCell, unit, newCell);
+
+        // 绑定新格子（占用从空→有，触发环境"进入"被动；SourceCell=旧格，用于同环境移动判断）
+        if (newCell != null)
         {
             unit.GridPos = targetGridPos;
             newCell.OccupyingUnit = unit;
             newCell.CanPass = false;
             newCell.CanStand = false;
             EventBus.Instance?.Fire(EventType.OnUnitEnterCell,
-                new Context { TargetCell = newCell, TargetUnit = unit, SourceUnit = unit, SourceTeam = unit.Team },
+                new Context { TargetCell = newCell, TargetUnit = unit, SourceUnit = unit, SourceTeam = unit.Team, SourceCell = oldCell },
                 subject: unit);
         }
 

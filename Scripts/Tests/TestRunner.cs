@@ -2644,6 +2644,340 @@ public partial class TestRunner : Node
                 em.RemoveEnvironment(enterCell);
                 em.RemoveEnvironment(otherCell);
             }
+
+            // ── 环境变化过滤：同环境内移动不触发 / 跨环境触发（含真实移动路径）──
+            if (UnitManager.Instance != null)
+            {
+                // 进入/离开各 1 伤的通用环境（施加到多个格子）
+                var moveTrap = new EnvironmentData
+                {
+                    EnvironmentID = "移动陷阱",
+                    Duration = -1,
+                    PassiveEffects = new EffectData[]
+                    {
+                        new EffectData
+                        {
+                            TriggerEvent = EventType.OnUnitEnterCell,
+                            TargetFilters = new TargetFilter[] { new ShapeTargetFilter { Shape = TargetShape.SingleUnit } },
+                            Actions = new GameAction[] { new DamageAction { Value = 1 } },
+                        },
+                        new EffectData
+                        {
+                            TriggerEvent = EventType.OnUnitLeaveCell,
+                            TargetFilters = new TargetFilter[] { new ShapeTargetFilter { Shape = TargetShape.SingleUnit } },
+                            Actions = new GameAction[] { new DamageAction { Value = 1 } },
+                        },
+                    },
+                };
+                var sameEnvA = MakeCell(new Vector2I(8, 0), new BlockData { BlockName = "地板", MoveCost = 1 });
+                var sameEnvB = MakeCell(new Vector2I(9, 0), new BlockData { BlockName = "地板", MoveCost = 1 });
+                var diffEnvCell = MakeCell(new Vector2I(10, 0), new BlockData { BlockName = "地板", MoveCost = 1 });
+                var plainCell = MakeCell(new Vector2I(11, 0), new BlockData { BlockName = "地板", MoveCost = 1 });
+                em.ApplyEnvironment(sameEnvA, moveTrap, null);
+                em.ApplyEnvironment(sameEnvB, moveTrap, null);
+                var diffEnv = new EnvironmentData
+                {
+                    EnvironmentID = "异环境",
+                    Duration = -1,
+                    PassiveEffects = new EffectData[]
+                    {
+                        new EffectData
+                        {
+                            TriggerEvent = EventType.OnUnitEnterCell,
+                            TargetFilters = new TargetFilter[] { new ShapeTargetFilter { Shape = TargetShape.SingleUnit } },
+                            Actions = new GameAction[] { new DamageAction { Value = 1 } },
+                        },
+                    },
+                };
+                em.ApplyEnvironment(diffEnvCell, diffEnv, null);
+
+                var mover = MakeUnit("环境过滤移动者", 0, 10);
+
+                // 同环境内移动（A→B）：离开/进入均不触发（对面环境 ID 相同）
+                EventBus.Instance.Fire(EventType.OnUnitLeaveCell,
+                    new Context { TargetCell = sameEnvA, SourceCell = sameEnvB, TargetUnit = mover }, subject: mover);
+                EventBus.Instance.Fire(EventType.OnUnitEnterCell,
+                    new Context { TargetCell = sameEnvB, SourceCell = sameEnvA, TargetUnit = mover }, subject: mover);
+                VAssert("同环境内移动：进入/离开均不触发（HP 不变）", () => mover.CurrentHP == 10);
+
+                // 跨环境移动（A→C）：起点环境触发离开（10→9）
+                EventBus.Instance.Fire(EventType.OnUnitLeaveCell,
+                    new Context { TargetCell = sameEnvA, SourceCell = diffEnvCell, TargetUnit = mover }, subject: mover);
+                VAssert("跨环境移动：起点环境触发离开（10→9）", () => mover.CurrentHP == 9);
+
+                // 跨环境移动（A→C）：终点环境触发进入（9→8）
+                EventBus.Instance.Fire(EventType.OnUnitEnterCell,
+                    new Context { TargetCell = diffEnvCell, SourceCell = sameEnvA, TargetUnit = mover }, subject: mover);
+                VAssert("跨环境移动：终点环境触发进入（9→8）", () => mover.CurrentHP == 8);
+
+                // 有→无：对面无环境触发离开（8→7）
+                EventBus.Instance.Fire(EventType.OnUnitLeaveCell,
+                    new Context { TargetCell = sameEnvA, SourceCell = plainCell, TargetUnit = mover }, subject: mover);
+                VAssert("有→无：离开触发（8→7）", () => mover.CurrentHP == 7);
+
+                // 无→有：对面无环境触发进入（7→6）
+                EventBus.Instance.Fire(EventType.OnUnitEnterCell,
+                    new Context { TargetCell = sameEnvA, SourceCell = plainCell, TargetUnit = mover }, subject: mover);
+                VAssert("无→有：进入触发（7→6）", () => mover.CurrentHP == 6);
+
+                // 清理
+                em.RemoveEnvironment(sameEnvA);
+                em.RemoveEnvironment(sameEnvB);
+                em.RemoveEnvironment(diffEnvCell);
+
+                // ── 真实移动路径：UnitManager.MoveUnit 的 SourceCell 传递 ──
+                if (MapManager.Instance != null)
+                {
+                    var map = MapManager.Instance.Map;
+                    var rA = MakeCell(new Vector2I(20, 0), new BlockData { BlockName = "地板", MoveCost = 1, CanStand = true, CanPass = true });
+                    var rB = MakeCell(new Vector2I(21, 0), new BlockData { BlockName = "地板", MoveCost = 1, CanStand = true, CanPass = true });
+                    var rPlain = MakeCell(new Vector2I(22, 0), new BlockData { BlockName = "地板", MoveCost = 1, CanStand = true, CanPass = true });
+                    var rDiff = MakeCell(new Vector2I(23, 0), new BlockData { BlockName = "地板", MoveCost = 1, CanStand = true, CanPass = true });
+                    map[rA.GridPos] = rA;
+                    map[rB.GridPos] = rB;
+                    map[rPlain.GridPos] = rPlain;
+                    map[rDiff.GridPos] = rDiff;
+
+                    em.ApplyEnvironment(rA, moveTrap, null);
+                    em.ApplyEnvironment(rB, moveTrap, null);
+                    em.ApplyEnvironment(rDiff, diffEnv, null);
+
+                    var realMover = MakeUnit("真实环境移动者", 0, 10);
+                    rA.OccupyingUnit = realMover;
+                    realMover.GridPos = rA.GridPos;
+
+                    // 同环境内移动（A→B）：不触发
+                    UnitManager.Instance.MoveUnit(realMover, rB.GridPos);
+                    VAssert("真实移动：同环境内移动不触发（HP 不变）", () => realMover.CurrentHP == 10);
+
+                    // 有→无（B→plain）：离开触发（10→9）
+                    UnitManager.Instance.MoveUnit(realMover, rPlain.GridPos);
+                    VAssert("真实移动：有→无触发离开（10→9）", () => realMover.CurrentHP == 9);
+
+                    // 无→有（plain→B）：进入触发（9→8）
+                    UnitManager.Instance.MoveUnit(realMover, rB.GridPos);
+                    VAssert("真实移动：无→有触发进入（9→8）", () => realMover.CurrentHP == 8);
+
+                    // 跨环境（B→C，不同 ID）：先离开后进入，各 1 伤（8→6）
+                    UnitManager.Instance.MoveUnit(realMover, rDiff.GridPos);
+                    VAssert("真实移动：跨环境先离开后进入（8→6）", () => realMover.CurrentHP == 6);
+
+                    // 清理
+                    em.RemoveEnvironment(rA);
+                    em.RemoveEnvironment(rB);
+                    em.RemoveEnvironment(rDiff);
+                    map.Remove(rA.GridPos);
+                    map.Remove(rB.GridPos);
+                    map.Remove(rPlain.GridPos);
+                    map.Remove(rDiff.GridPos);
+                }
+            }
+        });
+
+        RunGroup("变身", () =>
+        {
+            if (UnitManager.Instance == null) return;
+
+            var u = MakeUnit("变身者", 1, 10);
+            var newData = new UnitData
+            {
+                UnitID = "变身形态",
+                UnitName = "变身形态",
+                AttackPower = 5,
+                HealthPoints = 20,
+                Stamina = 3,
+                AttackDistance = 2,
+                ActionPoints = 2,
+            };
+
+            // 变身前挂 buff（MaxHP+5）与装备（ATK+2）
+            var buff = new BuffData
+            {
+                BuffID = "变身buff",
+                BuffName = "变身buff",
+                Duration = -1,
+                MaxStack = -1,
+                OnApplyActions = new GameAction[] { new ModifyStatAction { TargetStat = ModifyStatType.MaxHP, Value = 5 } },
+            };
+            BuffManager.Instance?.ApplyBuff(u, buff, null);
+            EquipmentManager.Instance?.Equip(u, new EquipmentData
+            {
+                EquipmentID = "变身装备",
+                EquipmentName = "变身装备",
+                AttackBonus = 2,
+                MaxHealthBonus = 0,
+            }, null);
+            VAssert("变身前置：buff 生效 MaxHP=15", () => u.MaxHP == 15);
+            VAssert("变身前置：装备生效 ATK=3", () => u.AttackPower == 3);
+
+            // 变身：清 buff/装备 + 换模板 + 重置属性（满血）
+            UnitManager.Instance.TransformUnit(u, newData);
+            VAssert("变身后：模板切换", () => u.UnitData == newData);
+            VAssert("变身后：MaxHP=20（buff 已清）", () => u.MaxHP == 20);
+            VAssert("变身后：ATK=5（装备已清）", () => u.AttackPower == 5);
+            VAssert("变身后：满血", () => u.CurrentHP == 20);
+            VAssert("变身后：体力=3", () => u.Stamina == 3);
+            VAssert("变身后：攻击距离=2", () => u.AttackDistance == 2);
+
+            // 变身动作 TransformUnitAction（TargetUnit 路径）
+            var action = new TransformUnitAction { UnitData = newData };
+            action.Execute(new Context { TargetUnit = u });
+            VAssert("变身动作：TargetUnit 再次变身生效", () => u.UnitData == newData && u.MaxHP == 20);
+
+            // 新被动订阅生效：新模板带 RoundStart 自伤 1（Target=Self 默认）
+            var passiveData = new UnitData
+            {
+                UnitID = "变身形态2",
+                UnitName = "变身形态2",
+                AttackPower = 3,
+                HealthPoints = 8,
+                PassiveEffects = new EffectData[]
+                {
+                    new EffectData
+                    {
+                        TriggerEvent = EventType.RoundStart,
+                        Actions = new GameAction[] { new DamageAction { Value = 1 } },
+                    },
+                },
+            };
+            UnitManager.Instance.TransformUnit(u, passiveData);
+            VAssert("变身前状态：MaxHP=8 满血", () => u.MaxHP == 8 && u.CurrentHP == 8);
+            EventBus.Instance?.Fire(EventType.RoundStart, new Context(), subject: u);
+            VAssert("新被动订阅生效：RoundStart 伤害1（8→7）", () => u.CurrentHP == 7);
+
+            // 变身事件：其他单位被动监听 OnUnitTransformed（Target=EventTarget=变身单位，伤害1）
+            var observer = MakeUnit("变身观察者", 0, 10);
+            EventBus.Instance?.Subscribe(observer, new[]
+            {
+                new EffectData
+                {
+                    TriggerEvent = EventType.OnUnitTransformed,
+                    Target = PassiveTarget.EventTarget,
+                    Actions = new GameAction[] { new DamageAction { Value = 1 } },
+                },
+            });
+            UnitManager.Instance.TransformUnit(u, newData);
+            VAssert("变身事件：观察者被动对变身单位造成1伤（变身满血20→19）", () => u.CurrentHP == 19);
+            EventBus.Instance?.Unsubscribe(observer);
+
+            // 清理
+            BuffManager.Instance?.RemoveAllBuffs(u);
+            EquipmentManager.Instance?.RemoveAllEquipments(u);
+        });
+
+        RunGroup("义肢变身", () =>
+        {
+            if (UnitManager.Instance == null) return;
+
+            // ── CardFactionFilter / CardCostFilter 单测（运行时 Card 包装）──
+            var unitDataA = new UnitData { UnitID = "义肢候选A", UnitName = "义肢候选A", Faction = Faction.擢升之手, HealthPoints = 10, AttackPower = 1 };
+            var unitDataB = new UnitData { UnitID = "义肢候选B", UnitName = "义肢候选B", Faction = Faction.擢升之手, HealthPoints = 12, AttackPower = 2 };
+            var cardA = new UnitCardData { CardID = "义肢卡A", CardName = "义肢卡A", Faction = Faction.擢升之手, Cost = 2, UnitData = unitDataA };
+            var cardA2 = new UnitCardData { CardID = "义肢卡A2", CardName = "义肢卡A2", Faction = Faction.擢升之手, Cost = 8, UnitData = unitDataA }; // 同单位费用8越界
+            var cardB = new UnitCardData { CardID = "义肢卡B", CardName = "义肢卡B", Faction = Faction.擢升之手, Cost = 6, UnitData = unitDataB };
+            var cardC = new UnitCardData { CardID = "义肢卡C", CardName = "义肢卡C", Faction = Faction.圣主教, Cost = 2, UnitData = new UnitData { UnitID = "圣主教单位", UnitName = "圣主教单位", Faction = Faction.圣主教 } };
+
+            VAssert("CardFactionFilter：擢升之手命中", () => new CardFactionFilter { Faction = Faction.擢升之手 }.IsMatch(new Card(cardA)));
+            VAssert("CardFactionFilter：圣主教卡排除", () => !new CardFactionFilter { Faction = Faction.擢升之手 }.IsMatch(new Card(cardC)));
+            VAssert("CardCostFilter：费用2命中≤6", () => new CardCostFilter { MaxCost = 6 }.IsMatch(new Card(cardA)));
+            VAssert("CardCostFilter：费用8排除", () => !new CardCostFilter { MaxCost = 6 }.IsMatch(new Card(cardA2)));
+
+            // ── CardLibrary 通用查询：临时隔离 CardList（候选只含注入卡，断言可靠）──
+            var backup = CardLibrary.CardList.ToList();
+            CardLibrary.CardList.Clear();
+            CardLibrary.CardList.AddRange(new CardData[] { cardA, cardA2, cardB, cardC });
+
+            var combo = CardFilter.CombineAnd(new CardFilter[]
+            {
+                new CardFactionFilter { Faction = Faction.擢升之手 },
+                new CardCostFilter { MaxCost = 6 },
+            });
+            var matched = CardLibrary.GetCards(combo);
+            VAssert("通用查询：擢升之手+费用≤6 命中 2 张", () => matched.Length == 2);
+            VAssert("通用查询：含卡A/卡B，不含费用8卡与圣主教卡",
+                () => matched.Contains(cardA) && matched.Contains(cardB) && !matched.Contains(cardA2) && !matched.Contains(cardC));
+            var randomPick = CardLibrary.GetRandomCard(combo);
+            VAssert("通用查询：随机命中匹配集", () => randomPick == cardA || randomPick == cardB);
+
+            // ── 完整链路：被动 = 义肢层数>2 → 随机变身擢升之手（卡费≤6）──
+            var transformPassive = new EffectData
+            {
+                TriggerEvent = EventType.OnBuffStackChanged,
+                Conditions = new Condition[]
+                {
+                    new CompareCondition
+                    {
+                        Left = new BuffInfoValue { Unit = ValueTarget.Source, BuffID = "义肢", Info = BuffInfoType.StackCount },
+                        Op = CompareOp.Greater,
+                        Right = new ConstantValue { Value = 2 },
+                    },
+                },
+                Actions = new GameAction[]
+                {
+                    new RandomTransformAction
+                    {
+                        Filters = new CardFilter[]
+                        {
+                            new CardFactionFilter { Faction = Faction.擢升之手 },
+                            new CardCostFilter { MaxCost = 6 },
+                        },
+                    },
+                },
+            };
+            var limbBuff = new BuffData { BuffID = "义肢", Duration = -1, MaxStack = -1 };
+
+            // 场景1：1→2→3 层逐步叠加，3 层触发变身
+            var limbed = MakeUnit("义肢变身者", 1, 10);
+            EventBus.Instance?.Subscribe(limbed, new[] { transformPassive });
+            var originalData = limbed.UnitData;
+            BuffManager.Instance?.ApplyBuff(limbed, limbBuff, null, 1);
+            BuffManager.Instance?.ApplyBuff(limbed, limbBuff, null, 1); // 叠到 2 层
+            VAssert("叠到2层：不触发变身", () => limbed.UnitData == originalData);
+            BuffManager.Instance?.ApplyBuff(limbed, limbBuff, null, 1); // 叠到 3 层
+            VAssert("叠到3层：触发变身（模板已换）", () => limbed.UnitData != originalData);
+            VAssert("变身目标：擢升之手单位", () => limbed.UnitData?.Faction == Faction.擢升之手);
+            VAssert("变身目标：候选A或B（卡费≤6）", () => limbed.UnitData == unitDataA || limbed.UnitData == unitDataB);
+
+            // 场景2：新建即 initialStacks=3 触发
+            var limbed2 = MakeUnit("义肢变身者2", 1, 10);
+            EventBus.Instance?.Subscribe(limbed2, new[] { transformPassive });
+            var orig2 = limbed2.UnitData;
+            BuffManager.Instance?.ApplyBuff(limbed2, limbBuff, null, 3);
+            VAssert("新建即3层：触发变身", () => limbed2.UnitData != orig2);
+
+            // 场景3：ModifyBuffAction 加层触发
+            var limbed3 = MakeUnit("义肢变身者3", 1, 10);
+            EventBus.Instance?.Subscribe(limbed3, new[] { transformPassive });
+            var orig3 = limbed3.UnitData;
+            BuffManager.Instance?.ApplyBuff(limbed3, limbBuff, null, 2);
+            VAssert("Modify前：未变身", () => limbed3.UnitData == orig3);
+            new ModifyBuffAction { BuffID = "义肢", StacksDelta = 1 }.Execute(new Context { TargetUnit = limbed3 });
+            VAssert("ModifyBuffAction 加层到3：触发变身", () => limbed3.UnitData != orig3);
+
+            // 变身清除 buff：BuffRemoved 事件必须触发（视图图标销毁依赖此事件）
+            int removedCount = 0;
+            System.Action<Unit, Buff> buffRemovedHandler = (t, b) => removedCount++;
+            BuffManager.Instance.BuffRemoved += buffRemovedHandler;
+            var clearVerify = MakeUnit("变身清buff验证", 1, 10);
+            BuffManager.Instance?.ApplyBuff(clearVerify, limbBuff, null, 2);
+            VAssert("变身清buff验证：前置义肢 2 层", () => BuffManager.Instance.GetBuff(clearVerify, "义肢")?.StackCount == 2);
+            UnitManager.Instance.TransformUnit(clearVerify, unitDataA);
+            VAssert("变身清除 buff：BuffRemoved 事件触发 1 次", () => removedCount == 1);
+            BuffManager.Instance.BuffRemoved -= buffRemovedHandler;
+
+            // 固定 buff（CanBeChanged=false）：RemoveBuffAction 拒绝移除，变身保留
+            var fixedBuff = new BuffData { BuffID = "固定buff", Duration = -1, MaxStack = -1, CanBeChanged = false };
+            var fixedUnit = MakeUnit("固定buff验证", 1, 10);
+            BuffManager.Instance?.ApplyBuff(fixedUnit, fixedBuff, null, 1);
+            UnitManager.Instance.TransformUnit(fixedUnit, unitDataA);
+            VAssert("固定buff（CanBeChanged=false）变身保留", () => BuffManager.Instance.GetBuff(fixedUnit, "固定buff") != null);
+
+            // 清理：还原 CardLibrary + 退订（变身后的单位被动已被 TransformUnit 清掉，退订幂等）
+            EventBus.Instance?.Unsubscribe(limbed);
+            EventBus.Instance?.Unsubscribe(limbed2);
+            EventBus.Instance?.Unsubscribe(limbed3);
+            CardLibrary.CardList.Clear();
+            CardLibrary.CardList.AddRange(backup);
         });
 
         // ── 汇总输出 ────────────────────────────────────────────

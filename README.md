@@ -64,7 +64,9 @@ Scripts/                         ~7300 行 C#
 │   │   ├── SetStatAction.cs     设置属性为精确值（不可逆）
 │   │   ├── ApplyEnvironmentAction.cs 施加环境（目标格子，替换式覆盖）
 │   │   ├── RemoveEnvironmentAction.cs 移除环境（驱散）
-│   │   └── ModifyCellStatAction.cs  修改格子属性（MoveCost 可逆 / 布尔覆盖不可逆）
+│   │   ├── ModifyCellStatAction.cs  修改格子属性（MoveCost 可逆 / 布尔覆盖不可逆）
+│   │   ├── TransformUnitAction.cs  变身（换模板 + 全清重置）
+│   │   └── RandomTransformAction.cs 随机变身（CardFilter 模板库筛选）
 │   ├── Targeting/               目标筛选器（抽象基类 + 多态子类，替代 Shape+Filter 枚举）
 │   │   ├── TargetFilter.cs      抽象基类：ApplyUnits/ApplyCells/GetShape/IsUnitMatch
 │   │   ├── ShapeTargetFilter.cs 形状候选源：Shape + AreaRange
@@ -113,6 +115,8 @@ Scripts/                         ~7300 行 C#
 │   │       ├── CardTypeFilter.cs  卡牌类型筛选（任一匹配）
 │   │       ├── CardTagFilter.cs   卡牌标签筛选（任一匹配）
 │   │       ├── CardUnitTypeFilter.cs 单位卡单位类型筛选（任一匹配，非单位卡不命中）
+│   │       ├── CardFactionFilter.cs  势力筛选（无=不限制）
+│   │       ├── CardCostFilter.cs     费用区间筛选（-1=该端不限）
 │   │       ├── AndCardFilter.cs   AND 组合
 │   │       ├── OrCardFilter.cs    OR 组合
 │   │       └── NotCardFilter.cs   NOT 组合（补集）
@@ -404,6 +408,13 @@ OrCondition
 
 部署限制出牌前由 `SelectionManager.ValidateCardTarget` 拦截（范围外点击不出牌、不扣费），`SummonUnitAction` 内保留同检查作为双保险。
 
+### 3.2.1 变身
+
+| 动作 | 字段 | 说明 |
+|---|---|---|
+| TransformUnitAction | UnitData / UnitID | **变身**：将目标单位切换为指定模板并完全重置。**语义=完全重置**：清一切 buff/装备（还原加成 + 退订 + 视图销毁；`CanBeChanged=false` 固定 buff 保留）、按新模板刷新属性（满血）、旧被动退订 + 新被动订阅；位置/阵营不变。变身后触发 `OnUnitTransformed`（无 subject 定向） |
+| RandomTransformAction | Filters（CardFilter[]，默认 And） | **随机变身**：从模板库筛匹配的**单位卡**随机取一张（按卡随机、不去重，同单位多卡权重更高）变身成其单位。例：`[CardFactionFilter{擢升之手}, CardCostFilter{MaxCost=6}]` = 随机变为费用≤6 的擢升之手单位。筛选复用 CardFilter + `CardLibrary.GetCards/GetRandomCard` 通用查询（与抽牌共用体系） |
+
 ### 3.3 自动攻击
 
 | 动作 | 说明 |
@@ -561,6 +572,8 @@ ModifyBuffAction(StacksDelta=-1) -> 减 1 层，还原 1 次 -> ATK-1。
 | OnTakeDamage / OnBeforeTakeDamage | 攻击者 |
 | OnKill / OnUnitDeath / OnAnyUnitDeath | 死者 |
 | OnUnitEnterCell / OnUnitLeaveCell | 进入/离开的单位 |
+| OnUnitTransformed | 变身单位 |
+| OnBuffStackChanged | 层数变化的单位 |
 | OnUseCard / OnDrawCard / RoundStart / RoundEnd / OnMove / OnSpawn | 无（null） |
 
 **典型用法（"自己获得对方的东西"）**：`Target=Self`（操作目标=自己）+ 条件/值源用 `Unit=EventTarget` 读对方。例（MK0"友方兵种死亡，获得其义肢"）：
@@ -591,8 +604,10 @@ Actions=[ApplyBuff{义肢, ValueSource=BuffInfoValue{Unit=EventTarget, BuffID=�
 | **OnUnitDeath** | 单位死亡（亡语） |
 | **OnAnyUnitDeath** | **任意单位死亡后**（区别于亡语：无 subject 定向，**存活**单位的被动均可响应，死者自身不触发）。`TargetUnit`=死者，`TargetCell`=死亡格子，`SourceUnit`=死者。配合 TargetFilters 筛阵营/类型（如 `[Shape(全体), Team(友方)]` = 友方死亡时） |
 | **OnMove** | 移动后（不含攻击/出牌） |
-| **OnUnitEnterCell** | **单位进入格子后**（格子占用从空→有，含移动/传送/召唤）。`TargetCell`=新格子，`TargetUnit`=进入的单位。**环境被动专用**：仅"目标格子==环境所在格"的订阅者触发，`[Shape(单体)]` 命中进入的单位 |
-| **OnUnitLeaveCell** | **单位离开格子后**（格子占用从有→空，含移动/传送/死亡/移除）。`TargetCell`=原格子，`TargetUnit`=离开的单位。环境被动专用，同上 |
+| **OnUnitEnterCell** | **单位进入格子后**（移动/传送/召唤）。`TargetCell`=新格子，`TargetUnit`=进入的单位。**环境被动专用**：仅"目标格子==环境所在格"且**起终点环境变化**的订阅者触发——对面格子环境 ID 与本环境相同（含两端都无环境）即同一环境内移动，不触发；无→有 / 有→无 / 环境A→环境B 才触发。`[Shape(单体)]` 命中进入的单位 |
+| **OnUnitLeaveCell** | **单位离开格子后**（移动/传送/死亡/移除）。`TargetCell`=原格子，`TargetUnit`=离开的单位。环境被动专用，同上（跨环境移动先 A 离开后 B 进入） |
+| **OnUnitTransformed** | **单位变身后**（变身=换模板 + 清 buff/装备 + 换被动）。`TargetUnit`=变身单位。**无 subject 定向**：所有存活单位被动可响应（参照 OnAnyUnitDeath），用 TargetFilters / `Target=EventTarget` 筛变身者 |
+| **OnBuffStackChanged** | **Buff 叠层变化/设置后**（新建 initialStacks、叠层刷新、ModifyBuffAction 增减层；归零移除走 OnBuffRemoved 不触发）。`TargetUnit`=层数变化的单位，subject=该单位（定向，自己响应）。配合条件 `BuffInfoValue{Unit=Source, BuffID, StackCount} > N` 判断层数 |
 
 ### 被动示例
 
@@ -1264,7 +1279,7 @@ EquipmentData：EquipmentID=护心镜, MaxHealthBonus=3,
 - `[Shape(单体)]`（SingleUnit）→ 命中**格子上当前单位**（如"回合结束对格子上单位造成 1 伤"）
 - `[Shape(菱形,N)]` → 以环境格为中心扩散
 - 事件如 RoundStart/RoundEnd/OnUnitAct 等均可用；来源（SourceUnit）= 环境的施加者
-- **进入/离开事件**（`OnUnitEnterCell`/`OnUnitLeaveCell`）：仅"目标格子==环境所在格"的环境触发（EventBus 自动过滤），`[Shape(单体)]` 命中**进入/离开的单位**——"踩陷阱"类效果直接用 `TriggerEvent=OnUnitEnterCell`。触发范围覆盖移动/传送/召唤（进入）、移动/传送/死亡/移除（离开），即格子的占用状态变化即触发。注意被动动作若再次移动/召唤单位会嵌套触发，用 `MaxTriggerCount` 防连锁
+- **进入/离开事件**（`OnUnitEnterCell`/`OnUnitLeaveCell`）：仅"目标格子==环境所在格"的环境触发（EventBus 自动过滤），`[Shape(单体)]` 命中**进入/离开的单位**——"踩陷阱"类效果直接用 `TriggerEvent=OnUnitEnterCell`。**起终点环境变化才触发**：两端环境 ID 相同（含两端都无环境）→ 同一环境内移动不触发；无→有 / 有→无 / 环境A→环境B → 触发（跨环境移动先 A 离开后 B 进入）。触发范围覆盖移动/传送/召唤（进入）、移动/传送/死亡/移除（离开）。注意被动动作若再次移动/召唤单位会嵌套触发，用 `MaxTriggerCount` 防连锁
 
 ### 15.4 环境卡配置
 
@@ -1295,3 +1310,34 @@ EnvironmentData：EnvironmentID=沼泽, Duration=-1, MoveCostDelta=2, CanStandOv
 ### 15.6 与单位占位的协调
 
 格子的 CanStand/CanPass 运行时值由 `EnvironmentManager.RefreshCellProperties()` 统一重算：**基础地形值 → 环境覆盖 → 单位占据强制 false**。单位移走/死亡释放格子时也走此入口，保证环境修正不被占位逻辑覆盖。
+
+---
+
+## 16. 变身机制
+
+变身 = 单位切换模板并**完全重置**：清一切 buff/装备（属性还原 + 退订 + 视图销毁；`CanBeChanged=false` 固定 buff 保留）、按新模板刷新属性（满血）、旧被动退订 + 新被动订阅；位置/阵营不变。核心入口 `UnitManager.TransformUnit`（`Scripts/Manager/UnitManager.cs`），动作 `TransformUnitAction`（指定模板）/ `RandomTransformAction`（CardFilter 筛模板库随机）。
+
+### 16.1 变身相关事件
+
+| 事件 | 说明 |
+|---|---|
+| `OnUnitTransformed` | 变身后触发，**无 subject 定向**（所有存活单位可监听，参照 OnAnyUnitDeath），`TargetUnit`=变身单位。视图层订阅刷新名字/描述/图标 |
+| `OnBuffStackChanged` | buff 叠层变化/设置后触发（subject=自己定向），配合条件"义肢层数>2"类判断实现"叠够就变身" |
+
+### 16.2 模板库筛选（CardFilter 通用机制）
+
+从模板库按条件选模板统一走 **CardFilter + CardLibrary 通用查询**（与抽牌 `DrawCardAction.Filters` 共用一套体系，不要写死筛选逻辑）：
+- `CardFactionFilter`（势力，`无`=不限）、`CardCostFilter`（费用区间，-1=该端不限），组合 And/Or/Not
+- `CardLibrary.GetCards(filter)` / `GetRandomCard(filter)`：模板级检索（内部把模板包装成运行时 Card 做 `IsMatch`，null=不限制）
+
+### 16.3 示例：破碎残躯（义肢≥2 变身随机擢升之手单位）
+
+```
+被动: TriggerEvent=OnBuffStackChanged
+条件: BuffInfoValue{Unit=Source, BuffID=义肢, StackCount} >= 2
+动作: RandomTransformAction{
+        Filters=[CardFactionFilter{Faction=擢升之手}, CardTypeFilter{单位}, CardCostFilter{MaxCost=6}]
+      }
+```
+
+变身触发即移除义肢（全清语义）→ 条件不再满足，天然只触发一次。

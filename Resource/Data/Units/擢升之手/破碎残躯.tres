@@ -1,0 +1,74 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://cariyv2bv7esb"]
+
+[ext_resource type="Script" uid="uid://fli8n238slbo" path="res://Scripts/Data/Card/Filters/CardCostFilter.cs" id="1_7d5yu"]
+[ext_resource type="Script" uid="uid://bh513nttrjbjn" path="res://Scripts/Data/Card/Filters/CardTypeFilter.cs" id="2_s71tn"]
+[ext_resource type="Script" uid="uid://bk4wgsjs1g26i" path="res://Scripts/Data/Card/Filters/CardFactionFilter.cs" id="3_bqobf"]
+[ext_resource type="Script" uid="uid://cq7gauev5yftu" path="res://Scripts/Data/Actions/RandomTransformAction.cs" id="4_e8bmd"]
+[ext_resource type="Script" uid="uid://bqdiie4v7k7l7" path="res://Scripts/Data/ValueSource/BuffInfoValue.cs" id="5_lksb7"]
+[ext_resource type="Script" uid="uid://bn4m8splfe3lb" path="res://Scripts/Data/ValueSource/ConstantValue.cs" id="6_l6del"]
+[ext_resource type="Script" uid="uid://brotjf8m2qpfx" path="res://Scripts/Data/Conditions/CompareCondition.cs" id="7_b50ey"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="8_lcmqj"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="9_3thdq"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="10_m34lk"]
+
+[sub_resource type="Resource" id="Resource_7c4dh"]
+script = ExtResource("1_7d5yu")
+MaxCost = 6
+metadata/_custom_type_script = "uid://fli8n238slbo"
+
+[sub_resource type="Resource" id="Resource_7p72v"]
+script = ExtResource("2_s71tn")
+Types = Array[int]([0])
+metadata/_custom_type_script = "uid://bh513nttrjbjn"
+
+[sub_resource type="Resource" id="Resource_kq84j"]
+script = ExtResource("3_bqobf")
+Faction = 2
+metadata/_custom_type_script = "uid://bk4wgsjs1g26i"
+
+[sub_resource type="Resource" id="Resource_sgub8"]
+script = ExtResource("4_e8bmd")
+Filters = Array[Object]([SubResource("Resource_7c4dh"), SubResource("Resource_7p72v"), SubResource("Resource_kq84j")])
+metadata/_custom_type_script = "uid://cq7gauev5yftu"
+
+[sub_resource type="Resource" id="Resource_xsk3m"]
+script = ExtResource("5_lksb7")
+BuffID = "义肢"
+metadata/_custom_type_script = "uid://bqdiie4v7k7l7"
+
+[sub_resource type="Resource" id="Resource_4eqa8"]
+script = ExtResource("6_l6del")
+Value = 2
+metadata/_custom_type_script = "uid://bn4m8splfe3lb"
+
+[sub_resource type="Resource" id="Resource_gjcce"]
+script = ExtResource("7_b50ey")
+Left = SubResource("Resource_xsk3m")
+Right = SubResource("Resource_4eqa8")
+metadata/_custom_type_script = "uid://brotjf8m2qpfx"
+
+[sub_resource type="Resource" id="Resource_b0rqx"]
+script = ExtResource("8_lcmqj")
+TriggerEvent = 22
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_sgub8")])
+Conditions = Array[Object]([SubResource("Resource_gjcce")])
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("10_m34lk")
+UnitID = "破碎残躯"
+UnitName = "破碎残躯"
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+AttackPower = 0
+HealthPoints = 3
+Stamina = 0
+AttackDistance = 0
+Type = 1
+ActionPoints = -9
+Description = "义肢大于等于2时，变身"
+UnitPrefab = ExtResource("9_3thdq")
+PassiveEffects = Array[Object]([SubResource("Resource_b0rqx")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

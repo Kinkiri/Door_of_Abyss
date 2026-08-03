@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://1vb3i1leh1yb"]
+
+[ext_resource type="Resource" uid="uid://c3nsnpssnhx0q" path="res://Resource/Data/Units/擢升之手/充能拳皇.tres" id="1_b2rih"]
+[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="1_tmg2v"]
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_v3nlb"]
+[ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_d7kfg"]
+
+[sub_resource type="Resource" id="Resource_beqnj"]
+script = ExtResource("1_v3nlb")
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[resource]
+script = ExtResource("1_tmg2v")
+UnitData = ExtResource("1_b2rih")
+CardID = "充能拳皇"
+CardName = "充能拳皇"
+Description = ""
+Type = 0
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+Rarity = 2
+Cost = 4
+TargetFilters = Array[Object]([ExtResource("2_d7kfg")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_beqnj")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://p1hhkgy2pem"

@@ -59,6 +59,7 @@ public partial class ModifyBuffAction : GameAction
         }
 
         // ── 叠层：最小减到 0（归零触发移除），不能为负 ──
+        int oldStacks = buff.StackCount;
         int newStacks = buff.StackCount;
 
         // ── 应用修改：减层逐层还原（最多还原到 0 层），加层逐层施加 ──
@@ -109,6 +110,14 @@ public partial class ModifyBuffAction : GameAction
         {
             GD.Print($"[ModifyBuffAction] {BuffID} 归零，移除");
             BuffManager.Instance?.RemoveBuff(ctx.TargetUnit, buff);
+            return; // 移除已触发 OnBuffRemoved，不再触发叠层变化事件
+        }
+
+        // 叠层实际变化（未归零移除）：触发叠层变化事件（层数已更新，监听条件可读到新值）
+        if (newStacks != oldStacks)
+        {
+            EventBus.Instance?.Fire(EventType.OnBuffStackChanged,
+                new Context { TargetUnit = ctx.TargetUnit }, subject: ctx.TargetUnit);
         }
     }
 }

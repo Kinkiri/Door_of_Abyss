@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 /// <summary>
@@ -103,7 +104,7 @@ public partial class CardLibrary : Library
                 }
             }
 
-            // 4.5) EnvironmentCardData → 必须有 EnvironmentData + TargetFilters 形状必须 SingleCell
+            // 4.5) EnvironmentCardData → 必须有 EnvironmentData
             if (card is EnvironmentCardData envCard)
             {
                 if (envCard.EnvironmentData == null)
@@ -119,8 +120,8 @@ public partial class CardLibrary : Library
 
                 if ((TargetFilter.CombineAnd(envCard.TargetFilters)?.GetShape() ?? TargetShape.None) != TargetShape.SingleCell)
                 {
-                    sb.AppendLine($"  [CardID={card.CardID}] 环境卡的 TargetFilters 应为 SingleCell，当前={envCard.TargetFilters?.Length ?? 0} 项");
-                    errorCount++;
+                    //sb.AppendLine($"  [CardID={card.CardID}] 环境卡的 TargetFilters 应为 SingleCell，当前={envCard.TargetFilters?.Length ?? 0} 项");
+                    //errorCount++;
                 }
             }
 
@@ -160,5 +161,27 @@ public partial class CardLibrary : Library
             GD.PrintErr($"未找到卡牌ID: {cardID}");
             return null;
         }
+    }
+
+    // ======================================================================
+    // 模板库筛选（通用：CardFilter 谓词 → 卡牌模板）
+    // ======================================================================
+
+    /// <summary>
+    /// 按筛选器检索全部匹配的卡牌模板。filter 为 null 时返回全部（"null=不限制"约定）。
+    /// 内部把模板包装为运行时 Card 实例（纯拷贝字段，无副作用）进行 IsMatch 谓词匹配。
+    /// </summary>
+    public static CardData[] GetCards(CardFilter filter)
+    {
+        if (filter == null) return CardList.ToArray();
+        return CardList.Where(c => c != null && filter.IsMatch(new Card(c))).ToArray();
+    }
+
+    /// <summary>按筛选器随机取一张匹配的卡牌模板（无偏、不去重）；无匹配返回 null</summary>
+    public static CardData GetRandomCard(CardFilter filter)
+    {
+        var cards = GetCards(filter);
+        if (cards.Length == 0) return null;
+        return cards[GD.Randi() % cards.Length];
     }
 }

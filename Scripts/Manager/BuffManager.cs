@@ -76,6 +76,10 @@ public partial class BuffManager : Node
 
                 GD.Print($"[BuffManager] 刷新+叠层: {buffData.BuffName} ×{existing.StackCount} " +
                          $"(新增{added}层) 剩余{existing.RemainingTurns}回合 目标={target.UnitData?.UnitName}");
+
+                // 叠层变化后触发（层数已更新，监听条件可读到新值；subject=自己定向）
+                EventBus.Instance?.Fire(EventType.OnBuffStackChanged,
+                    new Context { TargetUnit = target }, subject: target);
                 return;
             }
         }
@@ -109,8 +113,16 @@ public partial class BuffManager : Node
         EventBus.Instance?.Fire(EventType.OnBuffApplied,
             new Context { TargetUnit = target }, subject: target);
 
-        // 通知 View 层创建 Buff 图标（事件驱动）
-        BuffApplied?.Invoke(target, buff);
+        // 通知 View 层创建 Buff 图标（事件驱动）。
+        // 必须**先**创建图标、**再**触发叠层变化被动：若顺序颠倒，"施加即触发变身清 buff"
+        // （如破碎残躯"义肢≥2变身"）会在变身移除 buff 后才创建图标，残留已移除 buff 的视图；
+        // 顺序正确时变身触发 OnBuffRemoved 能命中 _buffViews 并销毁。IsExpired 兜底防异常路径。
+        if (!buff.IsExpired)
+            BuffApplied?.Invoke(target, buff);
+
+        // 叠层设置后触发（initialStacks 可能直接 > 目标层数，如"继承死者义肢层数"；subject=自己定向）
+        EventBus.Instance?.Fire(EventType.OnBuffStackChanged,
+            new Context { TargetUnit = target }, subject: target);
 
         GD.Print($"[BuffManager] 施加: {buffData.BuffName} 于 {target.UnitData?.UnitName} " +
                  $"持续{buffData.Duration}回合 叠层上限{buffData.MaxStack}");

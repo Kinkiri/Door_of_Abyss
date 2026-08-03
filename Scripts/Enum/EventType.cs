@@ -86,4 +86,18 @@ public enum EventType
     /// 配合 TargetFilters（如 [Shape(全体), Team(友方)]）筛"友方/敌方单位死亡"。
     /// </summary>
     OnAnyUnitDeath,
+
+    /// <summary>
+    /// 单位变身后（变身=换模板+重置属性+清 buff/装备+换被动）。TargetUnit=变身单位，
+    /// SourceUnit=变身单位，SourceTeam=阵营。无 subject 定向：所有**存活**单位的被动均响应
+    /// （参照 OnAnyUnitDeath），监听者用 TargetFilters 筛目标（如 [Shape(全体), Target(事件另一方)] = 变身者）。
+    /// </summary>
+    OnUnitTransformed,
+
+    /// <summary>
+    /// Buff 叠层变化/设置后（含新建 initialStacks、叠层刷新、ModifyBuffAction 增减层；
+    /// 归零移除走 OnBuffRemoved 不触发）。TargetUnit=层数变化的单位，subject=该单位（定向，自己响应）。
+    /// 监听者用条件判断层数（如 BuffInfoValue{Unit=Source, BuffID, StackCount} > 2）。
+    /// </summary>
+    OnBuffStackChanged,
 }

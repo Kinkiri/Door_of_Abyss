@@ -24,4 +24,5 @@ Cost = 0
 TargetFilters = Array[Object]([SubResource("Resource_vejfn")])
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_ecxgy")])
+PassiveEffects = null
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

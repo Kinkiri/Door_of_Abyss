@@ -201,10 +201,18 @@ public partial class EventBus : Node
                 envOwner = env;
                 sourceUnit = env.SourceUnit;
 
-                // 进入/离开格子事件：仅"目标格子 == 环境所在格"的订阅者触发（其余跳过）
-                if ((type == EventType.OnUnitEnterCell || type == EventType.OnUnitLeaveCell)
-                    && ctx?.TargetCell != env.Cell)
-                    continue;
+                // 进入/离开格子事件：
+                //   ① 格子匹配：仅"目标格子 == 环境所在格"的订阅者触发
+                //   ② 环境变化：对面格子（Enter=旧格/召唤无，Leave=新格/死亡无）的环境
+                //      与本环境 ID 相同（含对面无环境=null）→ 同一环境内移动，不触发；
+                //      仅起终点环境改变（无→有 / 有→无 / 环境A→环境B）才触发。
+                if (type == EventType.OnUnitEnterCell || type == EventType.OnUnitLeaveCell)
+                {
+                    if (ctx?.TargetCell != env.Cell) continue;
+                    var otherEnv = ctx?.SourceCell?.Environment;
+                    if (otherEnv != null && otherEnv.Data.EnvironmentID == env.Data.EnvironmentID)
+                        continue;
+                }
             }
             else
             {
