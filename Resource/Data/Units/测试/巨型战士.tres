@@ -1,5 +1,6 @@
 [gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://casbp4wx7562d"]
 
+[ext_resource type="Resource" uid="uid://c8aups7b5n8po" path="res://Resource/Data/Effects/压制.tres" id="1_byy2h"]
 [ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_x3b4b"]
 [ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="2_072dg"]
 
@@ -7,8 +8,10 @@
 script = ExtResource("2_072dg")
 UnitID = "巨型战士"
 UnitName = "巨型战士"
+Tags = null
 AttackPower = 4
 HealthPoints = 5
+AttackDistance = 2
 UnitPrefab = ExtResource("1_x3b4b")
-PassiveEffects = null
+PassiveEffects = Array[Object]([ExtResource("1_byy2h")])
 metadata/_custom_type_script = "uid://cthrvfilibvfl"

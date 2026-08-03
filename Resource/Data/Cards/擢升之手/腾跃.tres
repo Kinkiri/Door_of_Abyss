@@ -22,4 +22,5 @@ Tags = Array[int]([0])
 TargetFilters = Array[Object]([ExtResource("3_mjpcd")])
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_smajt")])
+PassiveEffects = null
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

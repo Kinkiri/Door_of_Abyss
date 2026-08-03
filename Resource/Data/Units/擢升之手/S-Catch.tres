@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://cns3plqukhny8"]
+
+[ext_resource type="Resource" uid="uid://c8aups7b5n8po" path="res://Resource/Data/Effects/压制.tres" id="1_g6xcf"]
+[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="2_bs0or"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="3_ysnkb"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="4_hiwj2"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="5_xgthm"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="6_bq1rm"]
+
+[sub_resource type="Resource" id="Resource_w82a1"]
+script = ExtResource("3_ysnkb")
+BuffData = ExtResource("2_bs0or")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_fylt2"]
+script = ExtResource("4_hiwj2")
+TriggerEvent = 13
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_w82a1")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("6_bq1rm")
+UnitID = "S-Catch"
+UnitName = "S-Catch"
+World = 1
+Faction = 2
+Tags = Array[int]([0, 6])
+Rarity = 1
+HealthPoints = 4
+Description = "对范围内所有目标造成伤害；每抽一张卡获得义肢1"
+UnitPrefab = ExtResource("5_xgthm")
+PassiveEffects = Array[Object]([ExtResource("1_g6xcf"), SubResource("Resource_fylt2")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

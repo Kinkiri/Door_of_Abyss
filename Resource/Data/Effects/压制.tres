@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="EffectData" format=3 uid="uid://c8aups7b5n8po"]
+
+[ext_resource type="Script" uid="uid://s84ks60onupf" path="res://Scripts/Data/ValueSource/UnitStatValue.cs" id="1_ay0vy"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="1_tm52l"]
+[ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="2_fm213"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_y3lq0"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="4_4uf5p"]
+
+[sub_resource type="Resource" id="Resource_fm213"]
+script = ExtResource("1_ay0vy")
+Unit = 0
+metadata/_custom_type_script = "uid://s84ks60onupf"
+
+[sub_resource type="Resource" id="Resource_rwahs"]
+script = ExtResource("2_fm213")
+ValueSource = SubResource("Resource_fm213")
+metadata/_custom_type_script = "uid://bcjncmte44un1"
+
+[sub_resource type="Resource" id="Resource_wp8c3"]
+script = ExtResource("1_ay0vy")
+Unit = 0
+Stat = 3
+metadata/_custom_type_script = "uid://s84ks60onupf"
+
+[sub_resource type="Resource" id="Resource_og6so"]
+script = ExtResource("3_y3lq0")
+Shape = 3
+AreaRangeValueSource = SubResource("Resource_wp8c3")
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_o1r2k"]
+script = ExtResource("4_4uf5p")
+Team = 2
+metadata/_custom_type_script = "uid://bjnrbd7iwxb5u"
+
+[resource]
+script = ExtResource("1_tm52l")
+TriggerEvent = 3
+TargetFilters = Array[Object]([SubResource("Resource_og6so"), SubResource("Resource_o1r2k")])
+MaxTriggerCount = 1
+Actions = Array[Object]([SubResource("Resource_rwahs")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"

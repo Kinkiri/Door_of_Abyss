@@ -14,12 +14,17 @@ public partial class ShapeTargetFilter : TargetFilter
 
     /// <summary>AreaDiamond/AreaSquare 的扩散半径（曼哈顿距离）</summary>
     [Export] public int AreaRange { get; set; } = 1;
+    /// <summary>
+    /// 替换扩散半径的值来源：
+    /// </summary>
+    [Export] public ValueSource AreaRangeValueSource { get; set; }
 
     /// <summary>结果集类型：单位或格子（Area/All 形状时需显式指定；SingleUnit 隐含 Unit、SingleCell 隐含 Cell）</summary>
     [Export] public TargetKind Kind { get; set; } = TargetKind.Unit;
 
     public override Unit[] ApplyUnits(Unit[] candidates, Context ctx)
     {
+        AreaRange = AreaRangeValueSource?.GetValue(ctx) ?? AreaRange;
         switch (Shape)
         {
             case TargetShape.None:
