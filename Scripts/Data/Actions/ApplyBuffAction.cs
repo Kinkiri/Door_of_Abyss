@@ -19,7 +19,7 @@ public partial class ApplyBuffAction : GameAction
     {
         InitialStacks = ValueSource?.GetValue(ctx) ?? InitialStacks;
         if (ctx.TargetUnits == null) return;
-        GD.Print($"[ApplyBuffAction] targets={ctx.TargetUnits.Length} buff={BuffData?.BuffName} stacks={InitialStacks}");
+        GD.Print($"[ApplyBuffAction] targets={ctx.TargetUnits.Length} buff={BuffData?.BuffName} 层数={InitialStacks}");
         foreach (var target in ctx.TargetUnits)
         {
             if (target != null && BuffData != null)

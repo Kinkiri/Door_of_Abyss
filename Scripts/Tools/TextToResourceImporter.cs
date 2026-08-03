@@ -542,6 +542,7 @@ public partial class TextToResourceImporter : EditorScript
     private static readonly System.Collections.Generic.Dictionary<string, EventType> _eventMap = new()
     {
         { "亡语", EventType.OnUnitDeath },
+        { "任意死亡", EventType.OnAnyUnitDeath },
         { "生成时", EventType.OnSpawn },
         { "回合开始", EventType.RoundStart },
         { "回合结束", EventType.RoundEnd },

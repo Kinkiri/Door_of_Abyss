@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://ca7kq5v3k0av2" path="res://Scripts/View/DragCamera2D.cs" id="1_edprt"]
 [ext_resource type="Script" uid="uid://7iryg60hqk8k" path="res://Scripts/Manager/BattleManager.cs" id="2_22vck"]
-[ext_resource type="Resource" uid="uid://dr5crh4jdw3kf" path="res://Resource/Data/Levels/格调.tres" id="3_xgq3g"]
+[ext_resource type="Resource" uid="uid://dosv0wy8ralmh" path="res://Resource/Data/Levels/1.tres" id="3_edprt"]
 [ext_resource type="Resource" uid="uid://bjvfgqjisq7sy" path="res://Resource/Data/测试玩家.tres" id="4_llcsm"]
 [ext_resource type="Script" uid="uid://cjfnh45i7txbs" path="res://Scripts/Manager/SelectionManager.cs" id="5_73o0s"]
 [ext_resource type="Script" uid="uid://07iqkkc7rmnd" path="res://Scripts/Manager/MapManager.cs" id="6_5eta3"]
@@ -55,7 +55,7 @@ script = ExtResource("1_edprt")
 
 [node name="Battle" type="Node2D" parent="Manager" unique_id=142002766]
 script = ExtResource("2_22vck")
-LevelData = ExtResource("3_xgq3g")
+LevelData = ExtResource("3_edprt")
 PlayerData = ExtResource("4_llcsm")
 
 [node name="SelectionManager" type="Node2D" parent="Manager" unique_id=1946646650]

@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="EquipmentData" format=3 uid="uid://c5in43v7goip7"]
+
+[ext_resource type="Texture2D" uid="uid://baji24g7q4i2h" path="res://Resource/Art/icon.svg" id="1_xkh1w"]
+[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="2_x70ed"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="3_acpmr"]
+[ext_resource type="Resource" uid="uid://djm1disxpn1o1" path="res://Resource/Data/Effects/追击.tres" id="4_1nswl"]
+[ext_resource type="Script" uid="uid://buoqyryw34u7o" path="res://Scripts/Data/Actions/RemoveEquipmentAction.cs" id="5_o4sht"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="6_yx4e1"]
+[ext_resource type="Script" uid="uid://tmoxnw3avry4" path="res://Scripts/Data/Units/EquipmentData.cs" id="7_ikcyk"]
+
+[sub_resource type="Resource" id="Resource_4gx2b"]
+script = ExtResource("3_acpmr")
+BuffData = ExtResource("2_x70ed")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_p50p8"]
+script = ExtResource("5_o4sht")
+EquipmentID = "RR-AR2"
+metadata/_custom_type_script = "uid://buoqyryw34u7o"
+
+[sub_resource type="Resource" id="Resource_3xegs"]
+script = ExtResource("6_yx4e1")
+TriggerEvent = 7
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_p50p8")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("7_ikcyk")
+EquipmentID = "RR-AR2"
+EquipmentName = "RR-AR2"
+Description = "追击；义肢1，攻击范围+1；义肢耗尽移除"
+Icon = ExtResource("1_xkh1w")
+AttackBonus = 0
+MaxHealthBonus = 0
+AttackDistanceBonus = 1
+PassiveEffects = Array[Object]([ExtResource("4_1nswl"), SubResource("Resource_3xegs")])
+OnApplyActions = Array[Object]([SubResource("Resource_4gx2b")])
+metadata/_custom_type_script = "uid://tmoxnw3avry4"

@@ -99,6 +99,7 @@ Scripts/                         ~7300 行 C#
 │   │   ├── RoundCountValue.cs   当前回合数
 │   │   ├── UnitCountValue.cs    场上单位数量
 │   │   ├── DistanceValue.cs     曼哈顿距离
+│   │   ├── UnitInfoValue.cs     单位类型（枚举数值）
 │   │   └── BattleCostValue.cs   费用
 │   ├── Card/
 │   │   ├── CardData.cs          卡牌基类（TargetFilter/Conditions/Actions）
@@ -285,9 +286,10 @@ DamageAction / HealAction / ModifyStatAction / SetStatAction / ...
 
 ```csharp
 public class Context {
-	Unit SourceUnit;       // 效果来源单位
-	Unit TargetUnit;       // 单目标
-	Unit[] TargetUnits;    // 多目标
+	Unit SourceUnit;        // 效果来源单位（=被动所有者：单位被动=自己，环境被动=施加者，手牌被动=事件来源）
+	Unit TargetUnit;        // 单目标（Target=Self 时=自己；EventTarget 时=事件另一方）
+	Unit[] TargetUnits;     // 多目标（TargetFilters 解析）
+	Unit EventTargetUnit;   // 事件另一方（如死亡事件=死者；供值源 Unit=EventTarget 读取）
 	Team SourceTeam, TargetTeam;
 	Card SourceCard;
 	Cell TargetCell, SourceCell;
@@ -467,8 +469,8 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 | 值源 | 字段 | 说明 |
 |---|---|---|
 | ConstantValue | Value | 固定数值 |
-| UnitStatValue | Unit=Source/Target, Stat, CurrentHP=true/false | 单位属性 |
-| BuffInfoValue | Unit, BuffID, Info=StackCount/RemainingTurns | Buff 叠层/回合，不存在时返回 DefaultValue |
+| UnitStatValue | Unit=Source/Target/EventTarget, Stat, CurrentHP=true/false | 单位属性（`EventTarget`=事件另一方，死亡事件=死者） |
+| BuffInfoValue | Unit=Source/Target/EventTarget, BuffID, Info=StackCount/RemainingTurns | Buff 叠层/回合，不存在时返回 DefaultValue。**`Unit=EventTarget` 读事件另一方的 Buff**（如"获得死者的义肢层数"） |
 | EquipmentInfoValue | Unit, Info=HasEquipment/各Bonus | 装备信息，无装备时 HasEquipment=0、其余返回 DefaultValue |
 | RandomValue | Min, Max | [Min, Max] 随机整数 |
 | FormulaValue | Op, Left, Right | 嵌套运算（Add/Sub/Mul/Div/Max/Min/Percent） |
@@ -477,6 +479,7 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 | DistanceValue | From=Source/Target, To=Source/Target | **曼哈顿距离** |
 | BattleCostValue | Type=Current/Max | 当前/最大费用 |
 | **CardInfoValue** | Info=Cost/Type/World/Faction/Rarity | **读取 `ctx.SourceCard` 的卡牌属性**（卡牌被动场景=被抽/被打出的牌；Type/World/Faction/Rarity 返回枚举数值，配合 CompareCondition 做类型判断），无卡牌时返回 DefaultValue |
+| **UnitInfoValue** | Unit=Source/Target/EventTarget, Info=Type/Team | **读取单位的类型/阵营枚举**（`UnitType`/`Team` 数值，配合 CompareCondition 判断"目标是建筑/兵种/门…"、"死者是友方"等），单位不存在时返回 DefaultValue |
 | **PendingDamageValue** | - | **本次伤害的基础伤害值**（攻击前/受击前事件时由 DamageAction 填充 `ctx.PendingDamage`）。配合条件判断"会致死"（如致命免伤） |
 
 ### FormulaValue 运算
@@ -537,6 +540,40 @@ ModifyBuffAction(StacksDelta=-1) -> 减 1 层，还原 1 次 -> ATK-1。
 | Conditions | ECA 条件 |
 | Actions | 动作序列 |
 
+### 事件角色模型（四角色）
+
+被动触发时，effectCtx（Actions/Conditions/值源可读的上下文）里有四个角色：
+
+| 角色 | 字段 | 计算方式 |
+|---|---|---|
+| **自己**（被动所有者） | `SourceUnit` | 单位被动=订阅单位**自己**；环境被动=环境**施加者**；手牌被动=事件 ctx 的来源（可能 null） |
+| **操作目标** | `TargetUnit` / `TargetUnits` / `TargetCells` | 有 TargetFilters → 筛选器解析（中心=自己格子/环境格/事件格）；无 → `Self`=自己 或 `EventTarget`=事件另一方 |
+| **对方**（事件另一方） | `EventTargetUnit` | = 事件 ctx 的 `TargetUnit`，随事件视角变化（见下表） |
+| ~~事件触发者~~ | `subject`（**不进 effectCtx**） | 仅用于订阅过滤：Unit 订阅者要求"事件发生在自己身上"，值源/条件读不到 |
+
+> **来源 ≠ 触发者**：effectCtx 的 `SourceUnit` 是"效果施法者"（单位被动恒为自己），**不是**事件触发者（subject）。事件 ctx 的"事件源"（如 OnUnitDeath 的 ctx.SourceUnit=死者）在 effectCtx 里不可直接读——要读事件另一方，用 `EventTargetUnit`（值源 `Unit=EventTarget`）。
+
+**各事件视角的"对方"：**
+
+| 事件 | 对方（`EventTargetUnit` / `Target=EventTarget` 时的 `TargetUnit`） |
+|---|---|
+| OnDealDamage / OnBeforeAttack | 受击者 |
+| OnTakeDamage / OnBeforeTakeDamage | 攻击者 |
+| OnKill / OnUnitDeath / OnAnyUnitDeath | 死者 |
+| OnUnitEnterCell / OnUnitLeaveCell | 进入/离开的单位 |
+| OnUseCard / OnDrawCard / RoundStart / RoundEnd / OnMove / OnSpawn | 无（null） |
+
+**典型用法（"自己获得对方的东西"）**：`Target=Self`（操作目标=自己）+ 条件/值源用 `Unit=EventTarget` 读对方。例（MK0"友方兵种死亡，获得其义肢"）：
+
+```
+TriggerEvent=OnAnyUnitDeath, Target=Self
+Conditions=[
+  UnitInfoValue{Unit=EventTarget, Info=Type} == 0(兵种),
+  UnitInfoValue{Unit=EventTarget, Info=Team} == UnitInfoValue{Unit=Source, Info=Team}  // 相对阵营
+]
+Actions=[ApplyBuff{义肢, ValueSource=BuffInfoValue{Unit=EventTarget, BuffID=义肢}}]  // 读死者层数
+```
+
 ### 触发事件
 
 | 事件 | 说明 |
@@ -552,6 +589,7 @@ ModifyBuffAction(StacksDelta=-1) -> 减 1 层，还原 1 次 -> ATK-1。
 | **OnBeforeAttack** | **攻击前**（伤害计算前，攻击者视角，subject=攻击者）。`SourceUnit`=攻击者，`TargetUnit`=受击者，`ctx.PendingDamage`=本次基础伤害。攻击者挂"加伤"被动（读 `Source`=自己），用 `ModifyDamageAction` 改 `ctx.DamageModifier` |
 | **OnBeforeTakeDamage** | **受击前**（伤害计算前，受击者视角，subject=受击者）。`SourceUnit`=受击者（自己），`TargetUnit`=攻击者，`ctx.PendingDamage`=本次基础伤害。受击者挂"减伤"被动（读 `Source`=自己），用 `ModifyDamageAction` 改 `ctx.DamageModifier`；`PendingDamageValue` 可判断"会致死"。`DamageAction` 结算时两侧修饰累加：`max(0, 基础伤害 + 攻击侧 + 受击侧)`；`AutoAttackAction` 已统一走 `DamageAction` 链路 |
 | **OnUnitDeath** | 单位死亡（亡语） |
+| **OnAnyUnitDeath** | **任意单位死亡后**（区别于亡语：无 subject 定向，**存活**单位的被动均可响应，死者自身不触发）。`TargetUnit`=死者，`TargetCell`=死亡格子，`SourceUnit`=死者。配合 TargetFilters 筛阵营/类型（如 `[Shape(全体), Team(友方)]` = 友方死亡时） |
 | **OnMove** | 移动后（不含攻击/出牌） |
 | **OnUnitEnterCell** | **单位进入格子后**（格子占用从空→有，含移动/传送/召唤）。`TargetCell`=新格子，`TargetUnit`=进入的单位。**环境被动专用**：仅"目标格子==环境所在格"的订阅者触发，`[Shape(单体)]` 命中进入的单位 |
 | **OnUnitLeaveCell** | **单位离开格子后**（格子占用从有→空，含移动/传送/死亡/移除）。`TargetCell`=原格子，`TargetUnit`=离开的单位。环境被动专用，同上 |
@@ -1049,7 +1087,8 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 
 | 事件 | 说明 | 示例 |
 |---|---|---|
-| `亡语` | 死亡时 | `亡语:菱形,敌方,伤害:3` |
+| `亡语` | 死亡时（只触发死者自身） | `亡语:菱形,敌方,伤害:3` |
+| `任意死亡` | 任意单位死亡时（存活单位被动响应，死者不触发） | `任意死亡:属性:攻击力+1` |
 | `生成时` | 登场时 | `生成时:属性:攻击力+1` |
 | `回合开始` / `回合结束` | 回合边界 | `回合结束:菱形,友方,治疗:3` |
 | `攻击后` / `受伤时` / `击杀后` | 战斗事件 | `击杀后:属性:攻击力+1` |

@@ -16,7 +16,13 @@ public partial class UnitStatValue : ValueSource
 
     public override int GetValue(Context ctx)
     {
-        var unit = Unit == ValueTarget.Target ? ctx.TargetUnit : ctx.SourceUnit;
+        var unit = Unit switch
+        {
+            ValueTarget.Source => ctx.SourceUnit,
+            ValueTarget.Target => ctx.TargetUnit,
+            ValueTarget.EventTarget => ctx.EventTargetUnit,
+            _ => null,
+        };
         if (unit == null) return 0;
 
         return Stat switch

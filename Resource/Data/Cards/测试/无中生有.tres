@@ -18,4 +18,5 @@ Tags = null
 TargetFilters = null
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_0v6ps")])
+PassiveEffects = null
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

@@ -23,4 +23,5 @@ Tags = Array[int]([0])
 TargetFilters = Array[Object]([ExtResource("3_j1cn4")])
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_xtokb")])
+PassiveEffects = null
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

@@ -288,6 +288,7 @@ public partial class EventBus : Node
                         TargetCells = cells,
                         SourceTeam = sourceTeam,
                         TargetTeam = Team.Neutral,
+                        EventTargetUnit = ctx?.TargetUnit,
                         ActType = ctx?.ActType ?? UnitActType.None,
                         DamageModifier = dmgBase,
                         PendingDamage = ctx?.PendingDamage ?? 0,
@@ -304,6 +305,7 @@ public partial class EventBus : Node
                         TargetUnits = targets,
                         SourceTeam = sourceTeam,
                         TargetTeam = Team.Neutral,
+                        EventTargetUnit = ctx?.TargetUnit,
                         ActType = ctx?.ActType ?? UnitActType.None,
                         DamageModifier = dmgBase,
                         PendingDamage = ctx?.PendingDamage ?? 0,
@@ -323,6 +325,7 @@ public partial class EventBus : Node
                     SourceUnit = sourceUnit,
                     TargetUnit = entry.PassiveTarget == PassiveTarget.Self
                         ? selfUnit : (ctx?.TargetUnit ?? selfUnit),
+                    EventTargetUnit = ctx?.TargetUnit,
                     TargetCell = ctx?.TargetCell,
                     SourceCell = ctx?.SourceCell,
                     SourceCard = isCardOwner ? null : ctx?.SourceCard,
@@ -367,13 +370,6 @@ public partial class EventBus : Node
             // 伤害修饰增量回写（多个加伤/减伤被动叠加到调用方 ctx）
             if (ctx != null && effectCtx.DamageModifier != dmgBase)
                 ctx.DamageModifier += effectCtx.DamageModifier - dmgBase;
-
-            // 扣减触发次数（按订阅条目独立计数）
-            if (entry.MaxTriggerCount > 0)
-            {
-                if (_triggerCounts.TryGetValue(entry, out var tc))
-                    _triggerCounts[entry] = (tc.max, tc.current - 1);
-            }
         }
 
         GD.Print($"[EventBus] <<< Fire({type}) 完成，实际触发 {triggered} 个");

@@ -2,16 +2,15 @@
 
 [ext_resource type="Script" uid="uid://d2widi0p087e8" path="res://Scripts/Data/PlayerData.cs" id="1_21qan"]
 [ext_resource type="Resource" uid="uid://brrpcr8sgqo3a" path="res://Resource/Data/Units/默认门.tres" id="1_mt5ji"]
-[ext_resource type="Resource" uid="uid://bx5xbq2gf6rig" path="res://Resource/Data/Cards/擢升之手/S-Catch.tres" id="2_cge07"]
-[ext_resource type="Resource" uid="uid://bnwyieql0puou" path="res://Resource/Data/Cards/擢升之手/超绝之肘.tres" id="3_mj3vb"]
-[ext_resource type="Resource" uid="uid://ce6bu28qumhkv" path="res://Resource/Data/Cards/擢升之手/腾跃.tres" id="5_k7wen"]
-[ext_resource type="Resource" uid="uid://cmjvls1mhbuyu" path="res://Resource/Data/Cards/擢升之手/自动机械手.tres" id="6_48enm"]
-[ext_resource type="Resource" uid="uid://dgedoy4lvmx0q" path="res://Resource/Data/Cards/擢升之手/多功能铲.tres" id="9_48enm"]
+[ext_resource type="Resource" uid="uid://bh7qdh30dca0x" path="res://Resource/Data/Cards/测试/死亡.tres" id="5_mt5ji"]
+[ext_resource type="Resource" uid="uid://cck5nndxpvlat" path="res://Resource/Data/Cards/擢升之手/MK0.tres" id="8_48enm"]
+[ext_resource type="Resource" uid="uid://codythx1kr0ew" path="res://Resource/Data/Cards/测试/便捷测试义肢2.tres" id="9_1aru3"]
 [ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="11_ljakr"]
+[ext_resource type="Resource" uid="uid://do4vvklkek6hx" path="res://Resource/Data/Cards/擢升之手/闲散员工.tres" id="17_fq88l"]
 
 [sub_resource type="Resource" id="Resource_h85jk"]
 script = ExtResource("11_ljakr")
-Cards = Array[Object]([ExtResource("2_cge07"), ExtResource("2_cge07"), ExtResource("2_cge07"), ExtResource("3_mj3vb"), ExtResource("3_mj3vb"), ExtResource("9_48enm"), ExtResource("9_48enm"), ExtResource("5_k7wen"), ExtResource("5_k7wen"), ExtResource("6_48enm"), ExtResource("6_48enm")])
+Cards = Array[Object]([ExtResource("17_fq88l"), ExtResource("8_48enm"), ExtResource("8_48enm"), ExtResource("9_1aru3"), ExtResource("9_1aru3"), ExtResource("9_1aru3"), ExtResource("5_mt5ji"), ExtResource("5_mt5ji"), ExtResource("5_mt5ji"), ExtResource("17_fq88l"), ExtResource("17_fq88l"), ExtResource("17_fq88l")])
 metadata/_custom_type_script = "uid://b1eamjx1y7exn"
 
 [resource]

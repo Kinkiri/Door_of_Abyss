@@ -1,0 +1,81 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://b5nch2litcm26"]
+
+[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="1_gdjgf"]
+[ext_resource type="Script" uid="uid://bqdiie4v7k7l7" path="res://Scripts/Data/ValueSource/BuffInfoValue.cs" id="2_2yo6w"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="3_ii83f"]
+[ext_resource type="Script" uid="uid://cjxylxuwajwdj" path="res://Scripts/Data/ValueSource/UnitInfoValue.cs" id="4_ii83f"]
+[ext_resource type="Script" uid="uid://bn4m8splfe3lb" path="res://Scripts/Data/ValueSource/ConstantValue.cs" id="5_nc5g2"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="5_tibnp"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="6_eklad"]
+[ext_resource type="Script" uid="uid://brotjf8m2qpfx" path="res://Scripts/Data/Conditions/CompareCondition.cs" id="6_tibnp"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="7_2xvmh"]
+
+[sub_resource type="Resource" id="Resource_ha3dh"]
+script = ExtResource("2_2yo6w")
+Unit = 2
+BuffID = "义肢"
+metadata/_custom_type_script = "uid://bqdiie4v7k7l7"
+
+[sub_resource type="Resource" id="Resource_3jd18"]
+script = ExtResource("3_ii83f")
+BuffData = ExtResource("1_gdjgf")
+ValueSource = SubResource("Resource_ha3dh")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_eklad"]
+script = ExtResource("4_ii83f")
+Unit = 2
+metadata/_custom_type_script = "uid://cjxylxuwajwdj"
+
+[sub_resource type="Resource" id="Resource_2xvmh"]
+script = ExtResource("5_nc5g2")
+metadata/_custom_type_script = "uid://bn4m8splfe3lb"
+
+[sub_resource type="Resource" id="Resource_ii83f"]
+script = ExtResource("6_tibnp")
+Left = SubResource("Resource_eklad")
+Op = 4
+Right = SubResource("Resource_2xvmh")
+metadata/_custom_type_script = "uid://brotjf8m2qpfx"
+
+[sub_resource type="Resource" id="Resource_ally_l"]
+script = ExtResource("4_ii83f")
+Unit = 2
+Info = 1
+metadata/_custom_type_script = "uid://cjxylxuwajwdj"
+
+[sub_resource type="Resource" id="Resource_ally_r"]
+script = ExtResource("4_ii83f")
+Unit = 0
+Info = 1
+metadata/_custom_type_script = "uid://cjxylxuwajwdj"
+
+[sub_resource type="Resource" id="Resource_ally_cond"]
+script = ExtResource("6_tibnp")
+Left = SubResource("Resource_ally_l")
+Op = 4
+Right = SubResource("Resource_ally_r")
+metadata/_custom_type_script = "uid://brotjf8m2qpfx"
+
+[sub_resource type="Resource" id="Resource_uebae"]
+script = ExtResource("5_tibnp")
+TriggerEvent = 20
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_3jd18")])
+Conditions = Array[Object]([SubResource("Resource_ii83f"), SubResource("Resource_ally_cond")])
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("7_2xvmh")
+UnitID = "MK0"
+UnitName = "MK0"
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+Rarity = 3
+AttackPower = 2
+ActionPoints = 2
+Description = "己方兵种被消灭，获得其义肢"
+UnitPrefab = ExtResource("6_eklad")
+PassiveEffects = Array[Object]([SubResource("Resource_uebae")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

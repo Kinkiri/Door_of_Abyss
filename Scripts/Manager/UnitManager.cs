@@ -184,6 +184,18 @@ public partial class UnitManager : Node
             },
             subject: unit);
 
+        // 任意单位死亡事件（无 subject 定向）：存活单位的被动可监听"其他单位死亡"。
+        // 区别于亡语 OnUnitDeath（只触发死者自身）；本事件死者被 EventBus 存活检查排除，
+        // 监听者用 TargetFilters 筛阵营/类型（如 [Shape(全体), Team(友方)] = 友方死亡时）。
+        EventBus.Instance?.Fire(EventType.OnAnyUnitDeath,
+            new Context
+            {
+                TargetUnit = unit,
+                TargetCell = deathCell,
+                SourceUnit = unit,
+                SourceTeam = unit.Team,
+            });
+
         RemoveUnit(unit);
     }
 

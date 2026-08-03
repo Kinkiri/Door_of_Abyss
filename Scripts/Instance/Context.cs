@@ -18,6 +18,12 @@ public partial class Context
     public Card SourceCard { get; set; }
     public Unit SourceUnit { get; set; }
 
+    /// <summary>
+    /// 事件另一方单位（触发被动的事件 ctx.TargetUnit 透传，如死亡事件=死者）。
+    /// 由 EventBus.Fire 构建 effectCtx 时填充，供值源以 ValueTarget.EventTarget 读取。
+    /// </summary>
+    public Unit EventTargetUnit { get; set; }
+
     /// <summary>触发 OnUnitAct 时的行动类型（移动/攻击），供被动效果区分</summary>
     public UnitActType ActType { get; set; }
 

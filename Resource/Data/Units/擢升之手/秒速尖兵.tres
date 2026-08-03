@@ -22,7 +22,6 @@ metadata/_custom_type_script = "uid://dso6efmkhromg"
 script = ExtResource("5_n2g6y")
 TriggerEvent = 14
 TargetFilters = null
-MaxTriggerCount = 1
 Actions = Array[Object]([SubResource("Resource_71yya")])
 Conditions = Array[Object]([SubResource("Resource_gaf4u")])
 metadata/_custom_type_script = "uid://5fvxtm1dtsgk"

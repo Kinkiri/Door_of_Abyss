@@ -689,6 +689,29 @@ public partial class TestRunner : Node
 
             eb.Unsubscribe(unit);
             VAssert("ECA 测试完成", () => true);
+
+            // 回归：MaxTriggerCount=2 应恰好触发 2 次
+            // （曾因 Fire 内执行前/执行后双扣减，N≥2 只触发 ⌈N/2⌉ 次）
+            var unit2 = MakeUnit("ECA限2", 5, 10);
+            var effect2 = new EffectData
+            {
+                TriggerEvent = EventType.RoundEnd,
+                Target = PassiveTarget.Self,
+                MaxTriggerCount = 2,
+                Actions = new GameAction[]
+                {
+                    new ModifyStatAction { TargetStat = ModifyStatType.AttackPower, Value = 2 },
+                },
+            };
+            eb.Subscribe(unit2, new[] { effect2 });
+            int atkStart = unit2.AttackPower;
+            eb.Fire(EventType.RoundEnd, new Context());  // 第 1 次
+            eb.Fire(EventType.RoundEnd, new Context());  // 第 2 次
+            VAssert("MaxTriggerCount=2 触发两次（ATK+4）", () => unit2.AttackPower == atkStart + 4);
+            int atkTwo = unit2.AttackPower;
+            eb.Fire(EventType.RoundEnd, new Context());  // 第 3 次 → 已耗尽
+            VAssert("MaxTriggerCount=2 第 3 次不触发", () => unit2.AttackPower == atkTwo);
+            eb.Unsubscribe(unit2);
         });
 
         // ── 多目标 GameAction ────────────────────────────────────────
@@ -909,13 +932,13 @@ public partial class TestRunner : Node
             VAssert("归零后 ATK=5", () => unit.AttackPower == 5);
             VAssert("归零后 Buff 移除", () => !bm.HasBuff(unit, "modify_test"));
 
-            // 负数拒绝测试
+            // 负数溢出测试：减 5 层但只有 1 层 → clamp 到 0 → 移除（还原全部效果）
             bm.ApplyBuff(unit, buffData, null, 1);
             VAssert("1 层 ATK=7", () => unit.AttackPower == 7);
-            modAction.StacksDelta = -5; // 减 5 层但只有 1 层 → 拒绝
+            modAction.StacksDelta = -5;
             modAction.Execute(new Context { TargetUnit = unit });
-            VAssert("负数拒绝，ATK 不变", () => unit.AttackPower == 7);
-            VAssert("负数拒绝，Buff 仍在", () => bm.HasBuff(unit, "modify_test"));
+            VAssert("负数溢出 clamp 到 0：ATK 还原为 5", () => unit.AttackPower == 5);
+            VAssert("负数溢出后 Buff 移除", () => !bm.HasBuff(unit, "modify_test"));
 
             bm.RemoveAllBuffs(unit);
         });
@@ -1495,7 +1518,7 @@ public partial class TestRunner : Node
                                 Right = new FormulaValue
                                 {
                                     Op = FormulaOp.Percent,
-                                    Left = new UnitStatValue { Unit = ValueTarget.Target, Stat = ModifyStatType.MaxHP },
+                                    Left = new UnitStatValue { Unit = ValueTarget.Target, Stat = ModifyStatType.MaxHP, CurrentHP = false },
                                     Right = new ConstantValue { Value = 50 },
                                 },
                             }
@@ -1596,8 +1619,9 @@ public partial class TestRunner : Node
             };
             var runtimeCard = new Card(spellData);
             VAssert("Card 运行时 CombineAnd 生效",
+                // 此时 lowHp 已加入 units，敌方共 5 个（e1/e2/建筑/科技兵/残血）
                 () => runtimeCard.TargetFilter is AndTargetFilter &&
-                      TargetResolver.ResolveUnits(runtimeCard.TargetFilter, ctx).Length == 4);
+                      TargetResolver.ResolveUnits(runtimeCard.TargetFilter, ctx).Length == 5);
 
             // ── 势力 / 世界观过滤 ──────────────────────────────
             var holyUnit = MakeUnit("圣徒", 3, 10);
@@ -1956,6 +1980,9 @@ public partial class TestRunner : Node
                 new UnitCardData { CardID = "骑兵", CardName = "骑兵", Type = CardType.Unit },
             });
 
+            // 手牌基线：在两次筛选抽取之前捕获（1 科技 + 2 法术 = +3）
+            int handBefore = cm.HandCards.Count;
+
             // 先筛科技标签（牌库中唯一科技牌，必中冰霜，避免随机性影响后续断言）
             var tagDrawn = cm.DrawCards(2, new CardTagFilter { Tags = new Godot.Collections.Array<Tag> { Tag.科技 } });
             VAssert("标签筛选抽牌",
@@ -1963,7 +1990,6 @@ public partial class TestRunner : Node
 
             // 再抽 2 法术（剩余法术恰好 2 张）
             var spellFilter = new CardTypeFilter { Types = new Godot.Collections.Array<CardType> { CardType.Spell } };
-            int handBefore = cm.HandCards.Count;
             var drawn = cm.DrawCards(2, spellFilter);
             VAssert("筛选抽牌 2 张全为法术",
                 () => drawn.Count == 2 && drawn.TrueForAll(c => c.Type == CardType.Spell));
@@ -2056,18 +2082,18 @@ public partial class TestRunner : Node
             VAssert("手牌被动响应 RoundStart（手牌 +1）",
                 () => cm.HandCards.Count == h2 + 1);
 
-            // ── 用例 D：打出后退订 ──
-            int h3 = cm.HandCards.Count;
+            // ── 用例 D：打出后退订（UseCard 使卡牌离手，基线在打出后捕获） ──
             cm.UseCard(roundCard);
+            int h3 = cm.HandCards.Count;
             eb.Fire(EventType.RoundStart, new Context());
             VAssert("打出后退订：RoundStart 不再触发",
                 () => cm.HandCards.Count == h3);
 
-            // ── 用例 E：弃牌后退订 ──
+            // ── 用例 E：弃牌后退订（DiscardCard 使卡牌离手，基线在弃牌后捕获） ──
             cm.InitializeDrawPile(new List<CardData> { plainData, plainData, plainData });
             var discardCard = cm.CreateCard(roundCardData);
-            int h4 = cm.HandCards.Count;
             cm.DiscardCard(discardCard);
+            int h4 = cm.HandCards.Count;
             eb.Fire(EventType.RoundStart, new Context());
             VAssert("弃牌后退订：RoundStart 不再触发",
                 () => cm.HandCards.Count == h4);
@@ -2086,6 +2112,164 @@ public partial class TestRunner : Node
             VAssert("单位被动响应 OnDrawCard（MaxTriggerCount=1 防连锁，手牌 +2）",
                 () => cm.HandCards.Count == h5 + 2);
             eb.Unsubscribe(listener);
+        });
+
+        // ── 任意单位死亡监听（OnAnyUnitDeath） ────────────────────
+        RunGroup("任意死亡监听", () =>
+        {
+            var eb = EventBus.Instance;
+            if (eb == null) { VAssert("EventBus 未就绪，跳过", () => false); return; }
+
+            // ── 用例 1：存活单位监听"任意单位死亡"（Target=Self 作用于自己） ──
+            var listener = MakeUnit("死亡监听", 5, 10);
+            var victim = MakeUnit("死者", 3, 10);
+            eb.Subscribe(listener, new[] { new EffectData
+            {
+                TriggerEvent = EventType.OnAnyUnitDeath,
+                Target = PassiveTarget.Self,
+                Actions = new GameAction[]
+                {
+                    new ModifyStatAction { TargetStat = ModifyStatType.AttackPower, Value = 1 },
+                },
+            } });
+            int l0 = listener.AttackPower;
+            eb.Fire(EventType.OnAnyUnitDeath,
+                new Context { TargetUnit = victim, SourceUnit = victim, SourceTeam = victim.Team });
+            VAssert("任意死亡：存活监听者 ATK+1", () => listener.AttackPower == l0 + 1);
+            eb.Unsubscribe(listener);
+
+            // ── 用例 2：死者自身不响应"任意死亡"（EventBus 存活检查排除） ──
+            var dying = MakeUnit("将死", 2, 10);
+            eb.Subscribe(dying, new[] { new EffectData
+            {
+                TriggerEvent = EventType.OnAnyUnitDeath,
+                Target = PassiveTarget.Self,
+                Actions = new GameAction[]
+                {
+                    new ModifyStatAction { TargetStat = ModifyStatType.AttackPower, Value = 100 },
+                },
+            } });
+            dying.CurrentHP = 0;   // 模拟死亡（IsAlive=false）
+            int d0 = dying.AttackPower;
+            eb.Fire(EventType.OnAnyUnitDeath,
+                new Context { TargetUnit = victim, SourceUnit = victim, SourceTeam = victim.Team });
+            VAssert("死者自身不响应任意死亡（ATK 不变）", () => dying.AttackPower == d0);
+            eb.Unsubscribe(dying);
+
+            // ── 用例 3：EventTarget → TargetUnit=死者（事件另一方可作目标/读取） ──
+            var tListener = MakeUnit("事件目标监听", 5, 10);
+            var tVictim = MakeUnit("事件目标死者", 3, 10);
+            eb.Subscribe(tListener, new[] { new EffectData
+            {
+                TriggerEvent = EventType.OnAnyUnitDeath,
+                Target = PassiveTarget.EventTarget,
+                Actions = new GameAction[]
+                {
+                    new ModifyStatAction { TargetStat = ModifyStatType.AttackPower, Value = 100 },
+                },
+            } });
+            int tv0 = tVictim.AttackPower;
+            eb.Fire(EventType.OnAnyUnitDeath,
+                new Context { TargetUnit = tVictim, SourceUnit = tVictim, SourceTeam = tVictim.Team });
+            VAssert("EventTarget 解析为死者（死者 ATK+100）", () => tVictim.AttackPower == tv0 + 100);
+            eb.Unsubscribe(tListener);
+
+            // ── 用例 4：真实链路 UnitManager.DestroyUnit 触发 OnAnyUnitDeath ──
+            if (UnitManager.Instance != null)
+            {
+                var realListener = MakeUnit("真实监听", 5, 10);
+                eb.Subscribe(realListener, new[] { new EffectData
+                {
+                    TriggerEvent = EventType.OnAnyUnitDeath,
+                    Target = PassiveTarget.Self,
+                    Actions = new GameAction[]
+                    {
+                        new ModifyStatAction { TargetStat = ModifyStatType.AttackPower, Value = 1 },
+                    },
+                } });
+                var realVictim = MakeUnit("真实死者", 3, 10);
+                int r0 = realListener.AttackPower;
+                UnitManager.Instance.DestroyUnit(realVictim);
+                VAssert("DestroyUnit 触发任意死亡监听（ATK+1）", () => realListener.AttackPower == r0 + 1);
+                eb.Unsubscribe(realListener);
+            }
+            else
+            {
+                VAssert("UnitManager 未就绪，跳过真实链路", () => true);
+            }
+        });
+
+        // ── 事件另一方读取（ValueTarget.EventTarget：死亡事件读死者） ──
+        RunGroup("事件另一方读取", () =>
+        {
+            var eb = EventBus.Instance;
+            var bm = BuffManager.Instance;
+            if (eb == null || bm == null) { VAssert("Manager 未就绪，跳过", () => false); return; }
+
+            // MK0 同款被动：任意死亡时，死者是"友方兵种" → 自己获得死者义肢层数
+            var limbBuff = new BuffData { BuffID = "义肢", Duration = -1, MaxStack = -1 };
+            var mk0Like = new EffectData
+            {
+                TriggerEvent = EventType.OnAnyUnitDeath,
+                Target = PassiveTarget.Self,
+                Conditions = new Condition[]
+                {
+                    // 死者是兵种（UnitType.Squad=0）
+                    new CompareCondition
+                    {
+                        Left = new UnitInfoValue { Unit = ValueTarget.EventTarget, Info = UnitInfoType.Type },
+                        Op = CompareOp.Equal,
+                        Right = new ConstantValue { Value = (int)UnitType.Squad },
+                    },
+                    // 死者是友方（死者阵营 == 来源阵营）
+                    new CompareCondition
+                    {
+                        Left = new UnitInfoValue { Unit = ValueTarget.EventTarget, Info = UnitInfoType.Team },
+                        Op = CompareOp.Equal,
+                        Right = new UnitInfoValue { Unit = ValueTarget.Source, Info = UnitInfoType.Team },
+                    },
+                },
+                Actions = new GameAction[]
+                {
+                    new ApplyBuffAction
+                    {
+                        BuffData = limbBuff,
+                        ValueSource = new BuffInfoValue { Unit = ValueTarget.EventTarget, BuffID = "义肢" },
+                    },
+                },
+            };
+
+            // ── 用例 1：友方兵种死亡（带 3 层义肢）→ 监听者获得 3 层 ──
+            var mk0 = MakeUnit("MK0", 2, 10);
+            var allySquad = MakeUnit("友方兵种", 3, 10);
+            bm.ApplyBuff(allySquad, limbBuff, null, 3);   // 死者携带 3 层义肢
+            eb.Subscribe(mk0, new[] { mk0Like });
+            EventBus.Instance.Fire(EventType.OnAnyUnitDeath,
+                new Context { TargetUnit = allySquad, SourceUnit = allySquad, SourceTeam = allySquad.Team });
+            VAssert("友方兵种死亡：监听者获得死者义肢 3 层",
+                () => bm.GetBuff(mk0, "义肢")?.StackCount == 3);
+
+            // 清理（避免影响后续用例断言）
+            bm.RemoveAllBuffs(mk0);
+            bm.RemoveAllBuffs(allySquad);
+
+            // ── 用例 2：敌方兵种死亡 → 相对阵营条件不满足，不触发 ──
+            var enemySquad = MakeUnit("敌方兵种", 3, 10); enemySquad.Team = Team.Enemy;
+            bm.ApplyBuff(enemySquad, limbBuff, null, 5);
+            EventBus.Instance.Fire(EventType.OnAnyUnitDeath,
+                new Context { TargetUnit = enemySquad, SourceUnit = enemySquad, SourceTeam = enemySquad.Team });
+            VAssert("敌方兵种死亡不触发（监听者无义肢）",
+                () => bm.GetBuff(mk0, "义肢") == null);
+
+            // ── 用例 3：友方建筑死亡 → 类型条件不满足，不触发 ──
+            var allyBuilding = MakeUnit("友方建筑", 3, 10); allyBuilding.Type = UnitType.Building;
+            bm.ApplyBuff(allyBuilding, limbBuff, null, 2);
+            EventBus.Instance.Fire(EventType.OnAnyUnitDeath,
+                new Context { TargetUnit = allyBuilding, SourceUnit = allyBuilding, SourceTeam = allyBuilding.Team });
+            VAssert("友方建筑死亡不触发（监听者仍无义肢）",
+                () => bm.GetBuff(mk0, "义肢") == null);
+
+            eb.Unsubscribe(mk0);
         });
 
         // ── CardInfoValue 卡牌值源 ───────────────────────────────
@@ -2115,6 +2299,37 @@ public partial class TestRunner : Node
                 () => new CardInfoValue { Info = CardInfoType.Rarity }.GetValue(ctx) == (int)Rarity.Legendary);
             VAssert("CardInfoValue 无 SourceCard 返回默认值",
                 () => new CardInfoValue { Info = CardInfoType.Cost, DefaultValue = 7 }.GetValue(new Context()) == 7);
+        });
+
+        // ── UnitInfoValue 单位信息值源 ────────────────────────────
+        RunGroup("UnitInfoValue 单位信息值源", () =>
+        {
+            var squad = MakeUnit("兵种", 3, 10);
+            var building = MakeUnit("建筑", 3, 10); building.Type = UnitType.Building;
+
+            var ctx = new Context { SourceUnit = squad, TargetUnit = building };
+            VAssert("读目标单位类型=建筑",
+                () => new UnitInfoValue { Info = UnitInfoType.Type }.GetValue(ctx) == (int)UnitType.Building);
+            VAssert("读来源单位类型=兵种",
+                () => new UnitInfoValue { Unit = ValueTarget.Source, Info = UnitInfoType.Type }.GetValue(ctx) == (int)UnitType.Squad);
+            VAssert("改类型后读取更新",
+                () =>
+                {
+                    building.Type = UnitType.Door;
+                    bool ok = new UnitInfoValue { Info = UnitInfoType.Type }.GetValue(ctx) == (int)UnitType.Door;
+                    building.Type = UnitType.Building;
+                    return ok;
+                });
+            VAssert("单位不存在返回 DefaultValue",
+                () => new UnitInfoValue { Info = UnitInfoType.Type, DefaultValue = 9 }.GetValue(new Context()) == 9);
+            // 配合 CompareCondition：目标是建筑时条件成立（值源返回枚举数值）
+            VAssert("CompareCondition 判断类型=建筑",
+                () => new CompareCondition
+                {
+                    Left = new UnitInfoValue { Info = UnitInfoType.Type },
+                    Op = CompareOp.Equal,
+                    Right = new ConstantValue { Value = (int)UnitType.Building },
+                }.IsMet(ctx));
         });
 
         // ── 致命免伤（OnBeforeTakeDamage + PendingDamage） ────────
@@ -2423,7 +2638,7 @@ public partial class TestRunner : Node
                 var bystander = MakeUnit("路人", 0, 10);
                 EventBus.Instance.Fire(EventType.OnUnitEnterCell,
                     new Context { TargetCell = enterCell, TargetUnit = bystander }, subject: bystander);
-                VAssert("格子过滤：非目标格环境不被触发（路人仍 10HP）", () => bystander.CurrentHP == 10);
+                VAssert("格子过滤：进入格环境命中（路人 10→9），非目标格环境不触发", () => bystander.CurrentHP == 9);
 
                 // 清理
                 em.RemoveEnvironment(enterCell);

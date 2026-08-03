@@ -78,4 +78,12 @@ public enum EventType
     /// 环境被动专用：EventBus 仅触发"目标格子==环境所在格"的订阅者。
     /// </summary>
     OnUnitLeaveCell,
+
+    /// <summary>
+    /// 任意单位死亡后（区别于亡语 OnUnitDeath：subject=死者 只触发死者自己的被动）。
+    /// 本事件无 subject 定向：所有**存活**单位的被动均响应（死者被 EventBus 存活检查排除）。
+    /// TargetUnit=死者，TargetCell=死亡格子，SourceUnit=死者，SourceTeam=死者阵营。
+    /// 配合 TargetFilters（如 [Shape(全体), Team(友方)]）筛"友方/敌方单位死亡"。
+    /// </summary>
+    OnAnyUnitDeath,
 }
