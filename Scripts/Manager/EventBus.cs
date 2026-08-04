@@ -298,6 +298,7 @@ public partial class EventBus : Node
                         TargetTeam = Team.Neutral,
                         EventTargetUnit = ctx?.TargetUnit,
                         ActType = ctx?.ActType ?? UnitActType.None,
+                        AttackDirection = ctx?.AttackDirection,
                         DamageModifier = dmgBase,
                         PendingDamage = ctx?.PendingDamage ?? 0,
                     };
@@ -315,6 +316,7 @@ public partial class EventBus : Node
                         TargetTeam = Team.Neutral,
                         EventTargetUnit = ctx?.TargetUnit,
                         ActType = ctx?.ActType ?? UnitActType.None,
+                        AttackDirection = ctx?.AttackDirection,
                         DamageModifier = dmgBase,
                         PendingDamage = ctx?.PendingDamage ?? 0,
                     };
@@ -340,6 +342,7 @@ public partial class EventBus : Node
                     SourceTeam = sourceTeam,
                     TargetTeam = ctx?.TargetTeam ?? Team.Neutral,
                     ActType = ctx?.ActType ?? UnitActType.None,
+                    AttackDirection = ctx?.AttackDirection,
                     DamageModifier = dmgBase,
                     PendingDamage = ctx?.PendingDamage ?? 0,
                 };

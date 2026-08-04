@@ -182,7 +182,11 @@ public partial class BattleManager : Node2D
             attacker.UpdateUnit();
             attacker.ActionsThisTurn++;
             CheckVictory();
-            EventBus.Instance?.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack }, subject: attacker);
+            EventBus.Instance?.Fire(EventType.OnUnitAct, new Context
+            {
+                ActType = UnitActType.Attack,
+                AttackDirection = TargetResolver.DirectionBetween(attacker.GridPos, target.GridPos),
+            }, subject: attacker);
             UnitActed?.Invoke(attacker);
 
             // AP 耗尽不取消选中（保留面板与范围显示供查看）
@@ -313,7 +317,11 @@ public partial class BattleManager : Node2D
             attacker.UpdateUnit();
             attacker.ActionsThisTurn++;
             CheckVictory();
-            EventBus.Instance?.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack }, subject: attacker);
+            EventBus.Instance?.Fire(EventType.OnUnitAct, new Context
+            {
+                ActType = UnitActType.Attack,
+                AttackDirection = TargetResolver.DirectionBetween(attacker.GridPos, target.GridPos),
+            }, subject: attacker);
             UnitActed?.Invoke(attacker);
         }));
     }

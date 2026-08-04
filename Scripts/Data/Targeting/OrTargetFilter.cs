@@ -77,6 +77,17 @@ public partial class OrTargetFilter : TargetFilter
         return 1;
     }
 
+    public override CellShape GetCellShape()
+    {
+        if (Filters != null)
+            foreach (var f in Filters)
+            {
+                var s = f?.GetCellShape();
+                if (s != null) return s;
+            }
+        return null;
+    }
+
     public override TargetKind GetKind()
     {
         if (Filters != null)

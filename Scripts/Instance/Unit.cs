@@ -30,6 +30,9 @@ public partial class Unit
     /// <summary>体力（移动范围半径，曼哈顿距离；单值，无上限/剩余之分）</summary>
     public int Stamina { get; set; }
     public int AttackDistance { get; set; }
+
+    /// <summary>攻击形状（透传模板 UnitData.AttackShape；null = 默认菱形）。变身换模板自动更新</summary>
+    public CellShape AttackShape => UnitData?.AttackShape;
     /// <summary>当前行动点数（行动消耗，每回合开始恢复满）</summary>
     public int ActionPoints { get; set; }
     /// <summary>行动点上限（可被 Buff/装备修改，最小不低于 1）</summary>

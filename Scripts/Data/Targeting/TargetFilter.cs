@@ -27,6 +27,12 @@ public abstract partial class TargetFilter : Resource
     public virtual int GetAreaRange() => 1;
 
     /// <summary>
+    /// 形状节点实例（穿透组合递归取第一个形状节点；无形状节点返回 null）。
+    /// 供 UI 预览统一调用 CellShape.GetCells 生成预览格（与解析共用同一算法）。
+    /// </summary>
+    public virtual CellShape GetCellShape() => null;
+
+    /// <summary>
     /// 结果集类型（单位/格子）：仅形状节点真正持有 Kind，
     /// 过滤/组合节点穿透取形状子节点的值；无形状时默认 Unit。
     /// </summary>

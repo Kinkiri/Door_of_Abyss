@@ -816,6 +816,84 @@ public partial class TestRunner : Node
             eb.Unsubscribe(victim2);
         });
 
+        // ── 攻击方向 AttackDirection（ctx 传递 + 值源读取 + 方向取反） ──
+        RunGroup("攻击方向 AttackDirection", () =>
+        {
+            // DirectionBetween 纯函数（4 向 + 同格）
+            VAssert("DirectionBetween Right", () => TargetResolver.DirectionBetween(new Vector2I(3, 3), new Vector2I(5, 3)) == CellDirection.Right);
+            VAssert("DirectionBetween Left", () => TargetResolver.DirectionBetween(new Vector2I(3, 3), new Vector2I(1, 3)) == CellDirection.Left);
+            VAssert("DirectionBetween Down", () => TargetResolver.DirectionBetween(new Vector2I(3, 3), new Vector2I(3, 5)) == CellDirection.Down);
+            VAssert("DirectionBetween Up", () => TargetResolver.DirectionBetween(new Vector2I(3, 3), new Vector2I(3, 1)) == CellDirection.Up);
+            VAssert("DirectionBetween 同格 → null", () => TargetResolver.DirectionBetween(new Vector2I(3, 3), new Vector2I(3, 3)) == null);
+
+            // AttackDirectionValue 单测
+            VAssert("AttackDirectionValue 有方向读枚举值",
+                () => new AttackDirectionValue().GetValue(new Context { AttackDirection = CellDirection.Left }) == (int)CellDirection.Left);
+            VAssert("AttackDirectionValue 无方向读 DefaultValue",
+                () => new AttackDirectionValue { DefaultValue = 99 }.GetValue(new Context()) == 99);
+
+            // OppositeDirectionValue 取反
+            VAssert("OppositeDirectionValue 4 向取反",
+                () =>
+                {
+                    var ctx = new Context { AttackDirection = CellDirection.Up };
+                    var v = new OppositeDirectionValue { Direction = new AttackDirectionValue() };
+                    bool upDown = v.GetValue(ctx) == (int)CellDirection.Down;
+                    ctx.AttackDirection = CellDirection.Down;
+                    bool downUp = v.GetValue(ctx) == (int)CellDirection.Up;
+                    ctx.AttackDirection = CellDirection.Left;
+                    bool leftRight = v.GetValue(ctx) == (int)CellDirection.Right;
+                    ctx.AttackDirection = CellDirection.Right;
+                    bool rightLeft = v.GetValue(ctx) == (int)CellDirection.Left;
+                    return upDown && downUp && leftRight && rightLeft;
+                });
+            VAssert("OppositeDirectionValue 输入缺失 → DefaultValue",
+                () => new OppositeDirectionValue { DefaultValue = 3 }.GetValue(new Context()) == 3);
+            VAssert("OppositeDirectionValue 非法输入 → DefaultValue",
+                () => new OppositeDirectionValue { DefaultValue = 1, Direction = new ConstantValue { Value = 99 } }.GetValue(new Context()) == 1);
+
+            // EventBus 集成：DamageAction 攻击链路 → 被动捕获攻击方向
+            var eb = EventBus.Instance;
+            if (eb == null) { VAssert("EventBus 未就绪，跳过", () => false); return; }
+
+            var attacker = MakeUnit("攻击者", 10, 10); attacker.GridPos = new Vector2I(2, 2);
+            var victim = MakeUnit("受击者", 5, 20); victim.GridPos = new Vector2I(5, 2);  // 攻击方向 Right
+
+            var capture = new EffectData
+            {
+                TriggerEvent = EventType.OnBeforeAttack,
+                Target = PassiveTarget.Self,
+                Actions = new GameAction[] { new CaptureDirectionAction() },
+            };
+            eb.Subscribe(attacker, new[] { capture });
+            CaptureDirectionAction.Captured = null;
+            new DamageAction { Value = 3 }.Execute(new Context { SourceUnit = attacker, TargetUnits = new[] { victim } });
+            VAssert("OnBeforeAttack 被动捕获攻击方向 = Right（DamageAction 链路）",
+                () => CaptureDirectionAction.Captured == CellDirection.Right);
+
+            // OnUnitAct 攻击透传（PassiveTarget 分支）
+            var actCapture = new EffectData
+            {
+                TriggerEvent = EventType.OnUnitAct,
+                Target = PassiveTarget.Self,
+                Actions = new GameAction[] { new CaptureDirectionAction() },
+            };
+            eb.Subscribe(attacker, new[] { actCapture });
+            CaptureDirectionAction.Captured = null;
+            eb.Fire(EventType.OnUnitAct,
+                new Context { ActType = UnitActType.Attack, AttackDirection = CellDirection.Up }, subject: attacker);
+            VAssert("OnUnitAct 透传攻击方向（PassiveTarget 分支）", () => CaptureDirectionAction.Captured == CellDirection.Up);
+
+            // 非攻击事件：方向为 null → 值源读 DefaultValue
+            CaptureDirectionAction.Captured = null;
+            eb.Fire(EventType.OnUnitAct,
+                new Context { ActType = UnitActType.Move }, subject: attacker);
+            VAssert("移动事件无攻击方向（null）", () => CaptureDirectionAction.Captured == null);
+
+            CaptureDirectionAction.Captured = null;
+            eb.Unsubscribe(attacker);
+        });
+
         // ── 已行动条件 HasActed（攻击时本回合已行动过则加伤） ────────────
         RunGroup("已行动条件 HasActed", () =>
         {
@@ -2980,6 +3058,794 @@ public partial class TestRunner : Node
             CardLibrary.CardList.AddRange(backup);
         });
 
+        // ── 格子坐标值源（CellValueSource） ──────────────────────
+        RunGroup("CellValueSource 坐标值源", () =>
+        {
+            var src = MakeUnit("来源", 5, 10); src.GridPos = new Vector2I(3, 4);
+            var tgt = MakeUnit("目标", 5, 10); tgt.GridPos = new Vector2I(7, 1);
+            var evt = MakeUnit("事件方", 5, 10); evt.GridPos = new Vector2I(0, 9);
+
+            // ── UnitCellValue：读单位坐标 ──────────────────────
+            VAssert("UnitCellValue 读 Target 坐标",
+                () => new UnitCellValue { Unit = ValueTarget.Target }.GetCell(MakeCtx(src, tgt)) == new Vector2I(7, 1));
+            VAssert("UnitCellValue 读 Source 坐标",
+                () => new UnitCellValue { Unit = ValueTarget.Source }.GetCell(MakeCtx(src, tgt)) == new Vector2I(3, 4));
+            VAssert("UnitCellValue 读 EventTarget 坐标",
+                () => new UnitCellValue { Unit = ValueTarget.EventTarget }.GetCell(new Context { EventTargetUnit = evt }) == new Vector2I(0, 9));
+            VAssert("UnitCellValue 单位缺失 → null",
+                () => new UnitCellValue { Unit = ValueTarget.Target }.GetCell(new Context { SourceUnit = src }) == null);
+
+            // ── ContextCellValue：读 ctx 格子坐标 ──────────────
+            var tCell = MakeCell(new Vector2I(5, 5), new BlockData { BlockName = "地板" });
+            var sCell = MakeCell(new Vector2I(2, 2), new BlockData { BlockName = "地板" });
+            VAssert("ContextCellValue 读 TargetCell",
+                () => new ContextCellValue { Cell = ContextCellType.Target }.GetCell(new Context { TargetCell = tCell }) == new Vector2I(5, 5));
+            VAssert("ContextCellValue 读 SourceCell",
+                () => new ContextCellValue { Cell = ContextCellType.Source }.GetCell(new Context { SourceCell = sCell }) == new Vector2I(2, 2));
+            VAssert("ContextCellValue 格子缺失 → null",
+                () => new ContextCellValue().GetCell(new Context()) == null);
+
+            // ── OffsetCellValue：坐标偏移计算 ──────────────────
+            VAssert("OffsetCellValue 固定偏移",
+                () => new OffsetCellValue
+                {
+                    Base = new UnitCellValue { Unit = ValueTarget.Source },
+                    Dx = 2, Dy = -1,
+                }.GetCell(MakeCtx(src, tgt)) == new Vector2I(5, 3));
+            VAssert("OffsetCellValue 值源覆盖 Dx",
+                () => new OffsetCellValue
+                {
+                    Base = new UnitCellValue { Unit = ValueTarget.Source },
+                    Dx = 0,
+                    DxValueSource = new ConstantValue { Value = -3 },
+                    Dy = 1,
+                }.GetCell(MakeCtx(src, tgt)) == new Vector2I(0, 5));
+            VAssert("OffsetCellValue Base 无效 → null",
+                () => new OffsetCellValue { Base = new UnitCellValue { Unit = ValueTarget.Target }, Dx = 1 }
+                    .GetCell(new Context { SourceUnit = src }) == null);
+            VAssert("OffsetCellValue Base null → null",
+                () => new OffsetCellValue().GetCell(new Context()) == null);
+
+            // ── StepCellValue：沿方向步进 ──────────────────────
+            VAssert("StepCellValue Up 步进 2",
+                () => new StepCellValue
+                {
+                    Base = new UnitCellValue { Unit = ValueTarget.Source },
+                    Direction = CellDirection.Up, Distance = 2,
+                }.GetCell(MakeCtx(src, tgt)) == new Vector2I(3, 2));
+            VAssert("StepCellValue Right 步进 1",
+                () => new StepCellValue
+                {
+                    Base = new UnitCellValue { Unit = ValueTarget.Source },
+                    Direction = CellDirection.Right, Distance = 1,
+                }.GetCell(MakeCtx(src, tgt)) == new Vector2I(4, 4));
+            VAssert("StepCellValue 动态方向（DirectionValue）",
+                () => new StepCellValue
+                {
+                    Base = new UnitCellValue { Unit = ValueTarget.Source },
+                    DirectionValueSource = new DirectionValue { From = ValueTarget.Source, To = ValueTarget.Target },
+                    Distance = 1,
+                }.GetCell(MakeCtx(src, tgt)) == new Vector2I(4, 4));
+            VAssert("StepCellValue 距离 0 → 基准",
+                () => new StepCellValue
+                {
+                    Base = new UnitCellValue { Unit = ValueTarget.Source },
+                    Distance = 0,
+                }.GetCell(MakeCtx(src, tgt)) == new Vector2I(3, 4));
+            VAssert("StepCellValue 负距离 → 基准",
+                () => new StepCellValue
+                {
+                    Base = new UnitCellValue { Unit = ValueTarget.Source },
+                    Distance = -2,
+                }.GetCell(MakeCtx(src, tgt)) == new Vector2I(3, 4));
+            VAssert("StepCellValue Base 无效 → null",
+                () => new StepCellValue { Base = new UnitCellValue { Unit = ValueTarget.Target } }
+                    .GetCell(new Context { SourceUnit = src }) == null);
+
+            // ── DirectionValue：两点方向计算（4 向） ────────────
+            // 目标 (7,1) 相对来源 (3,4)：dx=4 dy=-3 → |dx|≥|dy| → Right
+            VAssert("DirectionValue 横向 Right",
+                () => new DirectionValue { From = ValueTarget.Source, To = ValueTarget.Target }
+                    .GetValue(MakeCtx(src, tgt)) == (int)CellDirection.Right);
+            var tgtLeft = MakeUnit("左侧", 5, 10); tgtLeft.GridPos = new Vector2I(1, 5);
+            VAssert("DirectionValue 横向 Left",
+                () => new DirectionValue { From = ValueTarget.Source, To = ValueTarget.Target }
+                    .GetValue(new Context { SourceUnit = src, TargetUnit = tgtLeft }) == (int)CellDirection.Left);
+            var tgtDown = MakeUnit("下方", 5, 10); tgtDown.GridPos = new Vector2I(4, 7);
+            VAssert("DirectionValue 纵向 Down",
+                () => new DirectionValue { From = ValueTarget.Source, To = ValueTarget.Target }
+                    .GetValue(new Context { SourceUnit = src, TargetUnit = tgtDown }) == (int)CellDirection.Down);
+            var tgtUp = MakeUnit("上方", 5, 10); tgtUp.GridPos = new Vector2I(4, 1);  // dx=1 dy=-3 → 纵向 Up
+            VAssert("DirectionValue 纵向 Up",
+                () => new DirectionValue { From = ValueTarget.Source, To = ValueTarget.Target }
+                    .GetValue(new Context { SourceUnit = src, TargetUnit = tgtUp }) == (int)CellDirection.Up);
+            VAssert("DirectionValue 零向量 → Right（横向优先）",
+                () => new DirectionValue { From = ValueTarget.Source, To = ValueTarget.Target }
+                    .GetValue(new Context { SourceUnit = src, TargetUnit = src }) == (int)CellDirection.Right);
+            VAssert("DirectionValue 单位缺失 → Up",
+                () => new DirectionValue().GetValue(new Context()) == (int)CellDirection.Up);
+
+            // ── CellCoordValue：坐标分量读取 ────────────────────
+            VAssert("CellCoordValue 读 X",
+                () => new CellCoordValue { Cell = new UnitCellValue { Unit = ValueTarget.Target }, Info = CellCoordInfo.PosX }
+                    .GetValue(MakeCtx(src, tgt)) == 7);
+            VAssert("CellCoordValue 读 Y",
+                () => new CellCoordValue { Cell = new UnitCellValue { Unit = ValueTarget.Target }, Info = CellCoordInfo.PosY }
+                    .GetValue(MakeCtx(src, tgt)) == 1);
+            VAssert("CellCoordValue 无效 → DefaultValue",
+                () => new CellCoordValue { Cell = new UnitCellValue { Unit = ValueTarget.Target }, DefaultValue = -99 }
+                    .GetValue(new Context { SourceUnit = src }) == -99);
+
+            // ── RandomCellValue：形状内随机一格（CellShape 体系） ──
+            var rmap = new System.Collections.Generic.Dictionary<Vector2I, Cell>();
+            var rblock = new BlockData { BlockName = "地板", CanStand = true, CanPass = true };
+            for (int x = 0; x < 5; x++)
+                for (int y = 0; y < 5; y++)
+                    rmap[new Vector2I(x, y)] = new Cell(rblock, new Vector2I(x, y), Vector2.Zero);
+            var rctx = new Context { Map = rmap, TargetCell = rmap[new Vector2I(2, 2)] };
+
+            VAssert("RandomCellValue 菱形1 随机结果 ∈ 候选集",
+                () =>
+                {
+                    for (int i = 0; i < 20; i++)
+                    {
+                        var pos = new RandomCellValue { Shape = new DiamondShape { AreaRange = 1 } }.GetCell(rctx);
+                        if (pos == null) return false;
+                        if (Mathf.Abs(pos.Value.X - 2) + Mathf.Abs(pos.Value.Y - 2) > 1) return false;
+                    }
+                    return true;
+                });
+            VAssert("RandomCellValue All 结果 ∈ 地图",
+                () =>
+                {
+                    for (int i = 0; i < 20; i++)
+                    {
+                        var pos = new RandomCellValue { Shape = new AllShape() }.GetCell(rctx);
+                        if (pos == null || !rmap.ContainsKey(pos.Value)) return false;
+                    }
+                    return true;
+                });
+            VAssert("RandomCellValue 全部占据 → 无候选 → null",
+                () =>
+                {
+                    foreach (var c in rmap.Values) c.OccupyingUnit = MakeUnit("占位", 1, 1);
+                    var pos = new RandomCellValue { Shape = new AllShape() }.GetCell(rctx);
+                    foreach (var c in rmap.Values) c.OccupyingUnit = null;
+                    return pos == null;
+                });
+            VAssert("RandomCellValue RequireStandable=false 占据不挡",
+                () =>
+                {
+                    foreach (var c in rmap.Values) c.OccupyingUnit = MakeUnit("占位", 1, 1);
+                    var pos = new RandomCellValue { Shape = new AllShape(), RequireStandable = false }.GetCell(rctx);
+                    foreach (var c in rmap.Values) c.OccupyingUnit = null;
+                    return pos != null;
+                });
+            VAssert("RandomCellValue Base 指定中心（半径0=中心格）",
+                () =>
+                {
+                    var center = MakeUnit("中心", 1, 1); center.GridPos = new Vector2I(2, 2);
+                    var pos = new RandomCellValue
+                    {
+                        Base = new UnitCellValue { Unit = ValueTarget.Source },
+                        Shape = new DiamondShape { AreaRange = 0 },
+                    }.GetCell(new Context { Map = rmap, SourceUnit = center });
+                    return pos == new Vector2I(2, 2);
+                });
+            VAssert("RandomCellValue Base 无效 → null",
+                () => new RandomCellValue { Base = new UnitCellValue { Unit = ValueTarget.Target } }
+                    .GetCell(new Context { Map = rmap }) == null);
+            VAssert("RandomCellValue Shape 未配置 → null",
+                () => new RandomCellValue().GetCell(rctx) == null);
+        });
+
+        // ── ShapeTargetFilter CenterOverride 扩散中心覆盖 ─────────
+        RunGroup("ShapeTargetFilter CenterOverride", () =>
+        {
+            var map = new System.Collections.Generic.Dictionary<Vector2I, Cell>();
+            var block = new BlockData { BlockName = "地板", CanStand = true, CanPass = true };
+            for (int x = 0; x < 5; x++)
+                for (int y = 0; y < 5; y++)
+                    map[new Vector2I(x, y)] = new Cell(block, new Vector2I(x, y), Vector2.Zero);
+
+            // 默认中心 (0,0)（TargetCell），覆盖中心 (4,4)（SourceCell）：
+            // 菱形1 从 (4,4) 扩散 → (4,4)(3,4)(4,3) 共 3 格（(5,4)(4,5) 越界）
+            var filter = new ShapeTargetFilter
+            {
+                Shape = TargetShape.AreaDiamond,
+                AreaRange = 1,
+                Kind = TargetKind.Cell,
+                CenterOverride = new ContextCellValue { Cell = ContextCellType.Source },
+            };
+            var ctx = new Context
+            {
+                Map = map,
+                TargetCell = map[new Vector2I(2, 2)],  // 默认中心在中间 → 菱形1=5格
+                SourceCell = map[new Vector2I(4, 4)],
+            };
+            VAssert("CenterOverride 覆盖扩散中心（(2,2)→(4,4) 菱形1=3格）",
+                () =>
+                {
+                    var cells = TargetResolver.ResolveCells(filter, ctx);
+                    return cells.Length == 3 &&
+                           cells.All(c => Mathf.Abs(c.GridPos.X - 4) + Mathf.Abs(c.GridPos.Y - 4) <= 1);
+                });
+            VAssert("无覆盖时仍以 TargetCell 为中心（菱形1=5格）",
+                () =>
+                {
+                    var defaultFilter = new ShapeTargetFilter { Shape = TargetShape.AreaDiamond, AreaRange = 1, Kind = TargetKind.Cell };
+                    return TargetResolver.ResolveCells(defaultFilter, ctx).Length == 5;
+                });
+            VAssert("SingleCell 用覆盖坐标",
+                () =>
+                {
+                    var singleFilter = new ShapeTargetFilter
+                    {
+                        Shape = TargetShape.SingleCell,
+                        CenterOverride = new ContextCellValue { Cell = ContextCellType.Source },
+                    };
+                    var r = TargetResolver.ResolveCells(singleFilter, ctx);
+                    return r.Length == 1 && r[0].GridPos == new Vector2I(4, 4);
+                });
+            VAssert("CenterOverride 越界坐标 → 空",
+                () =>
+                {
+                    var f = new ShapeTargetFilter
+                    {
+                        Shape = TargetShape.AreaDiamond,
+                        AreaRange = 1,
+                        Kind = TargetKind.Cell,
+                        CenterOverride = new OffsetCellValue
+                        {
+                            Base = new ContextCellValue { Cell = ContextCellType.Source },
+                            Dx = 100,
+                        },
+                    };
+                    return TargetResolver.ResolveCells(f, ctx).Length == 0;
+                });
+            VAssert("CenterOverride 值源无效 → 空",
+                () =>
+                {
+                    var f = new ShapeTargetFilter
+                    {
+                        Shape = TargetShape.AreaDiamond,
+                        AreaRange = 1,
+                        Kind = TargetKind.Cell,
+                        CenterOverride = new UnitCellValue { Unit = ValueTarget.Target },  // ctx.TargetUnit=null
+                    };
+                    return TargetResolver.ResolveCells(f, ctx).Length == 0;
+                });
+        });
+
+        // ── CellShape 形状体系（十字/叉/射线/三角形 + CustomShape 双通道） ──
+        RunGroup("CellShape 形状体系", () =>
+        {
+            var map = new System.Collections.Generic.Dictionary<Vector2I, Cell>();
+            var block = new BlockData { BlockName = "地板", CanStand = true, CanPass = true };
+            for (int x = 0; x < 5; x++)
+                for (int y = 0; y < 5; y++)
+                    map[new Vector2I(x, y)] = new Cell(block, new Vector2I(x, y), Vector2.Zero);
+            var center = map[new Vector2I(2, 2)];
+            var ctx = new Context { Map = map, TargetCell = center };
+
+            VAssert("CellDirectionVector 4 向",
+                () =>
+                    TargetResolver.CellDirectionVector(CellDirection.Up) == new Vector2I(0, -1) &&
+                    TargetResolver.CellDirectionVector(CellDirection.Down) == new Vector2I(0, 1) &&
+                    TargetResolver.CellDirectionVector(CellDirection.Left) == new Vector2I(-1, 0) &&
+                    TargetResolver.CellDirectionVector(CellDirection.Right) == new Vector2I(1, 0));
+
+            // 十字：中心 + 四臂各 2（9 格）
+            VAssert("CrossShape 臂2 = 9 格（|dx|+|dy|≤2 且单轴）",
+                () =>
+                {
+                    var cells = new CrossShape { Length = 2 }.GetCells(center, ctx);
+                    if (cells.Length != 9) return false;
+                    foreach (var c in cells)
+                    {
+                        int dx = System.Math.Abs(c.GridPos.X - 2), dy = System.Math.Abs(c.GridPos.Y - 2);
+                        if (dx + dy > 2 || (dx != 0 && dy != 0)) return false;
+                    }
+                    return true;
+                });
+
+            // 叉字：中心 + 四对角各 2（9 格）
+            VAssert("XShape 臂2 = 9 格（|dx|=|dy|≤2）",
+                () =>
+                {
+                    var cells = new XShape { Length = 2 }.GetCells(center, ctx);
+                    if (cells.Length != 9) return false;
+                    foreach (var c in cells)
+                    {
+                        int dx = System.Math.Abs(c.GridPos.X - 2), dy = System.Math.Abs(c.GridPos.Y - 2);
+                        if (dx > 2 || dx != dy) return false;
+                    }
+                    return true;
+                });
+
+            // 射线：Up 长2 宽1 → 3 排 × 3 宽 = 9 格（含中心排）
+            VAssert("RayShape Up 长2宽1 = 9 格",
+                () =>
+                {
+                    var cells = new RayShape { Direction = CellDirection.Up, Length = 2, Width = 1 }.GetCells(center, ctx);
+                    if (cells.Length != 9) return false;
+                    foreach (var c in cells)
+                    {
+                        int dy = c.GridPos.Y;
+                        if (dy < 0 || dy > 2 || System.Math.Abs(c.GridPos.X - 2) > 1) return false;
+                    }
+                    return true;
+                });
+
+            // 三角形：Up 长2 → 1+3+5 = 9 格（第 i 排宽 2i+1）
+            VAssert("TriangleShape Up 长2 = 9 格（锥形 1+3+5）",
+                () =>
+                {
+                    var cells = new TriangleShape { Direction = CellDirection.Up, Length = 2 }.GetCells(center, ctx);
+                    if (cells.Length != 9) return false;
+                    foreach (var c in cells)
+                    {
+                        int dy = c.GridPos.Y;          // 中心 y=2，向上 → 第 i 排（i=2-dy）宽 2i+1
+                        int i = 2 - dy;
+                        if (dy < 0 || dy > 2 || System.Math.Abs(c.GridPos.X - 2) > i) return false;
+                    }
+                    return true;
+                });
+
+            // 越界过滤：中心 (4,4) 十字 1 → (4,4)(3,4)(4,3) 共 3 格
+            VAssert("CrossShape 角落中心越界过滤（3 格）",
+                () => new CrossShape { Length = 1 }.GetCells(map[new Vector2I(4, 4)], ctx).Length == 3);
+
+            // Length=0 → 只有中心
+            VAssert("CrossShape Length=0 → 1 格",
+                () => new CrossShape { Length = 0 }.GetCells(center, ctx).Length == 1);
+
+            // 射线 Width=0 → 单列 Length+1 格（含中心排；中心 (2,2) 向上 2 不越界）
+            VAssert("RayShape Width=0 → 单列 Length+1 格",
+                () => new RayShape { Direction = CellDirection.Up, Length = 2, Width = 0 }.GetCells(center, ctx).Length == 3);
+
+            // 菱形/方形类与 TargetResolver 等价
+            VAssert("DiamondShape 与 CellsInArea 等价（13 格）",
+                () =>
+                {
+                    var cells = new DiamondShape { AreaRange = 2 }.GetCells(center, ctx);
+                    return cells.Length == 13;
+                });
+            VAssert("SquareShape 方形2（地图内）= 25 格",
+                () => new SquareShape { AreaRange = 2 }.GetCells(center, ctx).Length == 25);
+
+            // 动态参数值源覆盖
+            VAssert("CrossShape LengthValueSource 覆盖",
+                () => new CrossShape
+                {
+                    Length = 0,
+                    LengthValueSource = new ConstantValue { Value = 1 },
+                }.GetCells(center, ctx).Length == 5);  // 中心 + 4 臂
+            VAssert("RayShape 动态方向（DirectionValue 朝向目标）",
+                () =>
+                {
+                    var src = MakeUnit("来源", 1, 1); src.GridPos = new Vector2I(2, 2);
+                    var tgt = MakeUnit("目标", 1, 1); tgt.GridPos = new Vector2I(4, 2);  // dx=2 dy=0 → Right
+                    var c2 = new Context { Map = map, SourceUnit = src, TargetUnit = tgt };
+                    var cells = new RayShape
+                    {
+                        Direction = CellDirection.Up,
+                        DirectionValueSource = new DirectionValue { From = ValueTarget.Source, To = ValueTarget.Target },
+                        Length = 2,
+                        Width = 0,
+                    }.GetCells(map[new Vector2I(2, 2)], c2);
+                    if (cells.Length != 3) return false;
+                    foreach (var c in cells)
+                        if (c.GridPos.Y != 2 || c.GridPos.X < 2 || c.GridPos.X > 4) return false;
+                    return true;
+                });
+
+            // ── ShapeTargetFilter.CustomShape 双通道 ──────────────
+            VAssert("CustomShape GetShape 穿透 = Cross",
+                () => new ShapeTargetFilter { CustomShape = new CrossShape { Length = 1 } }.GetShape() == TargetShape.Cross);
+            VAssert("CustomShape GetAreaRange = 形状臂长",
+                () => new ShapeTargetFilter { CustomShape = new CrossShape { Length = 3 } }.GetAreaRange() == 3);
+            VAssert("CustomShape 解析格子（十字1 = 5 格）",
+                () =>
+                {
+                    var f = new ShapeTargetFilter { CustomShape = new CrossShape { Length = 1 }, Kind = TargetKind.Cell };
+                    return TargetResolver.ResolveCells(f, new Context { Map = map, TargetCell = center }).Length == 5;
+                });
+            VAssert("CustomShape 解析单位（提取格上存活单位）",
+                () =>
+                {
+                    map[new Vector2I(1, 2)].OccupyingUnit = MakeUnit("上", 1, 1);
+                    map[new Vector2I(3, 2)].OccupyingUnit = MakeUnit("右", 1, 1);
+                    map[new Vector2I(2, 3)].OccupyingUnit = MakeUnit("下", 1, 1);
+                    var f = new ShapeTargetFilter { CustomShape = new CrossShape { Length = 1 } };  // Kind 默认 Unit
+                    var units = TargetResolver.ResolveUnits(f, new Context { Map = map, TargetCell = center });
+                    map[new Vector2I(1, 2)].OccupyingUnit = null;
+                    map[new Vector2I(3, 2)].OccupyingUnit = null;
+                    map[new Vector2I(2, 3)].OccupyingUnit = null;
+                    return units.Length == 3;
+                });
+            VAssert("CustomShape 组合穿透（And.GetCellShape = 形状实例）",
+                () =>
+                {
+                    var shapeFilter = new ShapeTargetFilter { CustomShape = new XShape { Length = 2 } };
+                    var and = new AndTargetFilter
+                    {
+                        Filters = new TargetFilter[]
+                        {
+                            shapeFilter,
+                            new TeamTargetFilter { Team = TeamFilter.Enemy },
+                        },
+                    };
+                    return and.GetCellShape() is XShape xs && xs.Length == 2 && and.GetShape() == TargetShape.X;
+                });
+            VAssert("旧枚举路径不受影响（AreaDiamond 仍 5 格）",
+                () =>
+                {
+                    var f = new ShapeTargetFilter { Shape = TargetShape.AreaDiamond, AreaRange = 1, Kind = TargetKind.Cell };
+                    return TargetResolver.ResolveCells(f, new Context { Map = map, TargetCell = center }).Length == 5;
+                });
+
+            // ── 行/列/环形状 ────────────────────────────────────
+            VAssert("RowShape 行2 = 5 格（同 y，x=0..4）",
+                () =>
+                {
+                    var cells = new RowShape { Length = 2 }.GetCells(center, ctx);
+                    if (cells.Length != 5) return false;
+                    foreach (var c in cells)
+                        if (c.GridPos.Y != 2 || System.Math.Abs(c.GridPos.X - 2) > 2) return false;
+                    return true;
+                });
+            VAssert("ColumnShape 列2 = 5 格（同 x，y=0..4）",
+                () =>
+                {
+                    var cells = new ColumnShape { Length = 2 }.GetCells(center, ctx);
+                    if (cells.Length != 5) return false;
+                    foreach (var c in cells)
+                        if (c.GridPos.X != 2 || System.Math.Abs(c.GridPos.Y - 2) > 2) return false;
+                    return true;
+                });
+            VAssert("RingShape 环1 = 4 格（上下左右，不含中心）",
+                () =>
+                {
+                    var cells = new RingShape { Radius = 1 }.GetCells(center, ctx);
+                    if (cells.Length != 4) return false;
+                    foreach (var c in cells)
+                        if (System.Math.Abs(c.GridPos.X - 2) + System.Math.Abs(c.GridPos.Y - 2) != 1) return false;
+                    return true;
+                });
+            VAssert("RingShape 环2 = 8 格（曼哈顿==2，不含内部）",
+                () =>
+                {
+                    var cells = new RingShape { Radius = 2 }.GetCells(center, ctx);
+                    if (cells.Length != 8) return false;
+                    foreach (var c in cells)
+                    {
+                        int dist = System.Math.Abs(c.GridPos.X - 2) + System.Math.Abs(c.GridPos.Y - 2);
+                        if (dist != 2) return false;
+                    }
+                    return true;
+                });
+            VAssert("RingShape 环0 = 只有中心 1 格",
+                () => new RingShape { Radius = 0 }.GetCells(center, ctx).Length == 1);
+            VAssert("RowShape 角落中心越界过滤（(4,4) 行1 = 2 格）",
+                () => new RowShape { Length = 1 }.GetCells(map[new Vector2I(4, 4)], ctx).Length == 2);
+            VAssert("RowShape 尺寸注入（Length=0 → sizeOverride=1 行 = 3 格）",
+                () => new RowShape { Length = 0 }.GetCells(center, ctx, 1).Length == 3);
+            VAssert("Row/Column/Ring 组合穿透 GetShape",
+                () =>
+                {
+                    var and = new AndTargetFilter
+                    {
+                        Filters = new TargetFilter[]
+                        {
+                            new ShapeTargetFilter { CustomShape = new RingShape { Radius = 2 } },
+                            new TeamTargetFilter { Team = TeamFilter.Enemy },
+                        },
+                    };
+                    return and.GetShape() == TargetShape.Ring && and.GetCellShape() is RingShape;
+                });
+        });
+
+        // ── 攻击范围形状（AttackShape + PathFinder 统一入口） ────
+        RunGroup("AttackShape 攻击范围", () =>
+        {
+            var map = new System.Collections.Generic.Dictionary<Vector2I, Cell>();
+            var block = new BlockData { BlockName = "地板", CanStand = true, CanPass = true };
+            for (int x = 0; x < 7; x++)
+                for (int y = 0; y < 7; y++)
+                    map[new Vector2I(x, y)] = new Cell(block, new Vector2I(x, y), Vector2.Zero);
+            var pos = new Vector2I(3, 3);
+            var ctx = new Context { Map = map, TargetCell = map[pos] };
+
+            // 尺寸注入：sizeOverride 覆盖形状主尺寸
+            VAssert("CellShape sizeOverride 覆盖 Length（十字 2 = 9 格）",
+                () => new CrossShape { Length = 1 }.GetCells(map[pos], ctx, 2).Length == 9);
+            VAssert("CellShape sizeOverride 负值回退自身参数",
+                () => new CrossShape { Length = 1 }.GetCells(map[pos], ctx, -1).Length == 5);
+
+            // GetAttackRange：默认菱形 = 旧 GetCellsInRange 语义（不含自身）
+            VAssert("GetAttackRange 默认菱形（射程2 = 12 格，不含自身）",
+                () => PathFinder.GetAttackRange(pos, null, 2, map, ctx).Count == 12);
+            VAssert("GetAttackRange 默认菱形射程1 = 4 格",
+                () =>
+                {
+                    var range = PathFinder.GetAttackRange(pos, null, 1, map, ctx);
+                    return range.Count == 4 && !range.Contains(pos);
+                });
+
+            // 十字形状 + 射程联动：射程 2 → 十字臂 2 → 9 格排除自身 = 8
+            VAssert("GetAttackRange 十字 + 射程联动（臂2 = 8 格，不含自身）",
+                () =>
+                {
+                    var range = PathFinder.GetAttackRange(pos, new CrossShape { Length = 0 }, 2, map, ctx);
+                    return range.Count == 8 && !range.Contains(pos);
+                });
+            VAssert("GetAttackRange 中心不在图 → 空",
+                () => PathFinder.GetAttackRange(new Vector2I(99, 99), new CrossShape(), 1, map, ctx).Count == 0);
+
+            // GetAttackableTargets：形状 + 敌友/不可攻击过滤
+            VAssert("GetAttackableTargets 十字命中敌方、排除友方与不可攻击",
+                () =>
+                {
+                    var enemy = MakeUnit("敌", 1, 5); enemy.Team = Team.Enemy; enemy.GridPos = new Vector2I(3, 5);  // 十字下臂
+                    var ally = MakeUnit("友", 1, 5); ally.Team = Team.Player; ally.GridPos = new Vector2I(3, 1);    // 十字上臂（友方排除）
+                    var immune = MakeUnit("免", 1, 5); immune.Team = Team.Enemy; immune.CanBeAttacked = false;     // 十字左臂（不可攻击排除）
+                    immune.GridPos = new Vector2I(1, 3);
+                    map[new Vector2I(3, 5)].OccupyingUnit = enemy;
+                    map[new Vector2I(3, 1)].OccupyingUnit = ally;
+                    map[new Vector2I(1, 3)].OccupyingUnit = immune;
+
+                    var targets = PathFinder.GetAttackableTargets(
+                        pos, new CrossShape { Length = 0 }, 2, Team.Player, map, ctx);
+
+                    map[new Vector2I(3, 5)].OccupyingUnit = null;
+                    map[new Vector2I(3, 1)].OccupyingUnit = null;
+                    map[new Vector2I(1, 3)].OccupyingUnit = null;
+
+                    return targets.Count == 1 && targets.Contains(new Vector2I(3, 5));
+                });
+        });
+
+        // ── SummonUnitAction SummonPosition 指定坐标放置 ──────────
+        RunGroup("SummonUnitAction SummonPosition", () =>
+        {
+            var map = new System.Collections.Generic.Dictionary<Vector2I, Cell>();
+            var block = new BlockData { BlockName = "地板", CanStand = true, CanPass = true };
+            for (int x = 0; x < 5; x++)
+                for (int y = 0; y < 5; y++)
+                    map[new Vector2I(x, y)] = new Cell(block, new Vector2I(x, y), Vector2.Zero);
+
+            var src = MakeUnit("施法者", 1, 1); src.GridPos = new Vector2I(2, 2);
+            var far = MakeUnit("远处单位", 1, 1); far.GridPos = new Vector2I(999, 999);
+
+            // 值源无有效坐标（TargetUnit=null）→ 静默跳过，不抛异常
+            VAssert("SummonPosition 值源无效 → 跳过不抛异常",
+                () =>
+                {
+                    var action = new SummonUnitAction
+                    {
+                        UnitID = "不存在",
+                        SummonPosition = new UnitCellValue { Unit = ValueTarget.Target },
+                    };
+                    action.Execute(new Context { SourceUnit = src, SourceTeam = Team.Player, Map = map });
+                    return true;
+                });
+            // 坐标有效但不在地图 → 跳过，不抛异常
+            VAssert("SummonPosition 地图外坐标 → 跳过不抛异常",
+                () =>
+                {
+                    var action = new SummonUnitAction
+                    {
+                        UnitID = "不存在",
+                        SummonPosition = new UnitCellValue { Unit = ValueTarget.Target },
+                    };
+                    action.Execute(new Context { SourceUnit = src, TargetUnit = far, SourceTeam = Team.Player, Map = map });
+                    return true;
+                });
+            // 坐标有效且在地图内 → 进入召唤（UnitID 无效 → unitData null → 提前返回），不抛异常
+            VAssert("SummonPosition 地图内坐标 → 走到召唤流程不抛异常",
+                () =>
+                {
+                    var inMap = MakeUnit("地图内单位", 1, 1); inMap.GridPos = new Vector2I(3, 3);
+                    var action = new SummonUnitAction
+                    {
+                        UnitID = "不存在",
+                        SummonPosition = new UnitCellValue { Unit = ValueTarget.Target },
+                    };
+                    action.Execute(new Context { SourceUnit = src, TargetUnit = inMap, SourceTeam = Team.Player, Map = map });
+                    return true;
+                });
+        });
+
+        // ── MoveUnitAction 位移（Push/Pull 方向值源 + Teleport 坐标） ──
+        RunGroup("MoveUnitAction 位移", () =>
+        {
+            // 合成地图（ComputeTarget 纯逻辑，不依赖真实地图/管理器）
+            var map = new System.Collections.Generic.Dictionary<Vector2I, Cell>();
+            var block = new BlockData { BlockName = "地板", CanStand = true, CanPass = true };
+            for (int x = 0; x < 7; x++)
+                for (int y = 0; y < 7; y++)
+                    map[new Vector2I(x, y)] = new Cell(block, new Vector2I(x, y), Vector2.Zero);
+
+            // ── Push：远离锚点（击退） ──────────────────────────
+            VAssert("Push 自动方向（锚点下方 → 向上击退 2 格）",
+                () =>
+                {
+                    var unit = MakeUnit("被推", 1, 1); unit.GridPos = new Vector2I(3, 3);
+                    var anchor = MakeUnit("锚点", 1, 1); anchor.GridPos = new Vector2I(3, 5);
+                    var action = new MoveUnitAction { Mode = MoveUnitAction.MoveMode.Push, Distance = 2 };
+                    return action.ComputeTarget(unit, new Context { SourceUnit = anchor, Map = map }, map) == new Vector2I(3, 1);
+                });
+            VAssert("Push 锚点=DirectionAnchor 坐标（推离指定坐标）",
+                () =>
+                {
+                    var unit = MakeUnit("被推", 1, 1); unit.GridPos = new Vector2I(3, 3);
+                    var anchor = MakeUnit("无关单位", 1, 1); anchor.GridPos = new Vector2I(9, 9);
+                    var action = new MoveUnitAction
+                    {
+                        Mode = MoveUnitAction.MoveMode.Push,
+                        Distance = 1,
+                        DirectionAnchor = new ContextCellValue { Cell = ContextCellType.Source },  // 锚点坐标 (5,3)
+                    };
+                    var c = new Context { SourceUnit = anchor, SourceCell = map[new Vector2I(5, 3)], Map = map };
+                    return action.ComputeTarget(unit, c, map) == new Vector2I(2, 3);  // 锚点在右 → 向左推
+                });
+            VAssert("Push 值源方向覆盖（固定 Right 2 格）",
+                () =>
+                {
+                    var unit = MakeUnit("被推", 1, 1); unit.GridPos = new Vector2I(3, 3);
+                    var action = new MoveUnitAction
+                    {
+                        Mode = MoveUnitAction.MoveMode.Push,
+                        Distance = 2,
+                        DirectionValueSource = new ConstantValue { Value = (int)CellDirection.Right },
+                    };
+                    return action.ComputeTarget(unit, new Context { Map = map }, map) == new Vector2I(5, 3);
+                });
+            VAssert("Push 动态距离（值源覆盖 3 格）",
+                () =>
+                {
+                    var unit = MakeUnit("被推", 1, 1); unit.GridPos = new Vector2I(3, 3);
+                    var action = new MoveUnitAction
+                    {
+                        Mode = MoveUnitAction.MoveMode.Push,
+                        Distance = 0,
+                        DistanceValueSource = new ConstantValue { Value = 3 },
+                        DirectionValueSource = new ConstantValue { Value = (int)CellDirection.Right },
+                    };
+                    return action.ComputeTarget(unit, new Context { Map = map }, map) == new Vector2I(6, 3);
+                });
+            VAssert("Push 被占据格阻挡（停在阻挡前）",
+                () =>
+                {
+                    var unit = MakeUnit("被推", 1, 1); unit.GridPos = new Vector2I(3, 3);
+                    map[new Vector2I(3, 1)].OccupyingUnit = MakeUnit("挡路", 1, 1);
+                    var action = new MoveUnitAction
+                    {
+                        Mode = MoveUnitAction.MoveMode.Push,
+                        Distance = 3,
+                        DirectionValueSource = new ConstantValue { Value = (int)CellDirection.Up },
+                    };
+                    var target = action.ComputeTarget(unit, new Context { Map = map }, map);
+                    map[new Vector2I(3, 1)].OccupyingUnit = null;
+                    return target == new Vector2I(3, 2);  // (3,2) 可走，(3,1) 被占 → 停 (3,2)
+                });
+            VAssert("Push 锚点与方向均缺失 → 原地",
+                () =>
+                {
+                    var unit = MakeUnit("被推", 1, 1); unit.GridPos = new Vector2I(3, 3);
+                    var action = new MoveUnitAction { Mode = MoveUnitAction.MoveMode.Push, Distance = 1 };
+                    return action.ComputeTarget(unit, new Context { Map = map }, map) == unit.GridPos;
+                });
+
+            // ── Pull：靠近锚点（拉拽） ──────────────────────────
+            VAssert("Pull 拉向锚点（反方向 2 格）",
+                () =>
+                {
+                    var unit = MakeUnit("被拉", 1, 1); unit.GridPos = new Vector2I(3, 3);
+                    var anchor = MakeUnit("锚点", 1, 1); anchor.GridPos = new Vector2I(3, 5);
+                    var action = new MoveUnitAction { Mode = MoveUnitAction.MoveMode.Pull, Distance = 2 };
+                    return action.ComputeTarget(unit, new Context { SourceUnit = anchor, Map = map }, map) == new Vector2I(3, 5);
+                });
+
+            // ── 多目标 / Teleport ──────────────────────────────
+            VAssert("多目标方向/距离独立计算",
+                () =>
+                {
+                    var u1 = MakeUnit("甲", 1, 1); u1.GridPos = new Vector2I(1, 1);
+                    var u2 = MakeUnit("乙", 1, 1); u2.GridPos = new Vector2I(5, 5);
+                    var action = new MoveUnitAction
+                    {
+                        Mode = MoveUnitAction.MoveMode.Push,
+                        Distance = 1,
+                        DirectionValueSource = new ConstantValue { Value = (int)CellDirection.Right },
+                    };
+                    var c = new Context { Map = map };
+                    return action.ComputeTarget(u1, c, map) == new Vector2I(2, 1) &&
+                           action.ComputeTarget(u2, c, map) == new Vector2I(6, 5);
+                });
+            VAssert("Teleport 值源无效 → 原地不动作",
+                () =>
+                {
+                    var unit = MakeUnit("传送者", 1, 1); unit.GridPos = new Vector2I(2, 2);
+                    var action = new MoveUnitAction
+                    {
+                        Mode = MoveUnitAction.MoveMode.Teleport,
+                        TeleportPosition = new UnitCellValue { Unit = ValueTarget.Target },  // ctx.TargetUnit=null → 无效
+                    };
+                    action.Execute(new Context { TargetUnits = new[] { unit }, SourceUnit = MakeUnit("施法者", 1, 1), Map = map });
+                    return unit.GridPos == new Vector2I(2, 2);
+                });
+            VAssert("Teleport 优先 TeleportPosition 坐标（覆盖 TargetCell）",
+                () =>
+                {
+                    var unit = MakeUnit("传送者", 1, 1); unit.GridPos = new Vector2I(2, 2);
+                    var action = new MoveUnitAction
+                    {
+                        Mode = MoveUnitAction.MoveMode.Teleport,
+                        TeleportPosition = new ContextCellValue { Cell = ContextCellType.Source },
+                    };
+                    var c = new Context { SourceCell = map[new Vector2I(5, 5)], TargetCell = map[new Vector2I(1, 1)], Map = map };
+                    return action.ComputeTarget(unit, c, map) == new Vector2I(5, 5);
+                });
+            VAssert("Teleport 回退 TargetUnit 所在格",
+                () =>
+                {
+                    var unit = MakeUnit("传送者", 1, 1); unit.GridPos = new Vector2I(2, 2);
+                    var dest = MakeUnit("落点单位", 1, 1); dest.GridPos = new Vector2I(6, 6);
+                    var action = new MoveUnitAction { Mode = MoveUnitAction.MoveMode.Teleport };
+                    var c = new Context { Map = map, TargetUnit = dest };
+                    return action.ComputeTarget(unit, c, map) == new Vector2I(6, 6);
+                });
+
+            // ── 真实传送（需 UnitManager + MapManager 真实地图） ──
+            if (UnitManager.Instance == null || MapManager.Instance == null)
+            {
+                VAssert("UnitManager/MapManager 未就绪，跳过真实传送测试", () => true);
+            }
+            else
+            {
+                var rmap = MapManager.Instance.Map;
+                Cell targetA = null, targetB = null;
+                foreach (var kv in rmap)
+                {
+                    if (kv.Value.OccupyingUnit != null || !kv.Value.CanStand) continue;
+                    if (targetA == null) targetA = kv.Value;
+                    else if (targetB == null) { targetB = kv.Value; break; }
+                }
+                if (targetA == null || targetB == null)
+                {
+                    VAssert("地图空置格子不足，跳过真实传送测试", () => true);
+                }
+                else
+                {
+                    var unit = MakeUnit("传送者", 1, 1);
+                    unit.GridPos = new Vector2I(-1, -1);  // 地图外初始坐标，避免误释放旧格
+                    var action = new MoveUnitAction
+                    {
+                        Mode = MoveUnitAction.MoveMode.Teleport,
+                        TeleportPosition = new ContextCellValue { Cell = ContextCellType.Source },
+                    };
+                    // TeleportPosition = SourceCell = targetA；同时给 TargetCell=targetB 验证优先级
+                    action.Execute(new Context
+                    {
+                        TargetUnits = new[] { unit },
+                        SourceCell = targetA,
+                        TargetCell = targetB,
+                        SourceTeam = Team.Player,
+                    });
+                    VAssert("TeleportPosition 真实传送生效且优先于 TargetCell",
+                        () => unit.GridPos == targetA.GridPos);
+
+                    // 清理：释放占用格状态，避免污染后续流程
+                    targetA.OccupyingUnit = null;
+                    targetA.CanStand = true;
+                    targetA.CanPass = true;
+                    unit.GridPos = new Vector2I(-1, -1);
+                }
+            }
+        });
+
         // ── 汇总输出 ────────────────────────────────────────────
         GD.PrintRaw($"\n==============================\n");
         GD.PrintRaw($"  完成: {_passed} 通过, {_failed} 失败 (共 {_total} 项)\n");
@@ -3102,5 +3968,13 @@ public partial class TestRunner : Node
         // 条件本身的 IsMet 不依赖 Context 里的 left/right binding，
         // 而是靠 ctx 传给 ValueSource 的 GetValue
         return cc;
+    }
+
+    /// <summary>测试辅助动作：捕获执行时的 ctx.AttackDirection（验证攻击方向透传）</summary>
+    private partial class CaptureDirectionAction : GameAction
+    {
+        public static CellDirection? Captured;
+
+        protected override void Apply(Context ctx) => Captured = ctx.AttackDirection;
     }
 }

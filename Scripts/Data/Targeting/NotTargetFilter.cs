@@ -49,6 +49,8 @@ public partial class NotTargetFilter : TargetFilter
 
     public override int GetAreaRange() => Filter?.GetAreaRange() ?? 1;
 
+    public override CellShape GetCellShape() => Filter?.GetCellShape();
+
     public override TargetKind GetKind() => Filter?.GetKind() ?? TargetKind.Unit;
 
     public override TeamFilter GetTeamFilter()

@@ -47,7 +47,7 @@ public partial class CardView : TextureButton
                                         $"{unitCard.UnitData.Description} " +
                                         $"HP: {unitCard.UnitData.HealthPoints} " +
                                         $"ATK: {unitCard.UnitData.AttackPower}\n" +
-                                        $"AD: {unitCard.UnitData.AttackDistance} " +
+                                        $"AD: {CellShape.DescribeRange(unitCard.UnitData.AttackShape, unitCard.UnitData.AttackDistance)} " +
                                         $"AP: {unitCard.UnitData.ActionPoints}";
             }
         }

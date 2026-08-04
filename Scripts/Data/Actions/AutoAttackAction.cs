@@ -13,9 +13,11 @@ public partial class AutoAttackAction : GameAction
         var map = MapManager.Instance?.Map;
         if (map == null) return;
 
+        map.TryGetValue(ctx.SourceUnit.GridPos, out Cell srcCell);
+        var atkCtx = new Context { SourceUnit = ctx.SourceUnit, Map = map, TargetCell = srcCell };
         var atkPositions = PathFinder.GetAttackableTargets(
-            ctx.SourceUnit.GridPos, ctx.SourceUnit.AttackDistance,
-            ctx.SourceUnit.Team, map);
+            ctx.SourceUnit.GridPos, ctx.SourceUnit.AttackShape, ctx.SourceUnit.AttackDistance,
+            ctx.SourceUnit.Team, map, atkCtx);
 
         Unit nearest = null;
         int nearestDist = int.MaxValue;

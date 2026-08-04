@@ -35,6 +35,13 @@ public partial class UnitData : Resource
     /// <summary>攻击范围（曼哈顿距离）</summary>
     [Export] public int AttackDistance { get; set; } = 1;
 
+    /// <summary>
+    /// 攻击形状（CellShape，null = 默认菱形，半径 = AttackDistance）。
+    /// 配置后攻击范围按形状生成，主尺寸自动联动 AttackDistance（装备/变身/Buff 加射程生效）；
+    /// 建议使用无方向形状（菱形/方形/十字/叉），射线/三角形等方向形状待单位朝向系统引入后再用。
+    /// </summary>
+    [Export] public CellShape AttackShape { get; set; }
+
     /// <summary>单位类型</summary>
     [Export] public UnitType Type { get; set; } = UnitType.兵种;
 

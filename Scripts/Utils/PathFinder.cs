@@ -125,70 +125,84 @@ public static class PathFinder
 
     /// <summary>
     /// 计算移动范围的同时，找出从当前位置可攻击到的敌方单位位置。
-    /// 攻击范围从起点独立计算，与移动范围无关。
+    /// 攻击范围从起点独立计算，与移动范围无关。shape=null 时用默认菱形（attackDistance 半径）。
     /// </summary>
     public static HashSet<Vector2I> GetReachableCellsWithAttackTargets(
         Vector2I start,
         int movementPoints,
+        CellShape shape,
         int attackDistance,
         Team attackingTeam,
         Dictionary<Vector2I, Cell> map,
+        Context ctx,
         out HashSet<Vector2I> attackableTargets)
     {
         HashSet<Vector2I> reachable = GetReachableCells(start, movementPoints, map);
-        attackableTargets = GetAttackableTargets(start, attackDistance, attackingTeam, map);
+        attackableTargets = GetAttackableTargets(start, shape, attackDistance, attackingTeam, map, ctx);
         return reachable;
     }
 
     /// <summary>
     /// 独立计算从指定位置可攻击到的敌方单位。
+    /// shape=null 时用默认菱形（attackDistance 半径）；shape 非空时主尺寸联动 attackDistance（=单位射程）。
     /// </summary>
     public static HashSet<Vector2I> GetAttackableTargets(
         Vector2I pos,
+        CellShape shape,
         int attackDistance,
         Team attackingTeam,
-        Dictionary<Vector2I, Cell> map)
+        Dictionary<Vector2I, Cell> map,
+        Context ctx)
     {
         var targets = new HashSet<Vector2I>();
 
-        for (int dy = -attackDistance; dy <= attackDistance; dy++)
+        foreach (Vector2I checkPos in GetAttackRange(pos, shape, attackDistance, map, ctx))
         {
-            for (int dx = -attackDistance; dx <= attackDistance; dx++)
-            {
-                if (Mathf.Abs(dx) + Mathf.Abs(dy) > attackDistance)
-                    continue;
+            if (!map.TryGetValue(checkPos, out Cell cell))
+                continue;
 
-                Vector2I checkPos = new Vector2I(pos.X + dx, pos.Y + dy);
+            Unit enemy = cell.OccupyingUnit;
+            if (enemy == null || !enemy.CanBeAttacked || enemy.Team == attackingTeam)
+                continue;
 
-                if (!map.TryGetValue(checkPos, out Cell cell))
-                    continue;
-
-                Unit enemy = cell.OccupyingUnit;
-                if (enemy == null || !enemy.CanBeAttacked || enemy.Team == attackingTeam)
-                    continue;
-
-                targets.Add(checkPos);
-            }
+            targets.Add(checkPos);
         }
 
         return targets;
     }
 
     /// <summary>
-    /// 返回以 pos 为中心、曼哈顿距离 range 内的所有格子坐标（不含自身）
+    /// 生成攻击范围格子（**不含自身**）：
+    /// - shape=null → 默认菱形（曼哈顿距离 fallbackRange 内，兼容旧逻辑）
+    /// - shape 非空 → shape.GetCells(center, ctx, fallbackRange)（主尺寸联动射程；center 须在地图内，否则返回空）
     /// </summary>
-    public static HashSet<Vector2I> GetCellsInRange(
+    public static HashSet<Vector2I> GetAttackRange(
         Vector2I pos,
-        int range,
-        Dictionary<Vector2I, Cell> map)
+        CellShape shape,
+        int fallbackRange,
+        Dictionary<Vector2I, Cell> map,
+        Context ctx)
     {
         var cells = new HashSet<Vector2I>();
-        for (int dy = -range; dy <= range; dy++)
+
+        if (shape != null)
         {
-            for (int dx = -range; dx <= range; dx++)
+            if (map == null || !map.TryGetValue(pos, out Cell center) || center == null)
+                return cells;
+            var shapeCells = shape.GetCells(center, ctx, fallbackRange);
+            foreach (var c in shapeCells)
+                if (c != null && c.GridPos != pos)
+                    cells.Add(c.GridPos);
+            return cells;
+        }
+
+        if (map == null) return cells;
+        for (int dy = -fallbackRange; dy <= fallbackRange; dy++)
+        {
+            for (int dx = -fallbackRange; dx <= fallbackRange; dx++)
             {
                 if (dx == 0 && dy == 0) continue;
-                if (Mathf.Abs(dx) + Mathf.Abs(dy) > range) continue;
+                if (Mathf.Abs(dx) + Mathf.Abs(dy) > fallbackRange) continue;
                 Vector2I checkPos = new Vector2I(pos.X + dx, pos.Y + dy);
                 if (map.ContainsKey(checkPos))
                     cells.Add(checkPos);

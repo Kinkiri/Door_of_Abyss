@@ -70,8 +70,8 @@ Scripts/                         ~7300 行 C#
 │   │   ├── TransformUnitAction.cs  变身（换模板 + 全清重置）
 │   │   └── RandomTransformAction.cs 随机变身（CardFilter 模板库筛选）
 │   ├── Targeting/               目标筛选器（抽象基类 + 多态子类，替代 Shape+Filter 枚举）
-│   │   ├── TargetFilter.cs      抽象基类：ApplyUnits/ApplyCells/GetShape/IsUnitMatch
-│   │   ├── ShapeTargetFilter.cs 形状候选源：Shape + AreaRange
+│   │   ├── TargetFilter.cs      抽象基类：ApplyUnits/ApplyCells/GetShape/GetCellShape/IsUnitMatch
+│   │   ├── ShapeTargetFilter.cs 形状候选源：CustomShape（CellShape，推荐）或 Shape + AreaRange（旧枚举路径）
 │   │   ├── PropertyTargetFilter.cs 静态属性筛选中间基类
 │   │   ├── TeamTargetFilter.cs  相对阵营筛选
 │   │   ├── UnitTypeTargetFilter.cs 单位类型筛选
@@ -85,6 +85,18 @@ Scripts/                         ~7300 行 C#
 │   │   ├── AndTargetFilter.cs   AND 组合（形状节点生成 + 其余过滤）
 │   │   ├── OrTargetFilter.cs    OR 组合（任一命中）
 │   │   └── NotTargetFilter.cs   NOT 组合（补集）
+│   ├── Shapes/                 形状体系（CellShape 多态类，自管格子生成，解析与预览共用）
+│   │   ├── CellShape.cs        抽象基类：GetCells(center, ctx) → Cell[]（含中心、越界过滤）
+│   │   ├── DiamondShape.cs     菱形扩散（AreaRange + 值源）
+│   │   ├── SquareShape.cs      方形扩散（AreaRange + 值源）
+│   │   ├── CrossShape.cs       十字（中心 + 四臂各 Length）
+│   │   ├── XShape.cs           叉字（中心 + 四对角各 Length）
+│   │   ├── RayShape.cs         射线（方向 + 长 + 宽，矩形带）
+│   │   ├── TriangleShape.cs    三角形（方向 + 长，每排宽 2i+1 锥形）
+│   │   ├── RowShape.cs         整行（中心所在行左右各 Length）
+│   │   ├── ColumnShape.cs      整列（中心所在列上下各 Length）
+│   │   ├── RingShape.cs        环形（曼哈顿距离恰为 Radius，不含内部）
+│   │   └── AllShape.cs         全地图
 │   ├── Condition/               条件系统（ECA）
 │   │   ├── Condition.cs         抽象基类：IsMet(Context)
 │   │   ├── CompareCondition.cs  通用比较（两个 ValueSource）
@@ -104,7 +116,18 @@ Scripts/                         ~7300 行 C#
 │   │   ├── UnitCountValue.cs    场上单位数量
 │   │   ├── DistanceValue.cs     曼哈顿距离
 │   │   ├── UnitInfoValue.cs     单位类型（枚举数值）
-│   │   └── BattleCostValue.cs   费用
+│   │   ├── BattleCostValue.cs   费用
+│   │   └── Cell/                格子坐标值源（Vector2I，抽象基类 CellValueSource）
+│   │       ├── CellValueSource.cs   坐标值源基类：GetCell(Context) → Vector2I?（null=无有效坐标）
+│   │       ├── UnitCellValue.cs     单位坐标读取（Source/Target/EventTarget）
+│   │       ├── ContextCellValue.cs  格子坐标读取（ctx.TargetCell/SourceCell）
+│   │       ├── OffsetCellValue.cs   坐标偏移（基准 + dx/dy，支持值源覆盖）
+│   │       ├── StepCellValue.cs     方向步进（基准沿方向走 N 格，方向/距离支持值源覆盖）
+│   │       ├── DirectionValue.cs    方向计算（两点 → CellDirection 4 向枚举值）
+│   │       ├── AttackDirectionValue.cs 攻击方向读取（ctx.AttackDirection → 4 向枚举值）
+│   │       ├── OppositeDirectionValue.cs 方向取反（Up↔Down、Left↔Right）
+│   │       ├── CellCoordValue.cs    坐标分量（X/Y 整数读取，条件比较用）
+│   │       └── RandomCellValue.cs   形状内随机一格（可选仅可站立/未占据）
 │   ├── Card/
 │   │   ├── CardData.cs          卡牌基类（TargetFilter/Conditions/Actions）
 │   │   ├── DeckData.cs          卡组
@@ -301,6 +324,8 @@ public class Context {
 	Card SourceCard;
 	Cell TargetCell, SourceCell;
 	Cell[] TargetCells;
+	UnitActType ActType;    // 行动类型（OnUnitAct：移动/攻击）
+	CellDirection? AttackDirection;  // 攻击方向（攻击者→受击者 4 向；攻击事件/OnUnitAct 攻击时填充，非攻击=null）
 }
 ```
 
@@ -452,7 +477,7 @@ OrCondition
 
 | 动作 | 说明 |
 |---|---|
-| SummonUnitAction | 通用召唤：配置 `UnitData`（Resource 引用）或 `UnitID`（字符串查 UnitLibrary，亡语重生等循环引用场景用字符串）可直接召唤任意单位（无部署范围限制，可用于法术/被动）；两者都未配置时回退到单位卡自身（`UnitCardData.UnitData`），且仅此路径保留"己方门部署范围内"检查。可选 `SpawnBuff`/`SpawnBuffStacks`：召唤成功后自动给新单位施加 Buff（单位卡打出时带 Buff 的实现方式） |
+| SummonUnitAction | 通用召唤：配置 `UnitData`（Resource 引用）或 `UnitID`（字符串查 UnitLibrary，亡语重生等循环引用场景用字符串）可直接召唤任意单位（无部署范围限制，可用于法术/被动）；两者都未配置时回退到单位卡自身（`UnitCardData.UnitData`），且仅此路径保留"己方门部署范围内"检查。可选 `SpawnBuff`/`SpawnBuffStacks`：召唤成功后自动给新单位施加 Buff（单位卡打出时带 Buff 的实现方式）。可选 `SummonPosition`（坐标值源）：非空且有有效坐标时直接在该坐标放置（覆盖 TargetCells/TargetCell，如"来源前方 2 格"/随机格），坐标无效/格子不存在时静默跳过 |
 
 部署限制出牌前由 `SelectionManager.ValidateCardTarget` 拦截（范围外点击不出牌、不扣费），`SummonUnitAction` 内保留同检查作为双保险。
 
@@ -508,7 +533,7 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 
 | 动作 | 字段 | 说明 |
 |---|---|---|
-| MoveUnitAction | Mode=Teleport/Push/Pull, Distance | Teleport=传送，Push=击退，Pull=拉拽。不耗 AP。曼哈顿方向 |
+| MoveUnitAction | Mode=Teleport/Push/Pull, Distance + DistanceValueSource | **作用于 TargetUnits**（与其他动作一致：卡牌=筛选目标，被动=TargetFilter/Self/EventTarget 解析），不耗 AP。Teleport=传送到 TargetCell/TargetUnit 所在格（可选 `TeleportPosition` 坐标值源优先指定落点）；**Push=击退（远离锚点）**、**Pull=拉拽（靠近锚点）**，方向与距离均支持值源：`DirectionValueSource`（值源优先，CellDirection 枚举值，如 `DirectionValue` 动态朝向/常量固定向）、`DirectionAnchor`（坐标值源，方向 = 锚点坐标 → 目标，可推离门口/环境格；未配置时锚点=SourceUnit）、`DistanceValueSource`（动态距离）。锚点与方向均缺失时原地不动 |
 
 ### 3.8 属性设置（不可逆）
 
@@ -542,6 +567,28 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 | **CardInfoValue** | Info=Cost/Type/World/Faction/Rarity | **读取 `ctx.SourceCard` 的卡牌属性**（卡牌被动场景=被抽/被打出的牌；Type/World/Faction/Rarity 返回枚举数值，配合 CompareCondition 做类型判断），无卡牌时返回 DefaultValue |
 | **UnitInfoValue** | Unit=Source/Target/EventTarget, Info=Type/Team | **读取单位的类型/阵营枚举**（`UnitType`/`Team` 数值，配合 CompareCondition 判断"目标是建筑/兵种/门…"、"死者是友方"等），单位不存在时返回 DefaultValue |
 | **PendingDamageValue** | - | **本次伤害的基础伤害值**（攻击前/受击前事件时由 DamageAction 填充 `ctx.PendingDamage`）。配合条件判断"会致死"（如致命免伤） |
+| **AttackDirectionValue** | DefaultValue | **本次攻击方向**（攻击者→受击者的曼哈顿 4 向，CellDirection 枚举值；攻击事件/OnUnitAct 攻击时填充，非攻击事件返回 DefaultValue）。配合条件判断"背刺/侧翼" |
+| **OppositeDirectionValue** | Direction(方向值源), DefaultValue | **方向取反**：输入方向（CellDirection 枚举值）取反（Up↔Down、Left↔Right）；输入非法/缺失返回 DefaultValue。典型：`Direction=AttackDirectionValue` 得到"目标背后"方向 |
+
+### 4.1 格子坐标值源（CellValueSource）
+
+坐标值源返回 `Vector2I?`（**null = 无有效坐标**，消费方静默跳过）。抽象基类 `CellValueSource` 与 int 版 `ValueSource` 平行；纯坐标计算（读取/偏移/步进）不做地图校验，可链式组合（如 Step → Offset），由最终消费方（召唤/传送/扩散中心）经地图查格校验。
+
+| 坐标值源 | 字段 | 说明 |
+|---|---|---|
+| UnitCellValue | Unit=Source/Target/EventTarget | 单位格子坐标（GridPos） |
+| ContextCellValue | Cell=Target/Source | ctx.TargetCell（事件格/环境格/点击格）/ ctx.SourceCell（移动前旧格）坐标 |
+| OffsetCellValue | Base(坐标值源), Dx/Dy + DxValueSource/DyValueSource | 基准坐标 + (dx, dy) 偏移；偏移支持固定值与值源覆盖 |
+| StepCellValue | Base, Direction + DirectionValueSource, Distance + DistanceValueSource | 基准沿方向走 N 格；方向（CellDirection 4 向）与距离均支持值源覆盖；距离 ≤0 返回基准 |
+| DirectionValue | From/To=Source/Target/EventTarget | **方向计算**：两点 → `CellDirection` 枚举值（|dx|≥|dy| 取横向，否则纵向；零向量按横向 Right，与 MoveUnitAction 同约定） |
+| CellCoordValue | Cell(坐标值源), Info=PosX/PosY, DefaultValue | 坐标 X/Y 分量（int），配合 CompareCondition 做"X 坐标≥5"类判断 |
+| RandomCellValue | Base(null→ctx.TargetCell), Shape=菱形/方形/全图, Range + RangeValueSource, RequireStandable(默认 true) | 形状内随机一格；`RequireStandable=true` 只取可站立且未占据的格（召唤落点用），无可选格返回 null |
+
+**典型用法：**
+- "来源前方 2 格"：`StepCellValue{Base=UnitCellValue(Source), Direction=Up, Distance=2}`（方向也可用 `DirectionValue` 动态计算，如"朝向目标方向 3 格"）
+- "来源右上 1 格"：`OffsetCellValue{Base=UnitCellValue(Source), Dx=1, Dy=-1}`
+- "随机空地召唤"：`RandomCellValue{Shape=AreaDiamond, Range=2}` → `SummonPosition`
+- "以环境格为中心菱形 2 格扩散"：`ShapeTargetFilter.CenterOverride = ContextCellValue(Target)`（环境被动里 TargetCell=环境所在格）
 
 ### FormulaValue 运算
 
@@ -560,6 +607,11 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 | ModifyStatAction / SetStatAction / ModifyCostAction | ValueSource |
 | FormulaValue | Left, Right |
 | RepeatAction | Times |
+| SummonUnitAction | SummonPosition（坐标值源：指定召唤位置） |
+| MoveUnitAction | TeleportPosition（坐标值源：Teleport 指定落点）/ DirectionValueSource（int：Push/Pull 方向）/ DirectionAnchor（坐标值源：Push/Pull 锚点）/ DistanceValueSource（int：Push/Pull 距离） |
+| ShapeTargetFilter | AreaRangeValueSource（int）/ CenterOverride（坐标值源：扩散中心覆盖） |
+| OffsetCellValue / StepCellValue | Base（坐标值源）+ 偏移/方向/距离（int 值源覆盖） |
+| RandomCellValue | Base（坐标值源，null→ctx.TargetCell）+ Range（int 值源覆盖） |
 
 ## 5. Buff 系统
 
@@ -649,8 +701,8 @@ Actions=[ApplyBuff{义肢, ValueSource=BuffInfoValue{Unit=EventTarget, BuffID=�
 | OnUnitAct | 单位行动后（移动/攻击；**出牌不触发**），`ctx.ActType` 区分移动/攻击 |
 | **OnUseCard** | 使用卡牌后（出牌成功扣费后、卡牌动作执行前），无 subject（来源单位经 `SourceUnit` 取） |
 | **OnDrawCard** | 抽牌后（`SourceCard`=被抽的牌，`SourceTeam`=抽牌方），无 subject。**手牌被动只响应"自己被抽到"**（防连锁递归），单位被动可响应任意抽牌 |
-| **OnBeforeAttack** | **攻击前**（伤害计算前，攻击者视角，subject=攻击者）。`SourceUnit`=攻击者，`TargetUnit`=受击者，`ctx.PendingDamage`=本次基础伤害。攻击者挂"加伤"被动（读 `Source`=自己），用 `ModifyDamageAction` 改 `ctx.DamageModifier` |
-| **OnBeforeTakeDamage** | **受击前**（伤害计算前，受击者视角，subject=受击者）。`SourceUnit`=受击者（自己），`TargetUnit`=攻击者，`ctx.PendingDamage`=本次基础伤害。受击者挂"减伤"被动（读 `Source`=自己），用 `ModifyDamageAction` 改 `ctx.DamageModifier`；`PendingDamageValue` 可判断"会致死"。`DamageAction` 结算时两侧修饰累加：`max(0, 基础伤害 + 攻击侧 + 受击侧)`；`AutoAttackAction` 已统一走 `DamageAction` 链路 |
+| **OnBeforeAttack** | **攻击前**（伤害计算前，攻击者视角，subject=攻击者）。`SourceUnit`=攻击者，`TargetUnit`=受击者，`ctx.PendingDamage`=本次基础伤害，`ctx.AttackDirection`=攻击方向（攻击者→受击者 4 向）。攻击者挂"加伤"被动（读 `Source`=自己），用 `ModifyDamageAction` 改 `ctx.DamageModifier` |
+| **OnBeforeTakeDamage** | **受击前**（伤害计算前，受击者视角，subject=受击者）。`SourceUnit`=受击者（自己），`TargetUnit`=攻击者，`ctx.PendingDamage`=本次基础伤害，`ctx.AttackDirection`=攻击方向。受击者挂"减伤"被动（读 `Source`=自己），用 `ModifyDamageAction` 改 `ctx.DamageModifier`；`PendingDamageValue` 可判断"会致死"。`DamageAction` 结算时两侧修饰累加：`max(0, 基础伤害 + 攻击侧 + 受击侧)`；`AutoAttackAction` 已统一走 `DamageAction` 链路 |
 | **OnUnitDeath** | 单位死亡（亡语） |
 | **OnAnyUnitDeath** | **任意单位死亡后**（区别于亡语：无 subject 定向，**存活**单位的被动均可响应，死者自身不触发）。`TargetUnit`=死者，`TargetCell`=死亡格子，`SourceUnit`=死者。配合 TargetFilters 筛阵营/类型（如 `[Shape(全体), Team(友方)]` = 友方死亡时） |
 | **OnMove** | 移动后（不含攻击/出牌） |
@@ -734,9 +786,10 @@ Shape=All 时预览高亮只显示 TargetFilters 匹配且有存活单位的格�
 ```
 TargetFilter（抽象基类）
 │  Kind: Unit / Cell（结果集是单位还是格子）
-│  ApplyUnits / ApplyCells / GetShape / GetAreaRange / IsUnitMatch / GetTeamFilter
+│  ApplyUnits / ApplyCells / GetShape / GetAreaRange / GetCellShape / IsUnitMatch / GetTeamFilter
 │
-├── ShapeTargetFilter        // 形状候选源：Shape + AreaRange（唯一的形状节点，生成候选）
+├── ShapeTargetFilter        // 形状候选源（唯一的形状节点，生成候选）：
+│                            //   CustomShape（CellShape 多态类，推荐）或 Shape + AreaRange（旧枚举路径，兼容存量 .tres）
 ├── PropertyTargetFilter     // 静态属性筛选的中间基类（复用遍历过滤/格子透传）
 │   ├── TeamTargetFilter     // 相对阵营 Team（Ally/Enemy 相对来源）
 │   ├── UnitTypeTargetFilter // 单位类型 UnitTypes
@@ -752,11 +805,45 @@ TargetFilter（抽象基类）
 └── NotTargetFilter          // NOT 组合：全量 − 子过滤器命中集（补集）
 ```
 
+### 形状体系（CellShape，推荐）
+
+形状从 `ShapeTargetFilter` 枚举 switch 解耦为 **CellShape 多态 Resource 体系**（`Scripts/Data/Shapes/`）：每个形状类自管格子生成（`GetCells(center, ctx)`，含中心格、越界自动过滤），**解析与预览共用同一算法**（`SelectionManager` 预览经 `TargetFilter.GetCellShape()` 穿透取形状实例直接生成，不再复制算法）。
+
+```
+CellShape（抽象基类）
+│  GetCells(center, ctx) → Cell[]      // 以中心格生成形状内格子（含中心，经 ctx.Map 过滤越界）
+│  GetCells(center, ctx, sizeOverride) // 尺寸注入重载：sizeOverride≥0 时主尺寸（Length/AreaRange）取它
+│                                      //   （攻击范围场景 = 单位射程联动），否则回退自身参数；不改共享实例
+│  GetCategory() → TargetShape         // 类别枚举（UI 预览/校验/文本用）
+│  GetAreaRange()                      // 扩散半径（预览/文本用，值源动态取值）
+│  Describe(size) / DescribeRange()    // 显示描述（"十字 2"；null 形状只显数字）
+│
+├── DiamondShape    AreaRange + AreaRangeValueSource           // 菱形扩散
+├── SquareShape     AreaRange + AreaRangeValueSource           // 方形扩散
+├── CrossShape      Length + LengthValueSource                 // 十字：中心 + 上下左右各 Length（4N+1）
+├── XShape          Length + LengthValueSource                 // 叉字：中心 + 四对角各 Length（4N+1）
+├── RayShape        Direction + DirectionValueSource,          // 射线（矩形带）：含中心排共 Length+1 排，
+│                   Length + LengthValueSource, Width + ...    //   每排宽 2×Width+1（Width=0 → 单格宽）
+├── TriangleShape   Direction + DirectionValueSource,          // 三角形（锥形）：第 i 排宽 2i+1（1→3→5），
+│                   Length + LengthValueSource                 //   共 (Length+1)² 格
+├── RowShape        Length + LengthValueSource                 // 整行：中心所在行左右各 Length（2L+1）
+├── ColumnShape     Length + LengthValueSource                 // 整列：中心所在列上下各 Length（2L+1）
+├── RingShape       Radius + RadiusValueSource                 // 环形：曼哈顿距离恰为 Radius（不含内部；0=仅中心）
+└── AllShape        -                                          // 全地图（随机格等场景用）
+```
+
+配置方式：`ShapeTargetFilter.CustomShape` 拖入形状类 Resource（方向/长度/宽度支持固定值 + 值源覆盖，如 `DirectionValue` 动态朝向目标）。`Shape` 枚举路径保留兼容存量 .tres（`CustomShape=null` 时生效）；新配置统一走 `CustomShape`。
+
+### 单位攻击范围形状
+
+`UnitData.AttackShape`（CellShape，null = 默认菱形）——单位攻击范围按形状生成（选中高亮 / AI 索敌 / AutoAttackAction 三处共用 `PathFinder.GetAttackRange`/`GetAttackableTargets` 统一入口），**主尺寸自动联动 `AttackDistance`**（装备/变身/Buff 加射程即时生效）。建议用无方向形状（菱形/方形/十字/叉）；射线/三角形等方向形状待单位朝向系统引入。信息面板/卡牌显示形状描述（如"十字 2"）。
+
 ### 语义约定
 
 - **`CardData.TargetFilters` / `EffectData.TargetFilters` 是数组，默认 And 组合**：`[Shape(单体), Team(敌方)]` ≡ `And[Shape, Team]`，无需手动包 And（运行时经 `TargetFilter.CombineAnd` 组合）
 - **数组为 null/空 = 无目标**（无目标法术直接打出）；被动效果无 TargetFilters 时用 `Target`（Self/EventTarget）
 - **形状节点**（ShapeTargetFilter）忽略上游候选自行生成；**过滤节点**（Attribute/Condition/组合）对上游候选过滤
+- **扩散中心覆盖**：`ShapeTargetFilter.CenterOverride`（坐标值源，与 `AreaRangeValueSource` 同风格）——配置后 SingleCell/AreaDiamond/AreaSquare 以该坐标为中心，**代替默认的 ctx.TargetCell**（被动路径=单位自身格/环境格/事件格，卡牌路径=点击格）；覆盖坐标无效/格子不存在时返回空结果。典型用法：环境被动以"环境格"为固定中心、单位被动以"来源前方 N 格"为扩散中心（`StepCellValue`）
 - **单挂过滤类** = 从全量开始（`[Team(敌方)]` 单独 ≡ 全体敌方）
 - 阵营是**相对语义**（Ally/Enemy 相对效果来源阵营）；Neutral 单位不命中敌方过滤
 - **随机节点**（RandomTargetFilter）为后处理：无形状（GetShape=None），放筛选链末尾从已筛结果随机取 N 个（Fisher-Yates 不重复抽样；数量不足全要；`ValueSource` 动态数量覆盖 Count；单位/格子目标都支持）
@@ -769,6 +856,13 @@ TargetFilter（抽象基类）
 | None | 无目标（一般直接用 TargetFilters=null 或空数组） |
 | SingleUnit / SingleCell | 点选单位/格子 |
 | AreaDiamond / AreaSquare | 菱形/方形扩散（半径 = ShapeTargetFilter.AreaRange） |
+| Cross | 十字（`CrossShape`） |
+| X | 叉字（`XShape`） |
+| Ray | 射线（`RayShape`：方向 + 长 + 宽） |
+| Triangle | 三角形/锥形（`TriangleShape`：方向 + 长，每排宽 2i+1） |
+| Row | 整行（`RowShape`：中心所在行左右各 Length） |
+| Column | 整列（`ColumnShape`：中心所在列上下各 Length） |
+| Ring | 环形（`RingShape`：曼哈顿距离恰为 Radius，不含内部） |
 | All | 全地图 |
 
 ### 典型配置
@@ -778,6 +872,8 @@ TargetFilter（抽象基类）
 | 敌方单体 | `[Shape(单体), Team(敌方)]` |
 | 友方单体 | `[Shape(单体), Team(友方)]` |
 | 菱形 2 格敌方 | `[Shape(菱形,2), Team(敌方)]` |
+| 十字 2 格敌方 | `[Shape(CustomShape=CrossShape{Length=2}), Team(敌方)]` |
+| 朝目标方向射线 3×1 敌方 | `[Shape(CustomShape=RayShape{Direction=DirectionValue(朝向目标), Length=3, Width=0}), Team(敌方)]` |
 | 全体友方 | `[Shape(全体), Team(友方)]` |
 | 残血敌方（HP≤50%Max） | `[Shape(全体), Team(敌方), Cond(HP≤50%Max)]` |
 | 生命最低的 3 个友方 | `[Shape(全体), Team(友方), Extreme(生命值, 最低, 3)]`（值源+方向+数量；不足全要） |
@@ -968,7 +1064,15 @@ UnitData PassiveEffects=[EffectData{
 ```
 Type=Spell, Cost=1
 TargetFilters=[Shape(单体), Team(敌方)]
-Actions=[MoveUnitAction{Mode=Push, Distance=2}]
+Actions=[MoveUnitAction{Mode=Push, Distance=2}]   // 目标（敌方）沿"施法者 → 敌方"方向被推开 2 格
+```
+
+**变体：** 按施法者攻击力击退（动态距离）、推离指定坐标（如门口）：
+
+```
+Actions=[MoveUnitAction{Mode=Push,
+  DistanceValueSource=UnitStatValue(Source, AttackPower),   // 击退 = 自身攻击力格数
+  DirectionAnchor=ContextCellValue(Target)}]                // 锚点 = 事件目标格（推离该格）
 ```
 
 ### 11.11 吸取 - 造成等于两单位距离的伤害

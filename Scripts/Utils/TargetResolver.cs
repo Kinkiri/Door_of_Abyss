@@ -72,4 +72,42 @@ public static class TargetResolver
         }
         return list.ToArray();
     }
+
+    /// <summary>从格子集合提取其上的存活单位（CellShape 的 ApplyUnits 用）</summary>
+    public static Unit[] UnitsFromCells(Cell[] cells)
+    {
+        if (cells == null) return Array.Empty<Unit>();
+        var list = new List<Unit>(cells.Length);
+        foreach (var c in cells)
+        {
+            var u = c?.OccupyingUnit;
+            if (IsValidTarget(u))
+                list.Add(u);
+        }
+        return list.ToArray();
+    }
+
+    /// <summary>4 向单位向量（曼哈顿约定，与 StepCellValue/MoveUnitAction 一致）</summary>
+    public static Vector2I CellDirectionVector(CellDirection d) => d switch
+    {
+        CellDirection.Up => new Vector2I(0, -1),
+        CellDirection.Down => new Vector2I(0, 1),
+        CellDirection.Left => new Vector2I(-1, 0),
+        CellDirection.Right => new Vector2I(1, 0),
+        _ => Vector2I.Zero,
+    };
+
+    /// <summary>
+    /// 计算 from → to 的曼哈顿方向（4 向）：|dx| ≥ |dy| 取横向（dx>0→Right，dx<0→Left），否则纵向（dy>0→Down，dy<0→Up）；
+    /// 同格（无位移）返回 null。与 DirectionValue/MoveUnitAction 同约定。
+    /// </summary>
+    public static CellDirection? DirectionBetween(Vector2I from, Vector2I to)
+    {
+        int dx = to.X - from.X;
+        int dy = to.Y - from.Y;
+        if (dx == 0 && dy == 0) return null;
+        if (System.Math.Abs(dx) >= System.Math.Abs(dy))
+            return dx >= 0 ? CellDirection.Right : CellDirection.Left;
+        return dy >= 0 ? CellDirection.Down : CellDirection.Up;
+    }
 }

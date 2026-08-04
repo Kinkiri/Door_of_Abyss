@@ -23,13 +23,31 @@ public partial class SummonUnitAction : GameAction
     /// <summary>SpawnBuff 的初始层数</summary>
     [Export] public int SpawnBuffStacks { get; set; } = 1;
 
+    /// <summary>
+    /// 指定召唤坐标（CellValueSource）：非空且有有效坐标时，直接在该坐标放置（覆盖 TargetCells/TargetCell）。
+    /// 坐标无效/格子不存在时静默跳过。用于"召唤到指定位置"（如来源前方 N 格、随机格），配合 UnitData/UnitID 通用召唤路径。
+    /// </summary>
+    [Export] public CellValueSource SummonPosition { get; set; }
+
     protected override void Apply(Context ctx)
     {
-        // 目标格子：优先遍历 TargetCells（区域召唤），单格回退 TargetCell
-        var cells = (ctx.TargetCells != null && ctx.TargetCells.Length > 0)
-            ? ctx.TargetCells
-            : (ctx.TargetCell != null ? new[] { ctx.TargetCell } : null);
-        if (cells == null) return;
+        // 目标格子：优先 SummonPosition 指定坐标，其次遍历 TargetCells（区域召唤），单格回退 TargetCell
+        Cell[] cells;
+        if (SummonPosition != null)
+        {
+            var pos = SummonPosition.GetCell(ctx);
+            if (pos == null) return;
+            var map = ctx.Map ?? MapManager.Instance?.Map;
+            if (map == null || !map.TryGetValue(pos.Value, out Cell posCell) || posCell == null) return;
+            cells = new[] { posCell };
+        }
+        else
+        {
+            cells = (ctx.TargetCells != null && ctx.TargetCells.Length > 0)
+                ? ctx.TargetCells
+                : (ctx.TargetCell != null ? new[] { ctx.TargetCell } : null);
+            if (cells == null) return;
+        }
 
         // 优先用动作配置的单位（UnitData 引用 → UnitID 查库），否则回退到单位卡自身的 UnitData
         var unitData = UnitData

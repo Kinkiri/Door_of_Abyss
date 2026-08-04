@@ -93,10 +93,20 @@ public partial class SelectionManager : Node2D
 
         _reachable = PathFinder.GetReachableCellsWithAttackTargets(
             SelectedUnit.GridPos, SelectedUnit.Stamina,
-            SelectedUnit.AttackDistance, SelectedUnit.Team,
-            MapManager.Instance.Map, out _attackable);
+            SelectedUnit.AttackShape, SelectedUnit.AttackDistance, SelectedUnit.Team,
+            MapManager.Instance.Map, MakeAtkCtx(SelectedUnit), out _attackable);
         _attackRange = CalcAttackRange(SelectedUnit);
         EmitSignal(SignalName.SelectionUpdated);
+    }
+
+    /// <summary>构造攻击范围计算用的 ECA 上下文（形状值源可读 SourceUnit 属性，如射程联动）</summary>
+    private static Context MakeAtkCtx(Unit unit)
+    {
+        var map = MapManager.Instance?.Map;
+        Cell center = null;
+        if (map != null)
+            map.TryGetValue(unit.GridPos, out center);
+        return new Context { SourceUnit = unit, Map = map, TargetCell = center };
     }
 
     // ======================================================================
@@ -203,7 +213,8 @@ public partial class SelectionManager : Node2D
             return true;
 
         // 需要选择格子
-        if (shape is TargetShape.SingleCell or TargetShape.AreaDiamond or TargetShape.AreaSquare)
+        if (shape is TargetShape.SingleCell or TargetShape.AreaDiamond or TargetShape.AreaSquare
+            or TargetShape.Cross or TargetShape.X or TargetShape.Ray or TargetShape.Triangle)
         {
             if (ctx.TargetCell == null)
             {
@@ -349,12 +360,13 @@ public partial class SelectionManager : Node2D
         RecalculateRanges();
     }
 
-    /// <summary>计算攻击范围（排除友方格子）</summary>
+    /// <summary>计算攻击范围（排除友方格子；按 AttackShape 生成，null=默认菱形）</summary>
     private HashSet<Vector2I> CalcAttackRange(Unit unit)
     {
-        var raw = PathFinder.GetCellsInRange(unit.GridPos, unit.AttackDistance, MapManager.Instance.Map);
+        var map = MapManager.Instance.Map;
+        var raw = PathFinder.GetAttackRange(unit.GridPos, unit.AttackShape, unit.AttackDistance, map, MakeAtkCtx(unit));
         raw.RemoveWhere(pos =>
-            MapManager.Instance.TryGetCell(pos, out Cell c)
+            map.TryGetValue(pos, out Cell c)
             && c.OccupyingUnit != null && c.OccupyingUnit.Team == unit.Team);
         return raw;
     }
@@ -445,7 +457,20 @@ public partial class SelectionManager : Node2D
             return new HashSet<Vector2I> { center };
         }
 
-        // 范围形状：显示所有在范围中的格子（区域本身即是目标）
+        // 自定义形状（CellShape 多态体系）：统一生成预览格（与解析共用同一算法）
+        // 覆盖十字/叉/射线/三角形以及新配置的菱形/方形
+        var cellShape = tf.GetCellShape();
+        if (cellShape != null)
+        {
+            var shapeCells = cellShape.GetCells(map[center], previewCtx);
+            if (shapeCells.Length == 0) return null;
+            var set = new HashSet<Vector2I>();
+            foreach (var c in shapeCells)
+                set.Add(c.GridPos);
+            return set;
+        }
+
+        // 范围形状（旧枚举路径，兼容存量资源）：显示所有在范围中的格子（区域本身即是目标）
         int range = tf.GetAreaRange();
         var cells = new HashSet<Vector2I>();
 

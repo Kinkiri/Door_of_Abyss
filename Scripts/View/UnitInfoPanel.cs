@@ -137,7 +137,7 @@ public partial class UnitInfoPanel : PanelContainer
             $"HP：{unit.CurrentHP} / {unit.MaxHP}\n" +
             $"攻击力：{unit.AttackPower}\n" +
             $"体力：{unit.Stamina}\n" +
-            $"攻击范围：{unit.AttackDistance}\n" +
+            $"攻击范围：{CellShape.DescribeRange(unit.AttackShape, unit.AttackDistance)}\n" +
             $"行动点：{unit.ActionPoints} / {unit.MaxActionPoints}\n" +
             $"本回合行动次数：{unit.ActionsThisTurn}\n" +
             $"ID：{data.UnitID}　世界：{data.World}　势力：{data.Faction}\n" +
@@ -243,7 +243,7 @@ public partial class UnitInfoPanel : PanelContainer
             CardUnitSection.Visible = true;
             CardUnitLabel.Text =
                 $"{ud.UnitName}　{ud.Type}·{ud.Rarity}\n" +
-                $"HP：{ud.HealthPoints}　攻击力：{ud.AttackPower}　体力：{ud.Stamina}　射程：{ud.AttackDistance}　行动点：{ud.ActionPoints}\n" +
+                $"HP：{ud.HealthPoints}　攻击力：{ud.AttackPower}　体力：{ud.Stamina}　射程：{CellShape.DescribeRange(ud.AttackShape, ud.AttackDistance)}　行动点：{ud.ActionPoints}\n" +
                 $"{ud.Description}\n" +
                 $"被动效果：{ud.PassiveEffects?.Length ?? 0} 个";
         }
@@ -318,6 +318,13 @@ public partial class UnitInfoPanel : PanelContainer
             TargetShape.SingleCell  => "点选格子",
             TargetShape.AreaDiamond => "菱形区域",
             TargetShape.AreaSquare  => "方形区域",
+            TargetShape.Cross       => "十字区域",
+            TargetShape.X           => "叉字区域",
+            TargetShape.Ray         => "射线区域",
+            TargetShape.Triangle    => "三角区域",
+            TargetShape.Row         => "行区域",
+            TargetShape.Column      => "列区域",
+            TargetShape.Ring        => "环形区域",
             _                       => filter.GetShape().ToString(),
         };
     }

@@ -100,8 +100,10 @@ public partial class EnemyAI : Node
         GD.Print($"[EnemyAI] 处理 {enemy.UnitData?.UnitName} 位置={enemy.GridPos} AP={enemy.ActionPoints}");
 
         // 1. 找攻击范围内可攻击的玩家单位
+        map.TryGetValue(enemy.GridPos, out Cell enemyCell);
+        var atkCtx = new Context { SourceUnit = enemy, Map = map, TargetCell = enemyCell };
         var attackablePositions = PathFinder.GetAttackableTargets(
-            enemy.GridPos, enemy.AttackDistance, enemy.Team, map);
+            enemy.GridPos, enemy.AttackShape, enemy.AttackDistance, enemy.Team, map, atkCtx);
 
         Unit nearestTarget = null;
         int nearestDist = int.MaxValue;

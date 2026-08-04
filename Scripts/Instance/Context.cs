@@ -27,6 +27,13 @@ public partial class Context
     /// <summary>触发 OnUnitAct 时的行动类型（移动/攻击），供被动效果区分</summary>
     public UnitActType ActType { get; set; }
 
+    /// <summary>
+    /// 本次攻击方向（攻击者 → 受击者的曼哈顿 4 向；非攻击事件 = null）。
+    /// DamageAction（OnBeforeAttack/OnBeforeTakeDamage/OnDealDamage/OnTakeDamage/OnKill）与
+    /// BattleManager（OnUnitAct 攻击）触发时填充，EventBus 构建 effectCtx 时透传，供被动以 AttackDirectionValue 读取。
+    /// </summary>
+    public CellDirection? AttackDirection { get; set; }
+
     /// <summary>本次伤害事件的修饰量（正=加伤，负=减伤）。攻击前/受击前被动用 ModifyDamageAction 增减，DamageAction 结算时两侧累加</summary>
     public int DamageModifier { get; set; }
 
