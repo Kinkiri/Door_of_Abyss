@@ -2,17 +2,19 @@ using Godot;
 using System.Collections.Generic;
 
 /// <summary>
-/// 触摸输入适配器：把安卓触摸手势翻译为鼠标事件注入现有输入管线，
-/// 使 SelectionManager / DragCamera2D / BattleManager 等鼠标逻辑零改动运行。
+/// 触摸输入适配器：补充 Godot 原生触摸→鼠标模拟覆盖不了的手势。
 ///
-/// 手势映射：
-///   单指 按下→抬起（未超拖拽阈值）  = 左键点击（选单位/格子/出牌/放门）
-///   单指 按下→移动超阈值→抬起       = 中键拖拽镜头
-///   双指 捏合（两指距离变化）        = 滚轮缩放（锚点 = 两指中点）
-///   选中卡牌后单指拖动              = 鼠标移动（卡牌目标预览跟随手指）
+/// 分工约定：
+///   - 单指点击（按下→抬起，未超阈值）交给 Godot 原生触摸→鼠标模拟
+///     （project.godot 的 emulate_mouse_from_touch=true，位置天然正确，
+///      SelectionManager / BattleManager 放门 / Control 按钮直接可用）
+///   - 单指按下后移动超阈值  = 中键拖拽镜头（进入拖拽时先注入右键取消，
+///     避免按下瞬间 Godot 模拟出的左键点击误选中单位/误出牌）
+///   - 双指捏合（距离变化）   = 滚轮缩放（锚点 = 两指中点）
+///   - 选中卡牌后的拖动预览由 Godot 触摸模拟的鼠标移动自动提供，无需注入
 ///
-/// 触摸到 Control（手牌/按钮）时由 GUI 阶段先行消费，不会进入本适配器，
-/// 天然避让 UI 交互。"取消"按钮由本类动态创建（等效右键，见 CreateCancelButton）。
+/// 触摸到 Control（手牌/按钮）时由 GUI 阶段先行消费，不会进入本适配器。
+/// "取消"按钮由本类动态创建（等效右键，见 CreateCancelButton）。
 ///
 /// PC 调试：按住 Ctrl + 鼠标左键模拟单指触摸（EnableDebugMouseSimulation）。
 /// </summary>
@@ -37,7 +39,7 @@ public partial class TouchInputAdapter : Node2D
 
     private readonly Dictionary<int, TouchState> _touches = new();
 
-    /// <summary>本次触摸序列是否进入过双指模式（退出后抬起不再触发点击，防误触）</summary>
+    /// <summary>本次触摸序列是否进入过双指模式（退出后直到全部抬起不再产生手势）</summary>
     private bool _wasPinching;
     private float _lastPinchDist;
     private float _pendingZoomSteps;
@@ -152,13 +154,15 @@ public partial class TouchInputAdapter : Node2D
             return;
         }
 
-        // 单指：持续注入鼠标移动（更新鼠标位置 + 卡牌目标预览跟随）
-        InjectMouseMotion(pos);
-
-        // 超过阈值 → 进入拖拽（注入中键按下）
+        // 单指：超过阈值 → 进入拖拽（中键拖镜头）
         if (!state.IsDragging && state.StartPos.DistanceTo(pos) >= DragThreshold)
         {
             state.IsDragging = true;
+
+            // 按下瞬间 Godot 已模拟出左键点击（可能选中单位/误出牌）→ 注入右键取消
+            InjectMouseButton(MouseButton.Right, true, pos);
+            InjectMouseButton(MouseButton.Right, false, pos);
+
             _middleDownInjected = true;
             InjectMouseButton(MouseButton.Middle, true, pos);
         }
@@ -173,7 +177,7 @@ public partial class TouchInputAdapter : Node2D
         if (!_touches.TryGetValue(index, out var state)) return;
         _touches.Remove(index);
 
-        // 曾进入双指模式：本次抬起不触发点击，全部抬起后复位
+        // 曾进入双指模式：本次抬起不产生任何手势，全部抬起后复位
         if (_wasPinching)
         {
             if (_touches.Count == 0)
@@ -185,17 +189,11 @@ public partial class TouchInputAdapter : Node2D
             return;
         }
 
+        // 拖拽结束：中键抬起（点击由 Godot 原生触摸模拟处理，此处不注入）
         if (state.IsDragging)
         {
             InjectMouseButton(MouseButton.Middle, false, state.LastPos);
             _middleDownInjected = false;
-        }
-        else
-        {
-            // 点击：先定位鼠标位置再注入左键按下+抬起
-            InjectMouseMotion(state.StartPos);
-            InjectMouseButton(MouseButton.Left, true, state.StartPos);
-            InjectMouseButton(MouseButton.Left, false, state.StartPos);
         }
     }
 

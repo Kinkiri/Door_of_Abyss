@@ -316,16 +316,17 @@ public class Context {
 
 ### 触摸输入（TouchInputAdapter）
 
-触摸事件经 `Scripts/View/TouchInputAdapter.cs` 翻译为鼠标事件注入现有输入管线，
-**SelectionManager / DragCamera2D / BattleManager 等鼠标逻辑零改动**：
+**点击交给 Godot 原生触摸→鼠标模拟**（`emulate_mouse_from_touch=true`，位置天然正确，
+SelectionManager / 放门 / Control 按钮直接可用），`Scripts/View/TouchInputAdapter.cs`
+只补充原生模拟覆盖不了的手势，**SelectionManager / DragCamera2D / BattleManager 等鼠标逻辑零改动**：
 
-| 触摸手势 | 映射 |
+| 触摸手势 | 处理方 |
 |---|---|
-| 单指点击 | 左键（选单位/格子/出牌/放门） |
-| 单指拖动（超 24px 阈值） | 中键拖拽镜头 |
-| 双指捏合 | 滚轮缩放（锚点 = 两指中点） |
-| 选中卡牌后单指拖动 | 鼠标悬停（卡牌目标预览） |
-| 左上角 ✕ 按钮 | 右键取消（等效） |
+| 单指点击（选单位/格子/出牌/放门） | Godot 原生触摸→鼠标模拟 |
+| 单指拖动（超 24px 阈值） | 适配器：中键拖拽镜头（进入拖拽先注入右键取消，防按下瞬间误选中） |
+| 双指捏合 | 适配器：滚轮缩放（锚点 = 两指中点） |
+| 选中卡牌后拖动 | Godot 原生模拟鼠标移动（卡牌目标预览跟随） |
+| 左上角 ✕ 按钮 | 等效右键（ClearSelection） |
 
 - 触摸到 Control（手牌/按钮）由 GUI 阶段先行消费，适配器天然避让 UI
 - 手牌触屏无 hover 放大（点卡即选中，可接受）
