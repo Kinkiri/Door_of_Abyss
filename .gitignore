@@ -2,6 +2,9 @@
 .godot/
 /android/
 
+# 导出产物
+/build/
+
 # Visual Studio
 .vs/
 

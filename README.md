@@ -10,6 +10,7 @@
 - [项目结构（程序员）](#项目结构程序员)
 - [架构概览（程序员）](#架构概览程序员)
 - [ECA 效果系统（程序员）](#eca-效果系统程序员)
+- [安卓平台适配（程序员）](#安卓平台适配程序员)
 - [策划配置手册](#策划配置手册)
   - [1. 核心战斗流程](#1-核心战斗流程)
   - [2. 条件（Condition）](#2-条件condition)
@@ -39,6 +40,7 @@
 | 语言 | C# (.NET 8.0) |
 | 渲染 | Forward Plus (D3D12) |
 | 物理 | Jolt Physics 3D（预留） |
+| 平台 | Windows（D3D12）/ Android（arm64，锁定横屏；Vulkan，无 Vulkan 设备回退 OpenGL） |
 | 分辨率 | 1920 x 1080，Canvas Items + Expand |
 
 ## 项目结构（程序员）
@@ -301,6 +303,50 @@ public class Context {
 	Cell[] TargetCells;
 }
 ```
+
+---
+
+## 安卓平台适配（程序员）
+
+### 平台状态
+
+- **Godot 4.7.1 .NET**，目标 **Android 12+（arm64-v8a）**，锁定横屏（`display/window/handheld/orientation="landscape"`）
+- 渲染：Vulkan（Forward+）；设备不支持 Vulkan 时 Godot 自动回退 OpenGL 3（模拟器常见）
+- 打包：标准导出模板（非 gradle），APK 约 100MB（含 .NET 运行时）
+
+### 触摸输入（TouchInputAdapter）
+
+触摸事件经 `Scripts/View/TouchInputAdapter.cs` 翻译为鼠标事件注入现有输入管线，
+**SelectionManager / DragCamera2D / BattleManager 等鼠标逻辑零改动**：
+
+| 触摸手势 | 映射 |
+|---|---|
+| 单指点击 | 左键（选单位/格子/出牌/放门） |
+| 单指拖动（超 24px 阈值） | 中键拖拽镜头 |
+| 双指捏合 | 滚轮缩放（锚点 = 两指中点） |
+| 选中卡牌后单指拖动 | 鼠标悬停（卡牌目标预览） |
+| 左上角 ✕ 按钮 | 右键取消（等效） |
+
+- 触摸到 Control（手牌/按钮）由 GUI 阶段先行消费，适配器天然避让 UI
+- 手牌触屏无 hover 放大（点卡即选中，可接受）
+- PC 调试：按住 **Ctrl + 左键** 可模拟单指触摸（`EnableDebugMouseSimulation`）
+
+### 导出配置
+
+- `export_presets.cfg`：Android preset（包名 `com.doorofabbyss.game`，arm64-v8a，debug keystore 签名）
+- 环境：JDK 17 + Android SDK（platform-tools / platform-34 / build-tools 34.0.0 / NDK r25c）+ 4.7.1 .NET 导出模板
+- Godot 编辑器设置需配置 `export/android/java_sdk_path` / `android_sdk_path` / `android_ndk_path`
+- 命令行导出：
+  ```
+  Godot_console --headless --path . --export-debug "Android" build/Android/DoorOfAbyss.apk
+  ```
+- **导出时 TEMP 需指向空间充足的盘**：apksigner 签名写临时文件，C 盘空间不足会报"磁盘空间不足"
+
+### 注意事项
+
+- **打包后 .tres 被 UID 重映射为 .tres.remap**：`Library.GetAllTresPaths` 已兼容（枚举时去掉 `.remap` 后缀，逻辑路径不变），Windows/Android 导出均正常加载（卡牌库 54 张）
+- **模拟器（MuMu/雷电）限制**：Vulkan 不可用自动回退 OpenGL；arm64 APK 经 houdini 指令转译，卡牌库加载可能极慢/卡死（真机原生 arm64 正常）；adb swipe 受 INJECT_EVENTS 权限限制无法自动化拖拽手势
+- **待真机验证**：单指拖镜头、双指捏合缩放、安卓端卡牌库加载性能
 
 ---
 

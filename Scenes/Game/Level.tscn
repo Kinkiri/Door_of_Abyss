@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://ca7kq5v3k0av2" path="res://Scripts/View/DragCamera2D.cs" id="1_edprt"]
 [ext_resource type="Script" uid="uid://7iryg60hqk8k" path="res://Scripts/Manager/BattleManager.cs" id="2_22vck"]
-[ext_resource type="Resource" uid="uid://dosv0wy8ralmh" path="res://Resource/Data/Levels/1.tres" id="3_edprt"]
+[ext_resource type="Resource" uid="uid://c7v020abii05s" path="res://Resource/Data/Levels/变化莫测.tres" id="4_avor6"]
 [ext_resource type="Resource" uid="uid://bjvfgqjisq7sy" path="res://Resource/Data/测试玩家.tres" id="4_llcsm"]
 [ext_resource type="Script" uid="uid://cjfnh45i7txbs" path="res://Scripts/Manager/SelectionManager.cs" id="5_73o0s"]
 [ext_resource type="Script" uid="uid://07iqkkc7rmnd" path="res://Scripts/Manager/MapManager.cs" id="6_5eta3"]
@@ -30,6 +30,7 @@
 [ext_resource type="Script" uid="uid://b5ay1q0j1ieb6" path="res://Scripts/View/EnvironmentViewManager.cs" id="29_envview"]
 [ext_resource type="PackedScene" path="res://Scenes/Prefabs/UnitInfoPanel.tscn" id="30_uipanel"]
 [ext_resource type="PackedScene" path="res://Scenes/Prefabs/RoundInfoPanel.tscn" id="31_roundpanel"]
+[ext_resource type="Script" uid="uid://d051m8qdn0xj8" path="res://Scripts/View/TouchInputAdapter.cs" id="32_touch"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8od7v"]
 texture = ExtResource("19_pu45w")
@@ -57,12 +58,15 @@ MaxZoom = 5.0
 ZoomAnimationDuration = 0.6
 FollowSpeed = 2.0
 
+[node name="TouchInputAdapter" type="Node2D" parent="." unique_id=692687025]
+script = ExtResource("32_touch")
+
 [node name="Manager" type="Node" parent="." unique_id=385605123]
 
 [node name="Battle" type="Node2D" parent="Manager" unique_id=142002766]
 visible = false
 script = ExtResource("2_22vck")
-LevelData = ExtResource("3_edprt")
+LevelData = ExtResource("4_avor6")
 PlayerData = ExtResource("4_llcsm")
 
 [node name="SelectionManager" type="Node2D" parent="Manager" unique_id=1946646650]

@@ -43,6 +43,12 @@ public partial class Library
             {
                 paths.Add(fullPath);
             }
+            else if (fileName.EndsWith(".tres.remap", StringComparison.OrdinalIgnoreCase))
+            {
+                // 打包导出（安卓/iOS）后 .tres 被 UID 重映射为 .tres.remap；
+                // 逻辑路径仍是 .tres（Godot VFS 自动重映射），去掉 .remap 后缀加入
+                paths.Add(fullPath.Substring(0, fullPath.Length - ".remap".Length));
+            }
 
             fileName = dir.GetNext();
         }
