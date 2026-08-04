@@ -24,4 +24,5 @@ Cost = 2
 TargetFilters = Array[Object]([SubResource("Resource_xx80y")])
 Conditions = Array[Object]([])
 Actions = Array[Object]([SubResource("Resource_pdtq3")])
+PassiveEffects = null
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

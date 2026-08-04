@@ -1,0 +1,72 @@
+[gd_scene format=3 uid="uid://di1dqmhwfo5lm"]
+
+[ext_resource type="Texture2D" uid="uid://b6qnolos2hokg" path="res://Resource/Art/标题白.png" id="1_crdls"]
+[ext_resource type="Script" uid="uid://b8lyfx8k5628i" path="res://Scripts/View/MainMenu.cs" id="1_y8j27"]
+
+[node name="Control" type="Control" unique_id=18785710 node_paths=PackedStringArray("_title")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_y8j27")
+_title = NodePath("TextureRect")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=846928234]
+layout_mode = 0
+offset_right = 1943.0
+offset_bottom = 1115.0
+color = Color(0.10747976, 0.10747973, 0.10747973, 1)
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1304986895]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -599.0
+offset_top = 35.0
+offset_right = 599.0
+offset_bottom = 960.0
+grow_horizontal = 2
+scale = Vector2(0.9599997, 0.9599997)
+pivot_offset = Vector2(606.8157, 462.34012)
+texture = ExtResource("1_crdls")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1653246637]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -843.0
+offset_top = -148.0
+offset_right = 843.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 1
+
+[node name="Button" type="Button" parent="HBoxContainer" unique_id=1160372015]
+layout_mode = 2
+theme_override_font_sizes/font_size = 80
+text = "   开始游戏   "
+
+[node name="Button2" type="Button" parent="HBoxContainer" unique_id=834903720]
+layout_mode = 2
+theme_override_font_sizes/font_size = 80
+text = "   设置（假）   "
+
+[node name="Button4" type="Button" parent="HBoxContainer" unique_id=368696933]
+layout_mode = 2
+theme_override_font_sizes/font_size = 80
+text = "  制作名单   "
+
+[node name="ColorRect2" type="ColorRect" parent="." unique_id=1958764907]
+visible = false
+layout_mode = 0
+offset_right = 1943.0
+offset_bottom = 1115.0
+color = Color(0, 0, 0, 1)
+
+[connection signal="button_down" from="HBoxContainer/Button" to="." method="OnButtonDown"]

@@ -1,5 +1,6 @@
 [gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://c7v020abii05s"]
 
+[ext_resource type="Resource" uid="uid://dekadf5n71kj5" path="res://Resource/Data/Deck/变化.tres" id="1_1cl0d"]
 [ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="4_agk58"]
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="5_yvd2k"]
 [ext_resource type="Resource" path="res://Resource/Data/Maps/破碎之地.tres" id="10_cvjv1"]
@@ -52,4 +53,5 @@ Waves = Array[Object]([SubResource("Resource_1os30"), SubResource("Resource_a5yd
 MapData = ExtResource("10_cvjv1")
 DoorPlaceZoneMax = Vector2i(3, 3)
 DefaultSpawnAreaMax = Vector2i(12, 12)
+LevelDeck = ExtResource("1_1cl0d")
 metadata/_custom_type_script = "uid://wk0covoailum"

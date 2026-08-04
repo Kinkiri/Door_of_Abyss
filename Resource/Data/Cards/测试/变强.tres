@@ -32,4 +32,5 @@ Tags = null
 TargetFilters = Array[Object]([SubResource("Resource_xoo06"), SubResource("Resource_fod2w")])
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_qrm4r")])
+PassiveEffects = null
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

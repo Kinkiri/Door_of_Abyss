@@ -32,4 +32,5 @@ Cost = 2
 TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_attr_team")])
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_kyjyi")])
+PassiveEffects = null
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

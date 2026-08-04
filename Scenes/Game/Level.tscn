@@ -55,11 +55,12 @@ ZoomStep = 0.08
 MinZoom = 0.5
 MaxZoom = 5.0
 ZoomAnimationDuration = 0.6
-FollowSpeed = 3.0
+FollowSpeed = 2.0
 
 [node name="Manager" type="Node" parent="." unique_id=385605123]
 
 [node name="Battle" type="Node2D" parent="Manager" unique_id=142002766]
+visible = false
 script = ExtResource("2_22vck")
 LevelData = ExtResource("3_xgq3g")
 PlayerData = ExtResource("4_llcsm")
