@@ -166,10 +166,16 @@ public partial class CardManager : Node
     /// </summary>
     /// <param name="cardData"></param>
     /// <returns></returns>
-    public Card CreateCard(CardData cardData)
+    public Card CreateCard(CardData cardData, bool toDeck = false)
     {
         var card = new Card(cardData);
         GD.Print($"[CardManager] 创建卡牌: [{card.CardID}] {card.CardName}");
+        if (toDeck)
+        {
+            DrawPile.Add(card);
+            ShuffleDrawPile();
+            return card;
+        }
         HandCards.Add(card);
         SubscribeCardPassives(card);
         NotifyCardsUpdated();

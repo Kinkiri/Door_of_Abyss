@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://7c01ti1ek178"]
+
+[ext_resource type="Resource" uid="uid://codythx1kr0ew" path="res://Resource/Data/Cards/测试/便捷测试义肢2.tres" id="1_p0keg"]
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_rwp25"]
+[ext_resource type="Script" uid="uid://osx8pac8nfq5" path="res://Scripts/Data/Actions/CreateCardAction.cs" id="2_lj46d"]
+
+[sub_resource type="Resource" id="Resource_s0nft"]
+script = ExtResource("2_lj46d")
+CardData = ExtResource("1_p0keg")
+Count = 5
+Filters = null
+ToDeck = true
+metadata/_custom_type_script = "uid://osx8pac8nfq5"
+
+[resource]
+script = ExtResource("1_rwp25")
+CardID = "创卡进库"
+CardName = "创卡进库"
+Tags = null
+Cost = 0
+TargetFilters = null
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_s0nft")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"
