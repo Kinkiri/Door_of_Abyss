@@ -12,14 +12,14 @@ public partial class MainMenu : Control
     private Vector2 _center;
     private Tween _breathTween;
 
-    public override void _Ready()
-    {
-        _center = GetViewport().GetVisibleRect().Size / 2;
-        if (_title != null)
-            _title.Position = _center - _title.Size / 2;
-        StartBreathAnimation();
-        ConnectButtons();
-    }
+    //public override void _Ready()
+    //{
+    //    _center = GetViewport().GetVisibleRect().Size / 2;
+    //    if (_title != null)
+    //        _title.Position = _center - _title.Size / 2;
+    //    StartBreathAnimation();
+    //    ConnectButtons();
+    //}
 
     private void StartBreathAnimation()
     {
@@ -32,48 +32,48 @@ public partial class MainMenu : Control
         _breathTween.TweenProperty(_title, "scale", Vector2.One, 3.0f);
     }
 
-    private void ConnectButtons()
-    {
-        var startBtn = GetNode<Button>("Buttons/StartButton");
-        var quitBtn = GetNode<Button>("Buttons/QuitButton");
+    //private void ConnectButtons()
+    //{
+    //    var startBtn = GetNode<Button>("Buttons/StartButton");
+    //    var quitBtn = GetNode<Button>("Buttons/QuitButton");
 
-        startBtn.MouseEntered += () => AnimateButton(startBtn, true);
-        startBtn.MouseExited += () => AnimateButton(startBtn, false);
-        startBtn.ButtonDown += () => AnimateButtonPress(startBtn);
-        startBtn.ButtonUp += () => AnimateButtonRelease(startBtn);
-        //startBtn.Pressed += OnStartPressed;
+    //    startBtn.MouseEntered += () => AnimateButton(startBtn, true);
+    //    startBtn.MouseExited += () => AnimateButton(startBtn, false);
+    //    startBtn.ButtonDown += () => AnimateButtonPress(startBtn);
+    //    startBtn.ButtonUp += () => AnimateButtonRelease(startBtn);
+    //    //startBtn.Pressed += OnStartPressed;
 
-        quitBtn.MouseEntered += () => AnimateButton(quitBtn, true);
-        quitBtn.MouseExited += () => AnimateButton(quitBtn, false);
-        quitBtn.ButtonDown += () => AnimateButtonPress(quitBtn);
-        quitBtn.ButtonUp += () => AnimateButtonRelease(quitBtn);
-        quitBtn.Pressed += OnQuitPressed;
-    }
+    //    quitBtn.MouseEntered += () => AnimateButton(quitBtn, true);
+    //    quitBtn.MouseExited += () => AnimateButton(quitBtn, false);
+    //    quitBtn.ButtonDown += () => AnimateButtonPress(quitBtn);
+    //    quitBtn.ButtonUp += () => AnimateButtonRelease(quitBtn);
+    //    quitBtn.Pressed += OnQuitPressed;
+    //}
 
-    private void AnimateButton(Button btn, bool hover)
-    {
-        Tween tween = btn.CreateTween();
-        tween.SetTrans(Tween.TransitionType.Back);
-        tween.SetEase(Tween.EaseType.Out);
-        float target = hover ? 1.15f : 1.0f;
-        tween.TweenProperty(btn, "scale", Vector2.One * target, 0.2f);
-    }
+    //private void AnimateButton(Button btn, bool hover)
+    //{
+    //    Tween tween = btn.CreateTween();
+    //    tween.SetTrans(Tween.TransitionType.Back);
+    //    tween.SetEase(Tween.EaseType.Out);
+    //    float target = hover ? 1.15f : 1.0f;
+    //    tween.TweenProperty(btn, "scale", Vector2.One * target, 0.2f);
+    //}
 
-    private void AnimateButtonPress(Button btn)
-    {
-        Tween tween = btn.CreateTween();
-        tween.SetTrans(Tween.TransitionType.Cubic);
-        tween.SetEase(Tween.EaseType.Out);
-        tween.TweenProperty(btn, "scale", Vector2.One * 0.9f, 0.1f);
-    }
+    //private void AnimateButtonPress(Button btn)
+    //{
+    //    Tween tween = btn.CreateTween();
+    //    tween.SetTrans(Tween.TransitionType.Cubic);
+    //    tween.SetEase(Tween.EaseType.Out);
+    //    tween.TweenProperty(btn, "scale", Vector2.One * 0.9f, 0.1f);
+    //}
 
-    private void AnimateButtonRelease(Button btn)
-    {
-        Tween tween = btn.CreateTween();
-        tween.SetTrans(Tween.TransitionType.Back);
-        tween.SetEase(Tween.EaseType.Out);
-        tween.TweenProperty(btn, "scale", Vector2.One * 1.0f, 0.2f);
-    }
+    //private void AnimateButtonRelease(Button btn)
+    //{
+    //    Tween tween = btn.CreateTween();
+    //    tween.SetTrans(Tween.TransitionType.Back);
+    //    tween.SetEase(Tween.EaseType.Out);
+    //    tween.TweenProperty(btn, "scale", Vector2.One * 1.0f, 0.2f);
+    //}
 
     //private void OnStartPressed()
     //{
@@ -89,26 +89,26 @@ public partial class MainMenu : Control
         tree.ChangeSceneToFile("res://Scenes/Game/Level.tscn");
     }
 
-    private void OnQuitPressed()
-    {
-        GetTree().Quit();
-    }
+    //private void OnQuitPressed()
+    //{
+    //    GetTree().Quit();
+    //}
 
-    public override void _Input(InputEvent @event)
-    {
-        if (@event is InputEventMouseMotion mouseMotion)
-        {
-            Vector2 offset = (mouseMotion.Position - _center) / _center;
-            if (_background != null)
-            {
-                Vector2 bgOff = offset * _maxOffset * _bgFactor;
-                _background.Position = _center - _background.Size / 2 + bgOff;
-            }
-            if (_title != null)
-            {
-                Vector2 titleOff = offset * _maxOffset * _titleFactor;
-                _title.Position = _center - _title.Size / 2 + titleOff;
-            }
-        }
-    }
+    //public override void _Input(InputEvent @event)
+    //{
+    //    if (@event is InputEventMouseMotion mouseMotion)
+    //    {
+    //        Vector2 offset = (mouseMotion.Position - _center) / _center;
+    //        if (_background != null)
+    //        {
+    //            Vector2 bgOff = offset * _maxOffset * _bgFactor;
+    //            _background.Position = _center - _background.Size / 2 + bgOff;
+    //        }
+    //        if (_title != null)
+    //        {
+    //            Vector2 titleOff = offset * _maxOffset * _titleFactor;
+    //            _title.Position = _center - _title.Size / 2 + titleOff;
+    //        }
+    //    }
+    //}
 }

@@ -1,1 +1,0 @@
-检查 %TEMP%\door-test-selectspawn.log：PowerShell Get-Content -Tail 5 看"完成: N 通过, 0 失败"；-match 查 SCRIPT ERROR。完成后向用户简短汇报单位卡自动选中实现（OnCardPlay 回调选中新单位 + SelectUnit 公开，连带摄像机聚焦），并提醒 README 更新和提交推送仍待办。若无结果再等 120 秒。
