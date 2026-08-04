@@ -243,14 +243,22 @@ public partial class BattleManager : Node2D
         // 出牌成功（扣费+移出手牌）即触发 OnUseCard，被动先于卡牌动作执行
         EventBus.Instance?.Fire(EventType.OnUseCard, ctx, subject: ctx.SourceUnit);
 
-        // 通过 ActionQueue 逐个执行，支持动画节奏
-        ActionQueue.Instance?.Enqueue(card.CardData.Actions, ctx, new Callable(this, nameof(OnCardPlayActionsDone)));
+        // 通过 ActionQueue 逐个执行，支持动画节奏；完成后回调（携带 card/ctx 用于选中新召唤单位）
+        ActionQueue.Instance?.Enqueue(card.CardData.Actions, ctx, Callable.From(() => OnCardPlayActionsDone(card, ctx)));
     }
 
-    private void OnCardPlayActionsDone()
+    private void OnCardPlayActionsDone(Card card, Context ctx)
     {
         GD.Print("[Battle] 卡牌动作序列执行完毕");
         CheckVictory();
+
+        // 单位卡：放置成功后自动选中新召唤的单位（连带触发移动攻击高亮 + 摄像机聚焦）
+        if (card.CardData is UnitCardData
+            && ctx?.TargetCell?.OccupyingUnit is Unit spawned
+            && spawned.IsAlive && !spawned.IsDead)
+        {
+            SelectionManager.Instance.SelectUnit(spawned);
+        }
     }
 
     /// <summary>AI 移动单位（跳过阵营检查）</summary>

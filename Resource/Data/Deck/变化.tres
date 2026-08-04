@@ -12,5 +12,6 @@
 
 [resource]
 script = ExtResource("9_7sm0i")
+DeckName = "变化莫测"
 Cards = Array[Object]([ExtResource("1_p2iu3"), ExtResource("1_p2iu3"), ExtResource("1_p2iu3"), ExtResource("1_p2iu3"), ExtResource("1_p2iu3"), ExtResource("1_p2iu3"), ExtResource("2_7b03x"), ExtResource("3_tc0ms"), ExtResource("4_othxt"), ExtResource("5_soqca"), ExtResource("6_alwi4"), ExtResource("1_p2iu3"), ExtResource("7_v17hb"), ExtResource("8_lqdgu")])
 metadata/_custom_type_script = "uid://b1eamjx1y7exn"

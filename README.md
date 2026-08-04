@@ -152,12 +152,12 @@ Scripts/                         ~7300 行 C#
 │   ├── FormulaOp.cs             FormulaOp
 │   ├── ModifyStatType.cs        ModifyStatType
 │   ├── PassiveTarget.cs         PassiveTarget
-│   ├── Rarity.cs                Rarity（稀有度）
+│   ├── Rarity.cs                Rarity（稀有度，中文枚举：初级/中级/高级/顶级）
 │   ├── Tag.cs                   Tag（标签）
 │   ├── TargetKind.cs            TargetKind（目标结果类型：Unit/Cell）
 │   ├── TargetShape.cs           TargetShape
 │   ├── TeamFilter.cs            TeamFilter（相对阵营过滤，原 TargetFilter 改名）
-│   ├── UnitTybe.cs              UnitType
+│   ├── UnitTybe.cs              UnitType（中文枚举：兵种/建筑/障碍物/召唤物/特殊物/门）
 │   ├── ValueTarget.cs           ValueTarget
 │   └── World.cs                 World（世界观）
 ├── Instance/                    运行时实例层（纯 C# class，不继承 Godot 类型）
@@ -177,16 +177,17 @@ Scripts/                         ~7300 行 C#
 │   ├── EventBus.cs              事件总线（被动效果订阅/触发，Tag 支持）
 │   ├── InitManager.cs           初始化调度
 │   ├── MapManager.cs            地图管理
-│   ├── SelectionManager.cs      输入 + 选中 + 范围 + 卡牌流程
+│   ├── SelectionManager.cs      输入 + 选中（任意阶段可选单位/卡牌）+ 移动攻击高亮 + 出牌流程
 │   └── UnitManager.cs           单位生命周期（发事件驱动视图）
 ├── View/                        视图层（事件驱动渲染）
 │   ├── BuffView.cs              Buff 图标（Node2D，内含 TextureRect + Label）
 │   ├── CardView.cs              卡牌展示
-│   ├── DragCamera2D.cs          拖拽摄像机
+│   ├── DragCamera2D.cs          拖拽摄像机（丝滑缩放 + 非线性跟随：选中聚焦/行动跟随）
 │   ├── EnvironmentViewManager.cs 环境图层渲染（订阅环境事件 SetCell/EraseCell）
 │   ├── HandPanel.cs             手牌面板（订阅 CardManager 事件）
 │   ├── MapView.cs               地图渲染 + 高亮
-│   ├── RoundView.cs             回合面板 + 结束回合按钮
+│   ├── RoundInfoPanel.cs        右上角战斗信息面板（横排：阶段/阵营/回合/费用/手牌 + 结束回合按钮）
+│   ├── UnitInfoPanel.cs         左下角信息面板（选中单位/格子/卡牌详情：描述/属性/Buff/装备/环境）
 │   ├── UnitView.cs              单位视觉 + 内建动画（入场/受伤/治疗/死亡/移动/Buff）
 │   └── UnitViewManager.cs       订阅 UnitManager/BuffManager 事件，创建/销毁 UnitView 与 BuffView
 ├── Tests/
@@ -791,7 +792,7 @@ OnEnterGameStart
 
 `Scripts/Tests/TestRunner.cs` - 全面系统性单元测试，直接在场景中运行。
 
-**用法：** 在场景根节点加 Node，挂载 TestRunner.cs，运行即可。45+ 用例覆盖：
+**用法：** 在场景根节点加 Node，挂载 TestRunner.cs，运行即可。**381 项用例**覆盖：
 - ValueSource 运算（6 种公式 + 嵌套）
 - Condition 复合（And/Or/Not + Compare/HasBuff/Random）
 - Buff 生命周期（叠层/倒计时/还原/驱散）
@@ -799,6 +800,8 @@ OnEnterGameStart
 - ECA 集成（条件满足执行/MaxTriggerCount 限制）
 - DamageUnit（正常扣血/过量/击杀）
 - MaxStack/Duration 边界值
+- 事件系统（OnAnyUnitDeath 任意死亡 / ValueTarget.EventTarget 事件另一方读取）
+- 变身机制（清 buff/装备、固定 buff 保留、buff 叠层触发变身）
 
 测试完毕自动 `QueueFree()`，不影响游戏。
 
@@ -1182,6 +1185,16 @@ BattleManager 的 `OnUnitMove`/`OnUnitAttack`/`AIDoAttack`/`AIDoMove` 均通过 
 1. 在 `UnitView` 节点下添加 `Label`，默认 `Visible=false`
 2. 拖入 Inspector 的 `FloatLabel` 字段
 3. `FloatLifetime`（显示秒数，默认 1s）和 `FloatRise`（上飘像素，默认 28px）可在 Inspector 调节
+
+### 13.5 摄像机（DragCamera2D）
+
+- **丝滑缩放**：滚轮触发 Tween 平滑动画（Cubic/EaseOut，`ZoomAnimationDuration` 默认 0.12s），**鼠标锚点缩放**（zoom-to-cursor，放大跟随鼠标位置）；缩放步进为线性（`ZoomStep` 加减），符合"等距离缩放"约定
+- **非线性跟随**：`_Process` 每帧指数平滑逼近（`1-exp(-speed·dt)`，起始快接近慢、帧率无关、无过冲）：
+  - **选中聚焦**：选中单位时镜头平滑移过去（订阅 `SelectionManager.SelectionUpdated`）
+  - **行动跟随**：玩家/AI 单位移动或攻击时跟随行动单位（订阅 `BattleManager.UnitActed`，优先级高于选中）
+  - **单位卡联动**：召唤单位后自动选中新单位（`BattleManager.OnCardPlayActionsDone`），摄像机随之聚焦
+  - **拖拽接管**：中键拖拽开始即取消跟随；缩放动画期间暂停跟随
+- 参数：`EnableFollow` / `FollowSpeed` / `FollowOnSelect` / `FollowOnAct` 均可在 Inspector 调节
 
 ## 14. 装备系统
 

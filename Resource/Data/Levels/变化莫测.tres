@@ -49,6 +49,7 @@ metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 [resource]
 script = ExtResource("5_yvd2k")
 LevelName = "变化"
+Description = "小种子竞技场（"
 Waves = Array[Object]([SubResource("Resource_1os30"), SubResource("Resource_a5yd7"), SubResource("Resource_wdvom"), SubResource("Resource_te1ex"), SubResource("Resource_u5qqc")])
 MapData = ExtResource("10_cvjv1")
 DoorPlaceZoneMax = Vector2i(3, 3)

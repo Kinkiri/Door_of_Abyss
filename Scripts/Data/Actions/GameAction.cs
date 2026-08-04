@@ -8,7 +8,7 @@ using Godot;
 public abstract partial class GameAction : Resource
 {
     /// <summary>此动作的动画播放时长（秒），供 ActionQueue 控制节奏。策划可单独配置每个动作子类</summary>
-    [Export] public float AnimationDuration { get; set; } = 0.5f;
+    [Export] public float AnimationDuration { get; set; } = 0.02f;
 
     /// <summary>
     /// 执行动作。基类模板方法——先解析目标，再委托给子类的 Apply()。

@@ -330,7 +330,9 @@ public partial class SelectionManager : Node2D
     // 选中 + 范围计算
     // ======================================================================
 
-    private void SelectUnit(Unit unit)
+    /// <summary>选中一个单位（任意阶段/任意单位可用，计算并显示移动与攻击范围）。
+    /// 供点击与外部（如单位卡召唤后自动选中）调用。</summary>
+    public void SelectUnit(Unit unit)
     {
         if (unit == null) return;
 
