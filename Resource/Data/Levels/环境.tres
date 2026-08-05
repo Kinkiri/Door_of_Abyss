@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://br60hr5ldervs"]
+
+[ext_resource type="Resource" path="res://Resource/Data/Maps/环境测试.tres" id="1_t8ym5"]
+[ext_resource type="Resource" uid="uid://bkw4f7fjiykxq" path="res://Resource/Data/Units/擢升之手/闲散员工.tres" id="3_t8ym5"]
+[ext_resource type="Resource" uid="uid://bbkq67n50v7xu" path="res://Resource/Data/Units/擢升之手/飞拳斗士.tres" id="4_evngs"]
+[ext_resource type="Resource" uid="uid://f8jwdartjjfi" path="res://Resource/Data/Units/擢升之手/门卫.tres" id="5_3ijo7"]
+[ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="6_2e833"]
+[ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="15_1fwmb"]
+
+[sub_resource type="Resource" id="Resource_g85ni"]
+script = ExtResource("6_2e833")
+Round = 2
+SpawnAreaMin = Vector2i(3, 3)
+SpawnAreaMax = Vector2i(5, 5)
+UnitDatas = Array[Object]([ExtResource("5_3ijo7"), ExtResource("3_t8ym5"), ExtResource("4_evngs")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[resource]
+script = ExtResource("15_1fwmb")
+LevelName = "环境测试"
+Description = "测试用别玩"
+Waves = Array[Object]([SubResource("Resource_g85ni")])
+MapData = ExtResource("1_t8ym5")
+metadata/_custom_type_script = "uid://wk0covoailum"

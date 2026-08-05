@@ -27,6 +27,31 @@ public partial class EnvironmentManager : Node
     public void Init() { }
 
     // ======================================================================
+    // 预置环境（关卡地图瓦片化环境，MapData 导出）
+    // ======================================================================
+
+    /// <summary>
+    /// 加载关卡预置环境：遍历 MapData 中导出的环境瓦片数据，逐格静默施加。
+    /// 在战斗初始化（加载地图后、放门阶段前）调用，此后与动态施加的环境走同一生命周期。
+    /// </summary>
+    public void LoadPresetEnvironments(MapData data)
+    {
+        if (data == null) return;
+
+        int count = 0;
+        foreach (var kvp in data.ToEnvironmentDict())
+        {
+            if (MapManager.Instance?.TryGetCell(kvp.Key, out Cell cell) == true && cell.Environment == null)
+            {
+                ApplyEnvironment(cell, kvp.Value, null);
+                count++;
+            }
+        }
+        if (count > 0)
+            GD.Print($"[EnvironmentManager] 加载预置环境 {count} 格");
+    }
+
+    // ======================================================================
     // 施加环境
     // ======================================================================
 

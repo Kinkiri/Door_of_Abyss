@@ -8,6 +8,9 @@ public partial class MapExporter : Node
 {
     [Export] public TileMapLayer SourceLayer { get; set; }
 
+    /// <summary>环境图层（可选）：导出时读取该层瓦片绑定的 EnvironmentData，存入 MapData.Environment*</summary>
+    [Export] public TileMapLayer EnvironmentSourceLayer { get; set; }
+
     [Export] public string CustomDataLayerName { get; set; } = "data";
 
     [Export] public string OutputDir { get; set; } = "res://Resource/Data/Maps/";
@@ -56,6 +59,29 @@ public partial class MapExporter : Node
 
         var mapData = new MapData();
         mapData.SetFromDict(dict);
+
+        // 导出环境层：瓦片 custom data 绑定的 EnvironmentData（环境瓦片化）
+        if (EnvironmentSourceLayer != null)
+        {
+            var envDict = new System.Collections.Generic.Dictionary<Vector2I, EnvironmentData>();
+            foreach (Vector2I cellPos in EnvironmentSourceLayer.GetUsedCells())
+            {
+                var tileData = EnvironmentSourceLayer.GetCellTileData(cellPos);
+                if (tileData == null) continue;
+
+                var variant = tileData.GetCustomData(CustomDataLayerName);
+                if (variant.VariantType != Variant.Type.Object) continue;
+
+                var envData = variant.As<EnvironmentData>();
+                if (envData == null) continue;
+
+                envDict[cellPos] = envData;
+            }
+            mapData.SetEnvironmentDict(envDict);
+            if (envDict.Count > 0)
+                GD.Print($"[MapExporter] 导出环境 {envDict.Count} 格");
+        }
+
         string name = string.IsNullOrEmpty(FileName) ? SourceLayer.Name : FileName;
         string basePath = $"{OutputDir.TrimEnd('/')}/{name}";
         string fullPath = $"{basePath}.tres";

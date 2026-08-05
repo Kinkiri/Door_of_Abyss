@@ -41,6 +41,12 @@ public partial class BattleManager : Node2D
     /// <summary>记录当前放到第几个门</summary>
     private int _placingDoorIndex = 0;
 
+    /// <summary>
+    /// 预计算的波次刷怪计划：回合 → 刷怪位置与单位。
+    /// 上回合结束预计算并显示预告，本回合开始按计划生成（不再随机）。
+    /// </summary>
+    private readonly Dictionary<int, List<(Vector2I pos, UnitData data)>> _waveSpawnPlan = new();
+
     public Team Winner { get; private set; } = Team.Neutral;
 
     /// <summary>胜利条件（可替换），默认：敌方全灭</summary>
@@ -581,6 +587,9 @@ public partial class BattleManager : Node2D
             MapManager.Instance.LoadFromMapData(LevelData.MapData);
         }
 
+        // 预计算第 1 波刷怪位置并预告（放门阶段即显示）
+        PreviewWave(1);
+
         // 判断是否进入玩家手动放门模式
         var doors = PlayerData?.DoorDatas?.Where(d => d != null).ToArray();
         bool canPlaceDoor = doors is { Length: > 0 }
@@ -724,6 +733,15 @@ public partial class BattleManager : Node2D
     {
         if (LevelData?.Waves == null) return;
 
+        // 优先使用预计算计划（上回合已预告位置）；无计划时回退随机生成（如编辑器直接运行）
+        if (_waveSpawnPlan.TryGetValue(round, out var plan))
+        {
+            _waveSpawnPlan.Remove(round);
+            MapView.Instance?.ClearWavePreview();
+            SpawnFromPlan(plan, round);
+            return;
+        }
+
         foreach (var wave in LevelData.Waves)
         {
             if (wave == null || wave.Round != round) continue;
@@ -731,25 +749,7 @@ public partial class BattleManager : Node2D
 
             if (wave.UnitDatas == null || wave.UnitDatas.Length == 0) continue;
 
-            // 解析生成区域：WaveData 有自定义就用它，否则用 LevelData 默认
-            var areaMin = wave.SpawnAreaMin != Vector2I.Zero || wave.SpawnAreaMax != Vector2I.Zero
-                ? wave.SpawnAreaMin : LevelData?.DefaultSpawnAreaMin ?? Vector2I.Zero;
-            var areaMax = wave.SpawnAreaMin != Vector2I.Zero || wave.SpawnAreaMax != Vector2I.Zero
-                ? wave.SpawnAreaMax : LevelData?.DefaultSpawnAreaMax ?? Vector2I.Zero;
-
-            // 收集生成区域内可用的格子
-            var cells = new System.Collections.Generic.List<Vector2I>();
-            for (int x = areaMin.X; x <= areaMax.X; x++)
-            {
-                for (int y = areaMin.Y; y <= areaMax.Y; y++)
-                {
-                    var pos = new Vector2I(x, y);
-                    if (MapManager.Instance.TryGetCell(pos, out Cell c)
-                        && c.CanStand && c.OccupyingUnit == null)
-                        cells.Add(pos);
-                }
-            }
-
+            var cells = CollectSpawnableCells(wave);
             if (cells.Count == 0)
             {
                 GD.PrintErr($"[Battle] 波次生成区域无可站立空格");
@@ -758,12 +758,7 @@ public partial class BattleManager : Node2D
 
             // Fisher-Yates 洗牌，使单位在生成区域内随机分布，
             // 避免每波次单位总是从固定坐标出现
-            var rng = new System.Random();
-            for (int i = cells.Count - 1; i > 0; i--)
-            {
-                int j = rng.Next(i + 1);
-                (cells[i], cells[j]) = (cells[j], cells[i]);
-            }
+            Shuffle(cells);
 
             int spawned = 0;
             for (int i = 0; i < wave.UnitDatas.Length && i < cells.Count; i++)
@@ -778,6 +773,76 @@ public partial class BattleManager : Node2D
             }
 
             GD.Print($"[Battle] 波次生成完成：成功 {spawned}/{wave.UnitDatas.Length}");
+        }
+    }
+
+    /// <summary>按预计算计划生成波次单位（位置已在预告时锁定）</summary>
+    private void SpawnFromPlan(List<(Vector2I pos, UnitData data)> plan, int round)
+    {
+        GD.Print($"[Battle] 回合 {round} 波次开始，按预告生成 {plan.Count} 个单位");
+        int spawned = 0;
+        foreach (var (pos, data) in plan)
+        {
+            if (data == null) continue;
+            var unit = UnitManager.Instance.SpawnUnit(data, pos, Team.Enemy);
+            if (unit != null) spawned++;
+        }
+        GD.Print($"[Battle] 波次生成完成：成功 {spawned}/{plan.Count}");
+    }
+
+    /// <summary>预计算第 round 波次的刷怪位置（洗牌锁定），并通知视图显示预告</summary>
+    private void PreviewWave(int round)
+    {
+        if (LevelData?.Waves == null) return;
+        var wave = Array.Find(LevelData.Waves, w => w != null && w.Round == round);
+        if (wave == null || wave.UnitDatas == null || wave.UnitDatas.Length == 0) return;
+
+        var cells = CollectSpawnableCells(wave);
+        if (cells.Count == 0)
+        {
+            GD.PrintErr($"[Battle] 波次预告：回合 {round} 生成区域无可站立空格");
+            return;
+        }
+        Shuffle(cells);
+
+        var plan = new List<(Vector2I pos, UnitData data)>();
+        int count = Math.Min(wave.UnitDatas.Length, cells.Count);
+        for (int i = 0; i < count; i++)
+            plan.Add((cells[i], wave.UnitDatas[i]));
+
+        _waveSpawnPlan[round] = plan;
+        MapView.Instance?.RenderWavePreview(plan);
+        GD.Print($"[Battle] 预告回合 {round} 波次：{count} 个单位");
+    }
+
+    /// <summary>收集波次生成区域内可站立且未被占据的格子（WaveData 有自定义区域则用之，否则用 LevelData 默认）</summary>
+    private List<Vector2I> CollectSpawnableCells(WaveData wave)
+    {
+        var areaMin = wave.SpawnAreaMin != Vector2I.Zero || wave.SpawnAreaMax != Vector2I.Zero
+            ? wave.SpawnAreaMin : LevelData?.DefaultSpawnAreaMin ?? Vector2I.Zero;
+        var areaMax = wave.SpawnAreaMin != Vector2I.Zero || wave.SpawnAreaMax != Vector2I.Zero
+            ? wave.SpawnAreaMax : LevelData?.DefaultSpawnAreaMax ?? Vector2I.Zero;
+
+        var cells = new List<Vector2I>();
+        for (int x = areaMin.X; x <= areaMax.X; x++)
+            for (int y = areaMin.Y; y <= areaMax.Y; y++)
+            {
+                var pos = new Vector2I(x, y);
+                if (MapManager.Instance.TryGetCell(pos, out Cell c)
+                    && c.CanStand && c.OccupyingUnit == null)
+                    cells.Add(pos);
+            }
+        return cells;
+    }
+
+    /// <summary>Fisher-Yates 洗牌，使单位在生成区域内随机分布</summary>
+    private static void Shuffle(List<Vector2I> list)
+    {
+        var rng = new System.Random();
+        for (int i = list.Count - 1; i > 0; i--)
+        {
+            int j = rng.Next(i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
         }
     }
 
@@ -824,6 +889,9 @@ public partial class BattleManager : Node2D
 
         // 检查本回合是否有波次
         SpawnWaveForRound(RoundCount);
+
+        // 预告下一波刷怪位置：玩家在本回合行动阶段即可看到并布置防线
+        PreviewWave(RoundCount + 1);
 
         // 触发回合开始被动事件
         EventBus.Instance?.Fire(EventType.RoundStart, new Context());

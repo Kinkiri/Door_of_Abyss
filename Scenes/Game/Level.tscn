@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://ca7kq5v3k0av2" path="res://Scripts/View/DragCamera2D.cs" id="1_edprt"]
 [ext_resource type="Script" uid="uid://7iryg60hqk8k" path="res://Scripts/Manager/BattleManager.cs" id="2_22vck"]
-[ext_resource type="Resource" uid="uid://c7v020abii05s" path="res://Resource/Data/Levels/变化莫测.tres" id="4_avor6"]
+[ext_resource type="Resource" uid="uid://br60hr5ldervs" path="res://Resource/Data/Levels/环境.tres" id="4_fh8wi"]
 [ext_resource type="Resource" uid="uid://bjvfgqjisq7sy" path="res://Resource/Data/测试玩家.tres" id="4_llcsm"]
 [ext_resource type="Script" uid="uid://cjfnh45i7txbs" path="res://Scripts/Manager/SelectionManager.cs" id="5_73o0s"]
 [ext_resource type="Script" uid="uid://07iqkkc7rmnd" path="res://Scripts/Manager/MapManager.cs" id="6_5eta3"]
@@ -32,6 +32,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/Prefabs/RoundInfoPanel.tscn" id="31_roundpanel"]
 [ext_resource type="Script" uid="uid://d051m8qdn0xj8" path="res://Scripts/View/TouchInputAdapter.cs" id="32_touch"]
 [ext_resource type="Script" uid="uid://b70miqpw61rr8" path="res://Scripts/View/LevelFadeIn.cs" id="33_fade"]
+[ext_resource type="TileSet" uid="uid://b7vv082k3m1qm" path="res://Resource/Data/MapSet/EnvironmentTileSet.tres" id="34_envts"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8od7v"]
 texture = ExtResource("19_pu45w")
@@ -67,7 +68,7 @@ script = ExtResource("32_touch")
 [node name="Battle" type="Node2D" parent="Manager" unique_id=142002766]
 visible = false
 script = ExtResource("2_22vck")
-LevelData = ExtResource("4_avor6")
+LevelData = ExtResource("4_fh8wi")
 PlayerData = ExtResource("4_llcsm")
 
 [node name="SelectionManager" type="Node2D" parent="Manager" unique_id=1946646650]
@@ -87,9 +88,10 @@ script = ExtResource("8_s72d7")
 script = ExtResource("9_avor6")
 ActionDelay = 1.0
 
-[node name="MapExporter" type="Node" parent="Manager" unique_id=1709305838 node_paths=PackedStringArray("SourceLayer")]
+[node name="MapExporter" type="Node" parent="Manager" unique_id=1709305838 node_paths=PackedStringArray("SourceLayer", "EnvironmentSourceLayer")]
 script = ExtResource("10_g78sk")
 SourceLayer = NodePath("../../Map/BaseMapLayer")
+EnvironmentSourceLayer = NodePath("../../Map/EnvironmentLayer")
 FileName = "new map"
 
 [node name="EventBus" type="Node" parent="Manager" unique_id=1815899393]
@@ -110,12 +112,13 @@ script = ExtResource("25_eqmgr")
 [node name="Environment" type="Node" parent="Manager" unique_id=477498848]
 script = ExtResource("28_envmgr")
 
-[node name="Map" type="Node2D" parent="." unique_id=315899385 node_paths=PackedStringArray("BaseTerrainLayer", "MoveMapLayer", "AttackMapLayer", "CardPreviewLayer")]
+[node name="Map" type="Node2D" parent="." unique_id=315899385 node_paths=PackedStringArray("BaseTerrainLayer", "MoveMapLayer", "AttackMapLayer", "CardPreviewLayer", "WavePreviewLayer")]
 script = ExtResource("16_eklyj")
 BaseTerrainLayer = NodePath("BaseMapLayer")
 MoveMapLayer = NodePath("UILayer/MoveMapLayer")
 AttackMapLayer = NodePath("UILayer/AttackMapLayer")
 CardPreviewLayer = NodePath("UILayer/PreviewMapLayer")
+WavePreviewLayer = NodePath("UILayer/WavePreviewLayer")
 
 [node name="UnitViewManager" type="Node" parent="Map" unique_id=1266638464 node_paths=PackedStringArray("UnitLayer")]
 script = ExtResource("24_v8m9n")
@@ -125,14 +128,15 @@ UnitLayer = NodePath("../BaseMapLayer")
 
 [node name="EnvironmentViewManager" type="Node" parent="Map" unique_id=1266638465 node_paths=PackedStringArray("EnvironmentLayer")]
 script = ExtResource("29_envview")
-EnvironmentLayer = NodePath("../BaseMapLayer/EnvironmentLayer")
+EnvironmentLayer = NodePath("../EnvironmentLayer")
 
 [node name="BaseMapLayer" type="TileMapLayer" parent="Map" unique_id=795475500]
-tile_map_data = PackedByteArray("AAAAAAAAAgAAAAAAAAABAAAAAgAIAAAAAAACAAAAAgAAAAAAAAAAAAEAAgAIAAAAAAADAAEAAgAAAAAAAAACAAIAAgAAAAAAAAACAAEAAgAIAAAAAAABAAIAAgAIAAAAAAAEAAIAAgAAAAAAAAADAAIAAgAIAAAAAAAGAAIAAgAAAAAAAAABAAEAAgAAAAAAAAAAAAIAAgAAAAAAAAACAAMAAgAIAAAAAAADAAQAAgAIAAAAAAAGAAMAAgAIAAAAAAAFAAQAAgAIAAAAAAAEAAUAAgAIAAAAAAAGAAUAAgAIAAAAAAAFAAYAAgAIAAAAAAADAAYAAgAIAAAAAAAGAAYAAgAAAAAAAAAEAAYAAgAAAAAAAAACAAYAAgAAAAAAAAABAAMAAgAAAAAAAAACAAQAAgAAAAAAAAADAAMAAgAAAAAAAAADAAUAAgAAAAAAAAAEAAQAAgAAAAAAAAAFAAMAAgAAAAAAAAAFAAUAAgAAAAAAAAAGAAQAAgAAAAAAAAAEAAMAAgAIAAAAAAAIAAAAAgAAAAAAAAAHAAEAAgAAAAAAAAABAAcAAgAAAAAAAAAAAAgAAgAAAAAAAAAKAAAAAgAAAAAAAAAJAAEAAgAAAAAAAAAIAAIAAgAAAAAAAAAHAAMAAgAAAAAAAAADAAcAAgAAAAAAAAACAAgAAgAAAAAAAAABAAkAAgAAAAAAAAAAAAoAAgAAAAAAAAAMAAAAAgAAAAAAAAALAAEAAgAAAAAAAAAKAAIAAgAAAAAAAAAFAAcAAgAAAAAAAAAEAAgAAgAAAAAAAAADAAkAAgAAAAAAAAACAAoAAgAAAAAAAAABAAsAAgAAAAAAAAAJAAAAAgAIAAAAAAAIAAEAAgAIAAAAAAALAAAAAgAIAAAAAAAKAAEAAgAIAAAAAAAJAAIAAgAIAAAAAAAHAAIAAgAIAAAAAAAEAAcAAgAIAAAAAAADAAgAAgAIAAAAAAACAAkAAgAIAAAAAAABAAoAAgAIAAAAAAAAAAsAAgAIAAAAAAACAAcAAgAIAAAAAAABAAgAAgAIAAAAAAAAAAkAAgAIAAAAAAAMAAEAAgAIAAAAAAALAAIAAgAIAAAAAAAKAAMAAgAIAAAAAAAHAAYAAgAIAAAAAAAGAAcAAgAIAAAAAAAFAAgAAgAIAAAAAAADAAoAAgAIAAAAAAACAAsAAgAIAAAAAAALAAMAAgAAAAAAAAAKAAQAAgAAAAAAAAAJAAUAAgAAAAAAAAAIAAYAAgAAAAAAAAAHAAcAAgAAAAAAAAAGAAgAAgAAAAAAAAAFAAkAAgAAAAAAAAALAAUAAgAAAAAAAAAKAAYAAgAAAAAAAAAJAAcAAgAAAAAAAAAHAAkAAgAAAAAAAAAGAAoAAgAAAAAAAAAMAAYAAgAAAAAAAAALAAcAAgAAAAAAAAAIAAoAAgAAAAAAAAAHAAsAAgAAAAAAAAAGAAwAAgAAAAAAAAAMAAgAAgAAAAAAAAAIAAwAAgAAAAAAAAAMAAkAAgAIAAAAAAAJAAwAAgAIAAAAAAAMAAcAAgAIAAAAAAALAAgAAgAIAAAAAAAIAAsAAgAIAAAAAAAHAAwAAgAIAAAAAAAMAAUAAgAIAAAAAAALAAYAAgAIAAAAAAAKAAcAAgAIAAAAAAAHAAoAAgAIAAAAAAAGAAsAAgAIAAAAAAALAAQAAgAIAAAAAAAKAAUAAgAIAAAAAAAJAAYAAgAIAAAAAAAHAAgAAgAIAAAAAAAGAAkAAgAIAAAAAAAFAAoAAgAIAAAAAAAIAAcAAgAIAAAAAAACAAwAAgAAAAAAAAADAAwAAgAIAAAAAAAEAAwAAgAAAAAAAAADAAsAAgAAAAAAAAA=")
+tile_map_data = PackedByteArray("AAAAAAAAAgAAAAAAAAABAAAAAgAIAAAAAAACAAAAAgAAAAAAAAAAAAEAAgAIAAAAAAADAAEAAgAAAAAAAAACAAIAAgAAAAAAAAACAAEAAgAIAAAAAAABAAIAAgAIAAAAAAAEAAIAAgAAAAAAAAADAAIAAgAIAAAAAAABAAEAAgAAAAAAAAAAAAIAAgAAAAAAAAACAAMAAgAIAAAAAAADAAQAAgAIAAAAAAAFAAQAAgAIAAAAAAAEAAUAAgAIAAAAAAABAAMAAgAAAAAAAAACAAQAAgAAAAAAAAADAAMAAgAAAAAAAAADAAUAAgAAAAAAAAAEAAQAAgAAAAAAAAAFAAMAAgAAAAAAAAAFAAUAAgAAAAAAAAAEAAMAAgAIAAAAAAA=")
 tile_set = SubResource("TileSet_fw11u")
 
-[node name="EnvironmentLayer" type="TileMapLayer" parent="Map/BaseMapLayer" unique_id=795475501]
-tile_set = ExtResource("20_y0p6s")
+[node name="EnvironmentLayer" type="TileMapLayer" parent="Map" unique_id=795475501]
+tile_map_data = PackedByteArray("AAAFAAMAAAAQAAAAAAAEAAMAAAAQAAAAAAADAAMAAAAQAAAAAAADAAQAAAAQAAAAAAADAAUAAAAQAAAAAAAEAAUAAAAQAAAAAAAFAAUAAAAQAAAAAAAFAAQAAAAQAAAAAAAEAAQAAAAQAAAAAAACAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAIAAAAAAAAAAAABAAIAAAAAAAAAAAACAAIAAAAAAAAAAAACAAEAAAAAAAAAAAABAAEAAAAAAAAAAAA=")
+tile_set = ExtResource("34_envts")
 
 [node name="UILayer" type="Node2D" parent="Map" unique_id=1954588854]
 
@@ -143,6 +147,9 @@ tile_set = ExtResource("20_y0p6s")
 tile_set = ExtResource("20_y0p6s")
 
 [node name="PreviewMapLayer" type="TileMapLayer" parent="Map/UILayer" unique_id=705153773]
+tile_set = ExtResource("20_y0p6s")
+
+[node name="WavePreviewLayer" type="TileMapLayer" parent="Map/UILayer" unique_id=705153774]
 tile_set = ExtResource("20_y0p6s")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1922849196]
@@ -182,6 +189,7 @@ script = ExtResource("27_73o0s")
 
 [node name="FadeInLayer" type="CanvasLayer" parent="." unique_id=1250427062 node_paths=PackedStringArray("_black")]
 layer = 10
+visible = false
 script = ExtResource("33_fade")
 _black = NodePath("Control/Black")
 

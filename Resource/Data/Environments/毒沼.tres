@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnvironmentData" format=3 uid="uid://cx7oatqe6k22a"]
+
+[ext_resource type="Script" uid="uid://lxjpnv33tlmg" path="res://Scripts/Data/EnvironmentData.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+EnvironmentID = "毒沼"
+EnvironmentName = "毒沼"
+Description = "进入的单位每回合结束受到 1 点伤害（占位示例环境）"
+MoveCostDelta = 1
+OnApplyActions = null
+OnExpireActions = null
+OnRoundEndActions = null
+PassiveEffects = null

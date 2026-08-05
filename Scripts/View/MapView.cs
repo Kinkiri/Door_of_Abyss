@@ -22,6 +22,8 @@ public partial class MapView : Node2D
 
     [Export] public TileMapLayer CardPreviewLayer { get; set; }
 
+    [Export] public TileMapLayer WavePreviewLayer { get; set; }
+
     [Export] public Vector2I MoveHighlightAtlasCoords { get; set; } = Vector2I.Zero;
 
     [Export] public Vector2I AttackHighlightAtlasCoords { get; set; } = new Vector2I(8, 0);
@@ -245,5 +247,25 @@ public partial class MapView : Node2D
         Vector2I targetAtlas = new Vector2I(16, 0);
         foreach (Vector2I pos in cells)
             AttackMapLayer.SetCell(pos, HighlightSourceId, targetAtlas);
+    }
+
+    // ======================================================================
+    // 波次刷怪预告
+    // ======================================================================
+
+    /// <summary>渲染下一波刷怪位置预告（红色警示格）</summary>
+    public void RenderWavePreview(List<(Vector2I pos, UnitData data)> plan)
+    {
+        if (WavePreviewLayer == null) return;
+        WavePreviewLayer.Clear();
+        Vector2I previewAtlas = new Vector2I(16, 0);
+        foreach (var (pos, _) in plan)
+            WavePreviewLayer.SetCell(pos, HighlightSourceId, previewAtlas);
+    }
+
+    /// <summary>清除波次刷怪预告</summary>
+    public void ClearWavePreview()
+    {
+        WavePreviewLayer?.Clear();
     }
 }

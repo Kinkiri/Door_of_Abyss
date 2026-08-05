@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MapData" format=3]
+
+[ext_resource type="Resource" path="res://Resource/Data/Blocks/测试用白块.tres" id="1_5cip5"]
+[ext_resource type="Resource" path="res://Resource/Data/Blocks/测试用灰块.tres" id="2_bem6g"]
+[ext_resource type="Resource" path="res://Resource/Data/Environments/火焰之地.tres" id="3_h63ja"]
+[ext_resource type="Resource" path="res://Resource/Data/Environments/毒沼.tres" id="4_mrci3"]
+[ext_resource type="Script" path="res://Scripts/Data/Map/MapData.cs" id="5_asyai"]
+
+[resource]
+script = ExtResource("5_asyai")
+Positions = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(0, 1), Vector2i(3, 1), Vector2i(2, 2), Vector2i(2, 1), Vector2i(1, 2), Vector2i(4, 2), Vector2i(3, 2), Vector2i(1, 1), Vector2i(0, 2), Vector2i(2, 3), Vector2i(3, 4), Vector2i(5, 4), Vector2i(4, 5), Vector2i(1, 3), Vector2i(2, 4), Vector2i(3, 3), Vector2i(3, 5), Vector2i(4, 4), Vector2i(5, 3), Vector2i(5, 5), Vector2i(4, 3)]
+Blocks = [ExtResource("1_5cip5"), ExtResource("2_bem6g"), ExtResource("1_5cip5"), ExtResource("2_bem6g"), ExtResource("1_5cip5"), ExtResource("1_5cip5"), ExtResource("2_bem6g"), ExtResource("2_bem6g"), ExtResource("1_5cip5"), ExtResource("2_bem6g"), ExtResource("1_5cip5"), ExtResource("1_5cip5"), ExtResource("2_bem6g"), ExtResource("2_bem6g"), ExtResource("2_bem6g"), ExtResource("2_bem6g"), ExtResource("1_5cip5"), ExtResource("1_5cip5"), ExtResource("1_5cip5"), ExtResource("1_5cip5"), ExtResource("1_5cip5"), ExtResource("1_5cip5"), ExtResource("1_5cip5"), ExtResource("2_bem6g")]
+EnvironmentPositions = [Vector2i(5, 3), Vector2i(4, 3), Vector2i(3, 3), Vector2i(3, 4), Vector2i(3, 5), Vector2i(4, 5), Vector2i(5, 5), Vector2i(5, 4), Vector2i(4, 4), Vector2i(0, 1), Vector2i(0, 2), Vector2i(1, 2), Vector2i(2, 2), Vector2i(2, 1), Vector2i(1, 1)]
+EnvironmentDatas = [ExtResource("3_h63ja"), ExtResource("3_h63ja"), ExtResource("3_h63ja"), ExtResource("3_h63ja"), ExtResource("3_h63ja"), ExtResource("3_h63ja"), ExtResource("3_h63ja"), ExtResource("3_h63ja"), ExtResource("3_h63ja"), ExtResource("4_mrci3"), ExtResource("4_mrci3"), ExtResource("4_mrci3"), ExtResource("4_mrci3"), ExtResource("4_mrci3"), ExtResource("4_mrci3")]

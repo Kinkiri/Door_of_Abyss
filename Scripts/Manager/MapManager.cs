@@ -119,6 +119,9 @@ public partial class MapManager : Node2D
         OriginalMap = new Dictionary<Vector2I, Cell>(Map);
         GD.Print($"MapManager: 从 MapData 加载地图完成，共 {Map.Count} 个地块");
         MapUpdated?.Invoke();
+
+        // 初始化预置环境（环境瓦片化：MapData.Environment* → EnvironmentManager 静默施加）
+        EnvironmentManager.Instance?.LoadPresetEnvironments(data);
     }
 
     // ======================================================================

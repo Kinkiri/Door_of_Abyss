@@ -1,0 +1,22 @@
+[gd_resource type="TileSet" format=3 uid="uid://b7vv082k3m1qm"]
+
+[ext_resource type="Texture2D" uid="uid://b2jw8m6sawlup" path="res://Resource/Art/指示器.png" id="1_tex"]
+[ext_resource type="Resource" uid="uid://cx7oatqe6k22a" path="res://Resource/Data/Environments/毒沼.tres" id="2_env"]
+[ext_resource type="Resource" uid="uid://cjejmedpg47cy" path="res://Resource/Data/Environments/火焰之地.tres" id="2_ntae6"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_env"]
+texture = ExtResource("1_tex")
+0:0/size_in_atlas = Vector2i(8, 8)
+0:0/0 = 0
+0:0/0/custom_data_0 = ExtResource("2_env")
+8:0/size_in_atlas = Vector2i(8, 8)
+8:0/0 = 0
+16:0/size_in_atlas = Vector2i(8, 8)
+16:0/0 = 0
+16:0/0/custom_data_0 = ExtResource("2_ntae6")
+
+[resource]
+tile_size = Vector2i(128, 128)
+custom_data_layer_0/name = "data"
+custom_data_layer_0/type = 24
+sources/0 = SubResource("TileSetAtlasSource_env")

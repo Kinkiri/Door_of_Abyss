@@ -13,6 +13,12 @@ public partial class MapData : Resource
     /// <summary>地形模板列表（BlockData），与 Positions 一一对应</summary>
     [Export] public Godot.Collections.Array Blocks { get; set; } = new();
 
+    /// <summary>预置环境坐标列表（Vector2I），与 EnvironmentDatas 一一对应（环境瓦片化：MapExporter 从环境层导出）</summary>
+    [Export] public Godot.Collections.Array EnvironmentPositions { get; set; } = new();
+
+    /// <summary>预置环境模板列表（EnvironmentData），与 EnvironmentPositions 一一对应</summary>
+    [Export] public Godot.Collections.Array EnvironmentDatas { get; set; } = new();
+
     /// <summary>转换为 Dictionary&lt;Vector2I, BlockData&gt; 供游戏逻辑使用</summary>
     public Dictionary<Vector2I, BlockData> ToBlockDict()
     {
@@ -36,6 +42,32 @@ public partial class MapData : Resource
         {
             Positions.Add(kvp.Key);
             Blocks.Add(kvp.Value);
+        }
+    }
+
+    /// <summary>转换为 Dictionary&lt;Vector2I, EnvironmentData&gt; 供预置环境加载使用</summary>
+    public Dictionary<Vector2I, EnvironmentData> ToEnvironmentDict()
+    {
+        var dict = new Dictionary<Vector2I, EnvironmentData>();
+        int len = Mathf.Min(EnvironmentPositions.Count, EnvironmentDatas.Count);
+        for (int i = 0; i < len; i++)
+        {
+            var env = EnvironmentDatas[i].As<EnvironmentData>();
+            if (env == null) continue;
+            dict[(Vector2I)EnvironmentPositions[i]] = env;
+        }
+        return dict;
+    }
+
+    /// <summary>从字典设置预置环境数据（供 MapExporter 调用）</summary>
+    public void SetEnvironmentDict(Dictionary<Vector2I, EnvironmentData> source)
+    {
+        EnvironmentPositions.Clear();
+        EnvironmentDatas.Clear();
+        foreach (var kvp in source)
+        {
+            EnvironmentPositions.Add(kvp.Key);
+            EnvironmentDatas.Add(kvp.Value);
         }
     }
 }

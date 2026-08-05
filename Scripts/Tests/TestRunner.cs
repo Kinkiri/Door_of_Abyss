@@ -2930,6 +2930,34 @@ public partial class TestRunner : Node
                     map.Remove(rPlain.GridPos);
                     map.Remove(rDiff.GridPos);
                 }
+
+                // ── 环境预置加载（瓦片化：MapData 导出 → LoadPresetEnvironments） ──
+                if (MapManager.Instance != null)
+                {
+                    var mm = MapManager.Instance;
+                    var presetCell = MakeCell(new Vector2I(30, 0), new BlockData { BlockName = "地板", MoveCost = 1, CanStand = true, CanPass = true });
+                    mm.Map[presetCell.GridPos] = presetCell;
+                    var presetEnv = new EnvironmentData
+                    {
+                        EnvironmentID = "预置毒沼",
+                        EnvironmentName = "预置毒沼",
+                        Duration = -1,
+                        MoveCostDelta = 2,
+                    };
+                    var mapData = new MapData();
+                    mapData.SetEnvironmentDict(new System.Collections.Generic.Dictionary<Vector2I, EnvironmentData> { { presetCell.GridPos, presetEnv } });
+
+                    em.LoadPresetEnvironments(mapData);
+                    VAssert("预置环境加载到对应格子", () => em.HasEnvironment(presetCell, "预置毒沼"));
+                    VAssert("预置环境属性修正生效（MoveCost 1→3）", () => presetCell.MoveCost == 3);
+
+                    // 重复加载同格：已有环境跳过，不重复施加
+                    em.LoadPresetEnvironments(mapData);
+                    VAssert("预置环境重复加载跳过已有格", () => em.GetEnvironment(presetCell)?.Data.EnvironmentID == "预置毒沼");
+
+                    em.RemoveEnvironment(presetCell);
+                    mm.Map.Remove(presetCell.GridPos);
+                }
             }
         });
 

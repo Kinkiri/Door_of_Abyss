@@ -210,17 +210,20 @@ Scripts/                         ~7300 行 C#
 │   ├── DragCamera2D.cs          拖拽摄像机（丝滑缩放 + 非线性跟随：选中聚焦/行动跟随）
 │   ├── EnvironmentViewManager.cs 环境图层渲染（订阅环境事件 SetCell/EraseCell）
 │   ├── HandPanel.cs             手牌面板（订阅 CardManager 事件）
-│   ├── MapView.cs               地图渲染 + 高亮
+│   ├── LevelFadeIn.cs           战斗场景渐变入场（黑幕停留 1s → 0.9s 渐出，CanvasLayer 顶层）
+│   ├── MainMenu.cs              主界面（夜色背景/光尘粒子/呼吸标题/竖排菜单/选关·关于面板/退出）
+│   ├── MapView.cs               地图渲染 + 高亮（含波次刷怪预告层 WavePreviewLayer）
 │   ├── RoundInfoPanel.cs        右上角战斗信息面板（横排：阶段/阵营/回合/费用/手牌 + 结束回合按钮）
 │   ├── UnitInfoPanel.cs         左下角信息面板（选中单位/格子/卡牌详情：描述/属性/Buff/装备/环境）
 │   ├── UnitView.cs              单位视觉 + 内建动画（入场/受伤/治疗/死亡/移动/Buff）
 │   └── UnitViewManager.cs       订阅 UnitManager/BuffManager 事件，创建/销毁 UnitView 与 BuffView
 ├── Tests/
-│   └── TestRunner.cs            全面系统性测试（45+ 用例，场景内集成运行）
+│   └── TestRunner.cs            全面系统性测试（485 项，场景内集成运行）
 ├── Tools/
 │   └── TextToResourceImporter.cs  文本转 .tres 工具（EditorScript）
 └── Utils/
-	├── MapExporter.cs           地图导出工具
+	├── LevelSelection.cs        选关结果传递（静态类：主界面 → BattleManager 关卡覆盖）
+	├── MapExporter.cs           地图导出工具（基础地形 + 环境层双导出）
 	├── PathFinder.cs            BFS 寻路（纯算法）
 	└── TargetResolver.cs        目标解析器（纯函数，战场数据由调用方经 Context 传入）
 ```
@@ -333,6 +336,49 @@ public class Context {
 
 ---
 
+## 主界面与选关（程序员）
+
+### 主界面（title.tscn + MainMenu.cs）
+
+- **背景**：夜色 JPG 铺满（canvas_items 拉伸 + 冷色调压暗）+ 径向暗角遮罩 + 底部光尘粒子（GPUParticles2D，`_Process` 匀速左右往返，速度/边界为 Export 参数）
+- **标题**：白色标题图，呼吸动画（缩放 1.0↔1.05 + 亮度 0.86↔1.0，6.4s 循环）；`PivotOffset = 图片尺寸/2` 保证围绕图片中心缩放
+- **菜单**：竖排细字按钮（flat + 半透明白字 + hover 左侧指示条渐显），入场错峰淡入（每行 scale 0.94→1 + alpha，时长 1s）
+- **面板**：「关于」「选关」共用通用动画 `AnimatePanelIn/Out`（暗幕渐显 + 面板下滑 60px 弹出，0.35s Cubic；✕/暗幕点击关闭，`_creditsBasePos` 归位防偏移累积）
+- **退出**：黑幕淡出 0.5s → `GetTree().Quit()`
+
+### 选关流程
+
+```
+点击"开始游戏" → 选关面板滑出（LevelSelectBackdrop + LevelSelectPanel）
+  ├─ 左：关卡列表（BuildLevelList 遍历 LevelLibrary.LevelList 生成按钮，默认选中第一个，选中白字高亮）
+  ├─ 右：关卡详情（名称/描述/波次汇总/卡组）—— Summarize<T> 按名称统计为 "名字×数量"，无空行
+  └─ 右下"进入关卡" → LevelSelection.Selected = 关卡 → 黑幕淡出 → ChangeSceneToFile(Level.tscn)
+战斗场景：BattleManager._Ready 读 LevelSelection.Selected 覆盖 Level.tscn 的固定引用（编辑器直跑保留 fallback）
+```
+
+### 波次刷怪预告
+
+- **两阶段**：`GameStart` 预计算第 1 波；每回合 `RoundStart` 生成当前波（按预告位置）后立即预告下一波——玩家在整个玩家行动阶段可见
+- `PreviewWave(round)`：收集生成区域可站立空格 → 洗牌锁定位置 → 存 `_waveSpawnPlan` → `MapView.RenderWavePreview` 画红色警示格（独立 `WavePreviewLayer`）
+- `SpawnWaveForRound`：有预告计划 → 按计划生成并清除预告；无计划（编辑器直跑）→ 回退原随机路径
+
+### 环境瓦片化（2026-08-06）
+
+环境从"运行时手填图集坐标"改为**瓦片地图绘制 + 数据存储**：
+
+```
+编辑器 EnvironmentLayer 画瓦片（瓦片 custom data 绑 EnvironmentData，同 BlockData 机制）
+  → F5（MapExporter.EnvironmentSourceLayer 导出）
+  → MapData.EnvironmentPositions / EnvironmentDatas
+  → MapManager.LoadFromMapData 末尾 → EnvironmentManager.LoadPresetEnvironments 静默施加
+  → 与动态环境（环境卡）同一生命周期：属性修正/被动/渲染
+```
+
+- `EnvironmentLayer` 与 `BaseMapLayer` **平级**（消除嵌套 TileMapLayer 的 transform 继承问题），使用独立 `EnvironmentTileSet.tres`（占位图集，瓦片 0:0 绑毒沼）
+- 新增环境：建 EnvironmentData 资源 + 环境图集加瓦片绑资源，无需改代码
+
+---
+
 ## 安卓平台适配（程序员）
 
 ### 平台状态
@@ -385,14 +431,20 @@ SelectionManager / 放门 / Control 按钮直接可用），`Scripts/View/TouchI
 每一回合按以下顺序自动推进：
 
 ```
+主界面 → 点"开始游戏" → 选关面板（左列表/右详情/右下进入）
+  → 进入关卡（LevelSelection 传递所选关卡）
+
 GameStart（游戏开始）
-  ├─ 加载地图
+  ├─ 加载地图（含预置环境，瓦片化自动加载）
+  ├─ 预告第 1 波刷怪位置（红色警示格）
   ├─ 手动放门
   └─ 初始化卡组 → 抽 2 张牌
   ↓ 自动
 RoundStart（回合开始）
   ├─ 所有单位行动点恢复满上限，费用 +2
-  ├─ 抽 1 张牌，生成波次
+  ├─ 抽 1 张牌
+  ├─ 按上回合预告的位置生成波次（无预告时回退随机）
+  ├─ 预告下一波刷怪位置（玩家行动阶段可见）
   ├─ RoundStart 被动效果
   └─ 重置触发计数器
   ↓
@@ -411,6 +463,8 @@ RoundEnd（回合结束）
 默认顺序。若无敌对可行动单位则自动跳过，最多跳 3 次防死循环。
 
 **胜利条件：** 所有波次出完 + 场上无敌方 → 玩家胜。门被摧毁 → 玩家败。
+
+**波次预告：** 刷怪位置在上一回合就开始预告（地图上红色格），玩家有一整个回合布置防线。预告位置在锁定后生成前可被玩家主动占据（占据则生成时跳过该格）。
 
 ## 2. 条件（Condition）
 
@@ -1478,3 +1532,18 @@ EnvironmentData：EnvironmentID=沼泽, Duration=-1, MoveCostDelta=2, CanStandOv
 ### 15.6 与单位占位的协调
 
 格子的 CanStand/CanPass 运行时值由 `EnvironmentManager.RefreshCellProperties()` 统一重算：**基础地形值 → 环境覆盖 → 单位占据强制 false**。单位移走/死亡释放格子时也走此入口，保证环境修正不被占位逻辑覆盖。
+
+### 15.7 地图预置环境（瓦片化）
+
+环境可以直接画在关卡地图上（不用卡牌施加）。环境层 `EnvironmentLayer` 与基础地形层**平级**，使用独立的 `EnvironmentTileSet.tres`，瓦片 custom data 绑定 `EnvironmentData`（机制与 BlockData 绑定地形瓦片相同）。
+
+**流程：**
+
+```
+1. 编辑器在 EnvironmentLayer 上画瓦片（每类环境一个瓦片，绑对应 EnvironmentData 资源）
+2. 按 F5 导出地图（MapExporter 同时导出地形层 + 环境层 → MapData.EnvironmentPositions/EnvironmentDatas）
+3. 进入关卡自动加载：MapManager 加载地形后 → EnvironmentManager.LoadPresetEnvironments
+   逐格静默施加（属性修正/被动订阅/渲染全走标准流程，与动态环境同生命周期）
+```
+
+**新增环境：** 建 EnvironmentData 资源（Resource/Data/Environments/，如毒沼.tres）→ 在环境图集加一个瓦片并绑定该资源 → 地图上画。占位图集当前只有 0:0 一瓦（绑毒沼），等环境美术素材就绪后替换贴图并按瓦片更新各环境资源的 `AtlasSourceId/AtlasCoords`。
