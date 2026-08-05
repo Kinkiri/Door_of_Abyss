@@ -20,9 +20,9 @@ public partial class Context
 
     /// <summary>
     /// 事件另一方单位（触发被动的事件 ctx.TargetUnit 透传，如死亡事件=死者）。
-    /// 由 EventBus.Fire 构建 effectCtx 时填充，供值源以 ValueTarget.EventTarget 读取。
+    /// 由 EventBus.Fire 构建 effectCtx 时派生，供值源以 ValueTarget.EventOther 读取。
     /// </summary>
-    public Unit EventTargetUnit { get; set; }
+    public Unit EventOtherUnit { get; set; }
 
     /// <summary>触发 OnUnitAct 时的行动类型（移动/攻击），供被动效果区分</summary>
     public UnitActType ActType { get; set; }
@@ -52,4 +52,14 @@ public partial class Context
     /// </summary>
     public Cell[] TargetCells { get; set; }
     public Cell TargetCell { get; set; }
+
+    public string SourceBuffID { get; set; }
+    public int BuffChangedStacks { get; set; }
+
+    /// <summary>
+    /// 浅拷贝：EventBus 构建 effectCtx 时全量继承事件载荷（替代手写白名单透传，
+    /// 新增字段自动携带，杜绝"漏传即静默丢数据"）。
+    /// 字段均为引用/值类型，浅拷贝共享 Map/ActiveUnits/Unit 引用符合预期语义。
+    /// </summary>
+    public Context Clone() => (Context)MemberwiseClone();
 }

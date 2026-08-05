@@ -2,8 +2,13 @@
 
 [ext_resource type="Script" uid="uid://bndowl6u6n8uh" path="res://Scripts/Data/Actions/HealAction.cs" id="1_action"]
 [ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="1_effect"]
+[ext_resource type="Script" uid="uid://dvi5cm6ic86ev" path="res://Scripts/Data/Actions/ModifyCostAction.cs" id="3_p422u"]
 [ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="3_v6xdq"]
 [ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="4_2bhwe"]
+[ext_resource type="Script" uid="uid://bqdiie4v7k7l7" path="res://Scripts/Data/ValueSource/BuffInfoValue.cs" id="4_d6ibe"]
+[ext_resource type="Script" uid="uid://bn4m8splfe3lb" path="res://Scripts/Data/ValueSource/ConstantValue.cs" id="5_pja2u"]
+[ext_resource type="Script" uid="uid://brotjf8m2qpfx" path="res://Scripts/Data/Conditions/CompareCondition.cs" id="6_bf4pv"]
+[ext_resource type="Script" uid="uid://mdui273vel7y" path="res://Scripts/Data/ValueSource/Cell/DirectionValue.cs" id="7_x4pr0"]
 
 [sub_resource type="Resource" id="Resource_8nh57"]
 script = ExtResource("1_action")
@@ -17,6 +22,53 @@ MaxTriggerCount = 2
 Actions = Array[Object]([SubResource("Resource_8nh57")])
 Conditions = null
 
+[sub_resource type="Resource" id="Resource_00tcq"]
+script = ExtResource("3_p422u")
+Value = 1
+metadata/_custom_type_script = "uid://dvi5cm6ic86ev"
+
+[sub_resource type="Resource" id="Resource_3y7vf"]
+script = ExtResource("4_d6ibe")
+BuffID = "义肢"
+Info = 2
+metadata/_custom_type_script = "uid://bqdiie4v7k7l7"
+
+[sub_resource type="Resource" id="Resource_cuomb"]
+script = ExtResource("5_pja2u")
+metadata/_custom_type_script = "uid://bn4m8splfe3lb"
+
+[sub_resource type="Resource" id="Resource_r746w"]
+script = ExtResource("6_bf4pv")
+Left = SubResource("Resource_3y7vf")
+Op = 0
+Right = SubResource("Resource_cuomb")
+metadata/_custom_type_script = "uid://brotjf8m2qpfx"
+
+[sub_resource type="Resource" id="Resource_1ciy3"]
+script = ExtResource("7_x4pr0")
+To = 2
+metadata/_custom_type_script = "uid://mdui273vel7y"
+
+[sub_resource type="Resource" id="Resource_1xlik"]
+script = ExtResource("5_pja2u")
+Value = 2
+metadata/_custom_type_script = "uid://bn4m8splfe3lb"
+
+[sub_resource type="Resource" id="Resource_dhd0b"]
+script = ExtResource("6_bf4pv")
+Left = SubResource("Resource_1ciy3")
+Op = 1
+Right = SubResource("Resource_1xlik")
+metadata/_custom_type_script = "uid://brotjf8m2qpfx"
+
+[sub_resource type="Resource" id="Resource_saokk"]
+script = ExtResource("1_effect")
+TriggerEvent = 22
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_00tcq")])
+Conditions = Array[Object]([SubResource("Resource_r746w"), SubResource("Resource_dhd0b")])
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
 [resource]
 script = ExtResource("4_2bhwe")
 UnitID = "吸血鬼"
@@ -25,5 +77,5 @@ Tags = null
 HealthPoints = 4
 Description = "攻击后恢复1血"
 UnitPrefab = ExtResource("3_v6xdq")
-PassiveEffects = Array[Object]([SubResource("Resource_am8sn")])
+PassiveEffects = Array[Object]([SubResource("Resource_am8sn"), SubResource("Resource_saokk")])
 metadata/_custom_type_script = "uid://cthrvfilibvfl"

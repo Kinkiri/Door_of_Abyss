@@ -119,7 +119,7 @@ Scripts/                         ~7300 行 C#
 │   │   ├── BattleCostValue.cs   费用
 │   │   └── Cell/                格子坐标值源（Vector2I，抽象基类 CellValueSource）
 │   │       ├── CellValueSource.cs   坐标值源基类：GetCell(Context) → Vector2I?（null=无有效坐标）
-│   │       ├── UnitCellValue.cs     单位坐标读取（Source/Target/EventTarget）
+│   │       ├── UnitCellValue.cs     单位坐标读取（Source/Target/EventOther）
 │   │       ├── ContextCellValue.cs  格子坐标读取（ctx.TargetCell/SourceCell）
 │   │       ├── OffsetCellValue.cs   坐标偏移（基准 + dx/dy，支持值源覆盖）
 │   │       ├── StepCellValue.cs     方向步进（基准沿方向走 N 格，方向/距离支持值源覆盖）
@@ -247,12 +247,14 @@ View（Node/Control）        ← 事件驱动渲染，订阅 Manager 事件自�
 ### ECA 执行流程
 
 ```
-EventBus.Fire(EventType, Context, subject)
+EventBus.Fire(EventType, Context, instigator)
   → 遍历订阅者
 	→ 触发次数检查（MaxTriggerCount）
-	→ 创建 effectCtx（目标解析：PassiveTarget 或 TargetFilter）
+	→ 创建 effectCtx = 事件 ctx.Clone() + 订阅者语义覆盖（SourceUnit/SourceTeam/目标解析）
+	  （克隆式全量透传：事件载荷 TargetCell/SourceCell/Map/ActType/方向/伤害修饰等自动继承，
+	   新增字段零改动；EventOtherUnit 由 ctx.TargetUnit 派生；filter 路径 TargetUnit=null）
 	→ 条件检查（Conditions，任意不满足则 skip）
-	→ 执行 Actions
+	→ 执行 Actions（DamageModifier 增量 diff 回写事件 ctx）
 ```
 
 ### ActionQueue 序列化
@@ -317,9 +319,9 @@ DamageAction / HealAction / ModifyStatAction / SetStatAction / ...
 ```csharp
 public class Context {
 	Unit SourceUnit;        // 效果来源单位（=被动所有者：单位被动=自己，环境被动=施加者，手牌被动=事件来源）
-	Unit TargetUnit;        // 单目标（Target=Self 时=自己；EventTarget 时=事件另一方）
+	Unit TargetUnit;        // 单目标（Target=Self 时=自己；EventOther 时=事件另一方）
 	Unit[] TargetUnits;     // 多目标（TargetFilters 解析）
-	Unit EventTargetUnit;   // 事件另一方（如死亡事件=死者；供值源 Unit=EventTarget 读取）
+	Unit EventOtherUnit;   // 事件另一方（如死亡事件=死者；供值源 Unit=EventOther 读取）
 	Team SourceTeam, TargetTeam;
 	Card SourceCard;
 	Cell TargetCell, SourceCell;
@@ -485,10 +487,10 @@ OrCondition
 
 | 动作 | 字段 | 说明 |
 |---|---|---|
-| TransformUnitAction | UnitData / UnitID | **变身**：将目标单位切换为指定模板并完全重置。**语义=完全重置**：清一切 buff/装备（还原加成 + 退订 + 视图销毁；`CanBeChanged=false` 固定 buff 保留）、按新模板刷新属性（满血）、旧被动退订 + 新被动订阅；位置/阵营不变。变身后触发 `OnUnitTransformed`（无 subject 定向） |
+| TransformUnitAction | UnitData / UnitID | **变身**：将目标单位切换为指定模板并完全重置。**语义=完全重置**：清一切 buff/装备（还原加成 + 退订 + 视图销毁；`CanBeChanged=false` 固定 buff 保留）、按新模板刷新属性（满血）、旧被动退订 + 新被动订阅；位置/阵营不变。变身后触发 `OnUnitTransformed`（无 instigator 定向） |
 | RandomTransformAction | Filters（CardFilter[]，默认 And） | **随机变身**：从模板库筛匹配的**单位卡**随机取一张（按卡随机、不去重，同单位多卡权重更高）变身成其单位。例：`[CardFactionFilter{擢升之手}, CardCostFilter{MaxCost=6}]` = 随机变为费用≤6 的擢升之手单位。筛选复用 CardFilter + `CardLibrary.GetCards/GetRandomCard` 通用查询（与抽牌共用体系） |
 
-> **设计要点**：变身触发即移除义肢等 buff（全清语义）→ 触发条件不再满足，天然只触发一次。示例：破碎残躯被动 = `TriggerEvent=OnBuffStackChanged`（叠层变化/设置后触发，`TargetUnit`=层数变化单位，subject 定向自己）+ 条件 `BuffInfoValue{Unit=Source, BuffID=义肢, StackCount} >= 2` + `RandomTransformAction{Filters=[CardFactionFilter{擢升之手}, CardTypeFilter{单位}, CardCostFilter{MaxCost=6}]}`。
+> **设计要点**：变身触发即移除义肢等 buff（全清语义）→ 触发条件不再满足，天然只触发一次。示例：破碎残躯被动 = `TriggerEvent=OnBuffStackChanged`（叠层变化/设置后触发，`TargetUnit`=层数变化单位，instigator 定向自己）+ 条件 `BuffInfoValue{Unit=Source, BuffID=义肢, StackCount} >= 2` + `RandomTransformAction{Filters=[CardFactionFilter{擢升之手}, CardTypeFilter{单位}, CardCostFilter{MaxCost=6}]}`。
 
 ### 3.3 自动攻击
 
@@ -533,7 +535,7 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 
 | 动作 | 字段 | 说明 |
 |---|---|---|
-| MoveUnitAction | Mode=Teleport/Push/Pull, Distance + DistanceValueSource | **作用于 TargetUnits**（与其他动作一致：卡牌=筛选目标，被动=TargetFilter/Self/EventTarget 解析），不耗 AP。Teleport=传送到 TargetCell/TargetUnit 所在格（可选 `TeleportPosition` 坐标值源优先指定落点）；**Push=击退（远离锚点）**、**Pull=拉拽（靠近锚点）**，方向与距离均支持值源：`DirectionValueSource`（值源优先，CellDirection 枚举值，如 `DirectionValue` 动态朝向/常量固定向）、`DirectionAnchor`（坐标值源，方向 = 锚点坐标 → 目标，可推离门口/环境格；未配置时锚点=SourceUnit）、`DistanceValueSource`（动态距离）。锚点与方向均缺失时原地不动 |
+| MoveUnitAction | Mode=Teleport/Push/Pull, Distance + DistanceValueSource | **作用于 TargetUnits**（与其他动作一致：卡牌=筛选目标，被动=TargetFilter/Self/EventOther 解析），不耗 AP。Teleport=传送到 TargetCell/TargetUnit 所在格（可选 `TeleportPosition` 坐标值源优先指定落点）；**Push=击退（远离锚点）**、**Pull=拉拽（靠近锚点）**，方向与距离均支持值源：`DirectionValueSource`（值源优先，CellDirection 枚举值，如 `DirectionValue` 动态朝向/常量固定向）、`DirectionAnchor`（坐标值源，方向 = 锚点坐标 → 目标，可推离门口/环境格；未配置时锚点=SourceUnit）、`DistanceValueSource`（动态距离）。锚点与方向均缺失时原地不动 |
 
 ### 3.8 属性设置（不可逆）
 
@@ -555,8 +557,8 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 | 值源 | 字段 | 说明 |
 |---|---|---|
 | ConstantValue | Value | 固定数值 |
-| UnitStatValue | Unit=Source/Target/EventTarget, Stat, CurrentHP=true/false | 单位属性（`EventTarget`=事件另一方，死亡事件=死者） |
-| BuffInfoValue | Unit=Source/Target/EventTarget, BuffID, Info=StackCount/RemainingTurns | Buff 叠层/回合，不存在时返回 DefaultValue。**`Unit=EventTarget` 读事件另一方的 Buff**（如"获得死者的义肢层数"） |
+| UnitStatValue | Unit=Source/Target/EventOther, Stat, CurrentHP=true/false | 单位属性（`EventOther`=事件另一方，死亡事件=死者） |
+| BuffInfoValue | Unit=Source/Target/EventOther, BuffID, Info=StackCount/RemainingTurns | Buff 叠层/回合，不存在时返回 DefaultValue。**`Unit=EventOther` 读事件另一方的 Buff**（如"获得死者的义肢层数"） |
 | EquipmentInfoValue | Unit, Info=HasEquipment/各Bonus | 装备信息，无装备时 HasEquipment=0、其余返回 DefaultValue |
 | RandomValue | Min, Max | [Min, Max] 随机整数 |
 | FormulaValue | Op, Left, Right | 嵌套运算（Add/Sub/Mul/Div/Max/Min/Percent） |
@@ -565,7 +567,7 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 | DistanceValue | From=Source/Target, To=Source/Target | **曼哈顿距离** |
 | BattleCostValue | Type=Current/Max | 当前/最大费用 |
 | **CardInfoValue** | Info=Cost/Type/World/Faction/Rarity | **读取 `ctx.SourceCard` 的卡牌属性**（卡牌被动场景=被抽/被打出的牌；Type/World/Faction/Rarity 返回枚举数值，配合 CompareCondition 做类型判断），无卡牌时返回 DefaultValue |
-| **UnitInfoValue** | Unit=Source/Target/EventTarget, Info=Type/Team | **读取单位的类型/阵营枚举**（`UnitType`/`Team` 数值，配合 CompareCondition 判断"目标是建筑/兵种/门…"、"死者是友方"等），单位不存在时返回 DefaultValue |
+| **UnitInfoValue** | Unit=Source/Target/EventOther, Info=Type/Team | **读取单位的类型/阵营枚举**（`UnitType`/`Team` 数值，配合 CompareCondition 判断"目标是建筑/兵种/门…"、"死者是友方"等），单位不存在时返回 DefaultValue |
 | **PendingDamageValue** | - | **本次伤害的基础伤害值**（攻击前/受击前事件时由 DamageAction 填充 `ctx.PendingDamage`）。配合条件判断"会致死"（如致命免伤） |
 | **AttackDirectionValue** | DefaultValue | **本次攻击方向**（攻击者→受击者的曼哈顿 4 向，CellDirection 枚举值；攻击事件/OnUnitAct 攻击时填充，非攻击事件返回 DefaultValue）。配合条件判断"背刺/侧翼" |
 | **OppositeDirectionValue** | Direction(方向值源), DefaultValue | **方向取反**：输入方向（CellDirection 枚举值）取反（Up↔Down、Left↔Right）；输入非法/缺失返回 DefaultValue。典型：`Direction=AttackDirectionValue` 得到"目标背后"方向 |
@@ -576,11 +578,11 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 
 | 坐标值源 | 字段 | 说明 |
 |---|---|---|
-| UnitCellValue | Unit=Source/Target/EventTarget | 单位格子坐标（GridPos） |
+| UnitCellValue | Unit=Source/Target/EventOther | 单位格子坐标（GridPos） |
 | ContextCellValue | Cell=Target/Source | ctx.TargetCell（事件格/环境格/点击格）/ ctx.SourceCell（移动前旧格）坐标 |
 | OffsetCellValue | Base(坐标值源), Dx/Dy + DxValueSource/DyValueSource | 基准坐标 + (dx, dy) 偏移；偏移支持固定值与值源覆盖 |
 | StepCellValue | Base, Direction + DirectionValueSource, Distance + DistanceValueSource | 基准沿方向走 N 格；方向（CellDirection 4 向）与距离均支持值源覆盖；距离 ≤0 返回基准 |
-| DirectionValue | From/To=Source/Target/EventTarget | **方向计算**：两点 → `CellDirection` 枚举值（|dx|≥|dy| 取横向，否则纵向；零向量按横向 Right，与 MoveUnitAction 同约定） |
+| DirectionValue | From/To=Source/Target/EventOther | **方向计算**：两点 → `CellDirection` 枚举值（|dx|≥|dy| 取横向，否则纵向；零向量按横向 Right，与 MoveUnitAction 同约定） |
 | CellCoordValue | Cell(坐标值源), Info=PosX/PosY, DefaultValue | 坐标 X/Y 分量（int），配合 CompareCondition 做"X 坐标≥5"类判断 |
 | RandomCellValue | Base(null→ctx.TargetCell), Shape=菱形/方形/全图, Range + RangeValueSource, RequireStandable(默认 true) | 形状内随机一格；`RequireStandable=true` 只取可站立且未占据的格（召唤落点用），无可选格返回 null |
 
@@ -647,7 +649,7 @@ ModifyBuffAction(StacksDelta=-1) -> 减 1 层，还原 1 次 -> ATK-1。
 | 字段 | 说明 |
 |---|---|
 | TriggerEvent | 触发事件 |
-| Target | Self=自身, EventTarget=事件另一方（TargetFilters 为空时生效） |
+| Target | Self=自身, EventOther=事件另一方（TargetFilters 为空时生效） |
 | TargetFilters | 目标筛选器数组（默认 And；非空时自动解析目标，忽略 Target） |
 | MaxTriggerCount | 每回合最多 N 次，0=不限制 |
 | Conditions | ECA 条件 |
@@ -660,15 +662,15 @@ ModifyBuffAction(StacksDelta=-1) -> 减 1 层，还原 1 次 -> ATK-1。
 | 角色 | 字段 | 计算方式 |
 |---|---|---|
 | **自己**（被动所有者） | `SourceUnit` | 单位被动=订阅单位**自己**；环境被动=环境**施加者**；手牌被动=事件 ctx 的来源（可能 null） |
-| **操作目标** | `TargetUnit` / `TargetUnits` / `TargetCells` | 有 TargetFilters → 筛选器解析（中心=自己格子/环境格/事件格）；无 → `Self`=自己 或 `EventTarget`=事件另一方 |
-| **对方**（事件另一方） | `EventTargetUnit` | = 事件 ctx 的 `TargetUnit`，随事件视角变化（见下表） |
-| ~~事件触发者~~ | `subject`（**不进 effectCtx**） | 仅用于订阅过滤：Unit 订阅者要求"事件发生在自己身上"，值源/条件读不到 |
+| **操作目标** | `TargetUnit` / `TargetUnits` / `TargetCells` | 有 TargetFilters → 筛选器解析（中心=自己格子/环境格/事件格）；无 → `Self`=自己 或 `EventOther`=事件另一方 |
+| **对方**（事件另一方） | `EventOtherUnit` | = 事件 ctx 的 `TargetUnit`，随事件视角变化（见下表） |
+| ~~事件触发者~~ | `instigator`（**不进 effectCtx**） | 仅用于订阅过滤：Unit 订阅者要求"事件发生在自己身上"，值源/条件读不到 |
 
-> **来源 ≠ 触发者**：effectCtx 的 `SourceUnit` 是"效果施法者"（单位被动恒为自己），**不是**事件触发者（subject）。事件 ctx 的"事件源"（如 OnUnitDeath 的 ctx.SourceUnit=死者）在 effectCtx 里不可直接读——要读事件另一方，用 `EventTargetUnit`（值源 `Unit=EventTarget`）。
+> **来源 ≠ 触发者**：effectCtx 的 `SourceUnit` 是"效果施法者"（单位被动恒为自己），**不是**事件触发者（instigator）。事件 ctx 的"事件源"（如 OnUnitDeath 的 ctx.SourceUnit=死者）在 effectCtx 里不可直接读——要读事件另一方，用 `EventOtherUnit`（值源 `Unit=EventOther`）。
 
 **各事件视角的"对方"：**
 
-| 事件 | 对方（`EventTargetUnit` / `Target=EventTarget` 时的 `TargetUnit`） |
+| 事件 | 对方（`EventOtherUnit` / `Target=EventOther` 时的 `TargetUnit`） |
 |---|---|
 | OnDealDamage / OnBeforeAttack | 受击者 |
 | OnTakeDamage / OnBeforeTakeDamage | 攻击者 |
@@ -678,15 +680,15 @@ ModifyBuffAction(StacksDelta=-1) -> 减 1 层，还原 1 次 -> ATK-1。
 | OnBuffStackChanged | 层数变化的单位 |
 | OnUseCard / OnDrawCard / RoundStart / RoundEnd / OnMove / OnSpawn | 无（null） |
 
-**典型用法（"自己获得对方的东西"）**：`Target=Self`（操作目标=自己）+ 条件/值源用 `Unit=EventTarget` 读对方。例（MK0"友方兵种死亡，获得其义肢"）：
+**典型用法（"自己获得对方的东西"）**：`Target=Self`（操作目标=自己）+ 条件/值源用 `Unit=EventOther` 读对方。例（MK0"友方兵种死亡，获得其义肢"）：
 
 ```
 TriggerEvent=OnAnyUnitDeath, Target=Self
 Conditions=[
-  UnitInfoValue{Unit=EventTarget, Info=Type} == 0(兵种),
-  UnitInfoValue{Unit=EventTarget, Info=Team} == UnitInfoValue{Unit=Source, Info=Team}  // 相对阵营
+  UnitInfoValue{Unit=EventOther, Info=Type} == 0(兵种),
+  UnitInfoValue{Unit=EventOther, Info=Team} == UnitInfoValue{Unit=Source, Info=Team}  // 相对阵营
 ]
-Actions=[ApplyBuff{义肢, ValueSource=BuffInfoValue{Unit=EventTarget, BuffID=义肢}}]  // 读死者层数
+Actions=[ApplyBuff{义肢, ValueSource=BuffInfoValue{Unit=EventOther, BuffID=义肢}}]  // 读死者层数
 ```
 
 ### 触发事件
@@ -699,17 +701,17 @@ Actions=[ApplyBuff{义肢, ValueSource=BuffInfoValue{Unit=EventTarget, BuffID=�
 | OnKill | 击杀 |
 | OnBuffApplied / OnBuffRemoved | Buff 施加/移除 |
 | OnUnitAct | 单位行动后（移动/攻击；**出牌不触发**），`ctx.ActType` 区分移动/攻击 |
-| **OnUseCard** | 使用卡牌后（出牌成功扣费后、卡牌动作执行前），无 subject（来源单位经 `SourceUnit` 取） |
-| **OnDrawCard** | 抽牌后（`SourceCard`=被抽的牌，`SourceTeam`=抽牌方），无 subject。**手牌被动只响应"自己被抽到"**（防连锁递归），单位被动可响应任意抽牌 |
-| **OnBeforeAttack** | **攻击前**（伤害计算前，攻击者视角，subject=攻击者）。`SourceUnit`=攻击者，`TargetUnit`=受击者，`ctx.PendingDamage`=本次基础伤害，`ctx.AttackDirection`=攻击方向（攻击者→受击者 4 向）。攻击者挂"加伤"被动（读 `Source`=自己），用 `ModifyDamageAction` 改 `ctx.DamageModifier` |
-| **OnBeforeTakeDamage** | **受击前**（伤害计算前，受击者视角，subject=受击者）。`SourceUnit`=受击者（自己），`TargetUnit`=攻击者，`ctx.PendingDamage`=本次基础伤害，`ctx.AttackDirection`=攻击方向。受击者挂"减伤"被动（读 `Source`=自己），用 `ModifyDamageAction` 改 `ctx.DamageModifier`；`PendingDamageValue` 可判断"会致死"。`DamageAction` 结算时两侧修饰累加：`max(0, 基础伤害 + 攻击侧 + 受击侧)`；`AutoAttackAction` 已统一走 `DamageAction` 链路 |
+| **OnUseCard** | 使用卡牌后（出牌成功扣费后、卡牌动作执行前），无 instigator（来源单位经 `SourceUnit` 取） |
+| **OnDrawCard** | 抽牌后（`SourceCard`=被抽的牌，`SourceTeam`=抽牌方），无 instigator。**手牌被动只响应"自己被抽到"**（防连锁递归），单位被动可响应任意抽牌 |
+| **OnBeforeAttack** | **攻击前**（伤害计算前，攻击者视角，instigator=攻击者）。`SourceUnit`=攻击者，`TargetUnit`=受击者，`ctx.PendingDamage`=本次基础伤害，`ctx.AttackDirection`=攻击方向（攻击者→受击者 4 向）。攻击者挂"加伤"被动（读 `Source`=自己），用 `ModifyDamageAction` 改 `ctx.DamageModifier` |
+| **OnBeforeTakeDamage** | **受击前**（伤害计算前，受击者视角，instigator=受击者）。`SourceUnit`=受击者（自己），`TargetUnit`=攻击者，`ctx.PendingDamage`=本次基础伤害，`ctx.AttackDirection`=攻击方向。受击者挂"减伤"被动（读 `Source`=自己），用 `ModifyDamageAction` 改 `ctx.DamageModifier`；`PendingDamageValue` 可判断"会致死"。`DamageAction` 结算时两侧修饰累加：`max(0, 基础伤害 + 攻击侧 + 受击侧)`；`AutoAttackAction` 已统一走 `DamageAction` 链路 |
 | **OnUnitDeath** | 单位死亡（亡语） |
-| **OnAnyUnitDeath** | **任意单位死亡后**（区别于亡语：无 subject 定向，**存活**单位的被动均可响应，死者自身不触发）。`TargetUnit`=死者，`TargetCell`=死亡格子，`SourceUnit`=死者。配合 TargetFilters 筛阵营/类型（如 `[Shape(全体), Team(友方)]` = 友方死亡时） |
+| **OnAnyUnitDeath** | **任意单位死亡后**（区别于亡语：无 instigator 定向，**存活**单位的被动均可响应，死者自身不触发）。`TargetUnit`=死者，`TargetCell`=死亡格子，`SourceUnit`=死者。配合 TargetFilters 筛阵营/类型（如 `[Shape(全体), Team(友方)]` = 友方死亡时） |
 | **OnMove** | 移动后（不含攻击/出牌） |
 | **OnUnitEnterCell** | **单位进入格子后**（移动/传送/召唤）。`TargetCell`=新格子，`TargetUnit`=进入的单位。**环境被动专用**：仅"目标格子==环境所在格"且**起终点环境变化**的订阅者触发——对面格子环境 ID 与本环境相同（含两端都无环境）即同一环境内移动，不触发；无→有 / 有→无 / 环境A→环境B 才触发。`[Shape(单体)]` 命中进入的单位 |
 | **OnUnitLeaveCell** | **单位离开格子后**（移动/传送/死亡/移除）。`TargetCell`=原格子，`TargetUnit`=离开的单位。环境被动专用，同上（跨环境移动先 A 离开后 B 进入） |
-| **OnUnitTransformed** | **单位变身后**（变身=换模板 + 清 buff/装备 + 换被动）。`TargetUnit`=变身单位。**无 subject 定向**：所有存活单位被动可响应（参照 OnAnyUnitDeath），用 TargetFilters / `Target=EventTarget` 筛变身者 |
-| **OnBuffStackChanged** | **Buff 叠层变化/设置后**（新建 initialStacks、叠层刷新、ModifyBuffAction 增减层；归零移除走 OnBuffRemoved 不触发）。`TargetUnit`=层数变化的单位，subject=该单位（定向，自己响应）。配合条件 `BuffInfoValue{Unit=Source, BuffID, StackCount} > N` 判断层数 |
+| **OnUnitTransformed** | **单位变身后**（变身=换模板 + 清 buff/装备 + 换被动）。`TargetUnit`=变身单位。**无 instigator 定向**：所有存活单位被动可响应（参照 OnAnyUnitDeath），用 TargetFilters / `Target=EventOther` 筛变身者 |
+| **OnBuffStackChanged** | **Buff 叠层变化/设置后**（新建 initialStacks、叠层刷新、ModifyBuffAction 增减层；归零移除走 OnBuffRemoved 不触发）。`TargetUnit`=层数变化的单位，instigator=该单位（定向，自己响应）。配合条件 `BuffInfoValue{Unit=Source, BuffID, StackCount} > N` 判断层数 |
 
 ### 被动示例
 
@@ -841,7 +843,7 @@ CellShape（抽象基类）
 ### 语义约定
 
 - **`CardData.TargetFilters` / `EffectData.TargetFilters` 是数组，默认 And 组合**：`[Shape(单体), Team(敌方)]` ≡ `And[Shape, Team]`，无需手动包 And（运行时经 `TargetFilter.CombineAnd` 组合）
-- **数组为 null/空 = 无目标**（无目标法术直接打出）；被动效果无 TargetFilters 时用 `Target`（Self/EventTarget）
+- **数组为 null/空 = 无目标**（无目标法术直接打出）；被动效果无 TargetFilters 时用 `Target`（Self/EventOther）
 - **形状节点**（ShapeTargetFilter）忽略上游候选自行生成；**过滤节点**（Attribute/Condition/组合）对上游候选过滤
 - **扩散中心覆盖**：`ShapeTargetFilter.CenterOverride`（坐标值源，与 `AreaRangeValueSource` 同风格）——配置后 SingleCell/AreaDiamond/AreaSquare 以该坐标为中心，**代替默认的 ctx.TargetCell**（被动路径=单位自身格/环境格/事件格，卡牌路径=点击格）；覆盖坐标无效/格子不存在时返回空结果。典型用法：环境被动以"环境格"为固定中心、单位被动以"来源前方 N 格"为扩散中心（`StepCellValue`）
 - **单挂过滤类** = 从全量开始（`[Team(敌方)]` 单独 ≡ 全体敌方）
@@ -935,7 +937,7 @@ OnEnterGameStart
 
 `Scripts/Tests/TestRunner.cs` - 全面系统性单元测试，直接在场景中运行。
 
-**用法：** 在场景根节点加 Node，挂载 TestRunner.cs，运行即可。**381 项用例**覆盖：
+**用法：** 在场景根节点加 Node，挂载 TestRunner.cs，运行即可。**482 项用例**覆盖：
 - ValueSource 运算（6 种公式 + 嵌套）
 - Condition 复合（And/Or/Not + Compare/HasBuff/Random）
 - Buff 生命周期（叠层/倒计时/还原/驱散）
@@ -943,7 +945,7 @@ OnEnterGameStart
 - ECA 集成（条件满足执行/MaxTriggerCount 限制）
 - DamageUnit（正常扣血/过量/击杀）
 - MaxStack/Duration 边界值
-- 事件系统（OnAnyUnitDeath 任意死亡 / ValueTarget.EventTarget 事件另一方读取）
+- 事件系统（OnAnyUnitDeath 任意死亡 / ValueTarget.EventOther 事件另一方读取）
 - 变身机制（清 buff/装备、固定 buff 保留、buff 叠层触发变身）
 
 测试完毕自动 `QueueFree()`，不影响游戏。
@@ -1043,7 +1045,7 @@ Actions=[RepeatAction{
 
 ```
 UnitData PassiveEffects=[EffectData{
-  TriggerEvent=OnUnitDeath, Target=EventTarget
+  TriggerEvent=OnUnitDeath, Target=EventOther
   Actions=[DamageAction{Value=3}]
 }]
 ```

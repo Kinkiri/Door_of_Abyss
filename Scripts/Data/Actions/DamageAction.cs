@@ -31,10 +31,20 @@ public partial class DamageAction : GameAction
                 // PendingDamage 暴露本次基础伤害，供被动判断"伤害是否会致死"；
                 // AttackDirection 暴露攻击方向（攻击者 → 受击者 4 向），供被动判断"背刺"等
                 var atkDir = TargetResolver.DirectionBetween(ctx.SourceUnit.GridPos, target.GridPos);
-                var attackCtx = new Context { SourceUnit = ctx.SourceUnit, TargetUnit = target, PendingDamage = dmg, AttackDirection = atkDir };
-                var defendCtx = new Context { SourceUnit = target, TargetUnit = ctx.SourceUnit, PendingDamage = dmg, AttackDirection = atkDir };
-                EventBus.Instance?.Fire(EventType.OnBeforeAttack, attackCtx, subject: ctx.SourceUnit);
-                EventBus.Instance?.Fire(EventType.OnBeforeTakeDamage, defendCtx, subject: target);
+                var attackCtx = new Context
+                {
+                    SourceUnit = ctx.SourceUnit, SourceTeam = ctx.SourceUnit.Team,
+                    TargetUnit = target, TargetTeam = target.Team,
+                    PendingDamage = dmg, AttackDirection = atkDir,
+                };
+                var defendCtx = new Context
+                {
+                    SourceUnit = target, SourceTeam = target.Team,
+                    TargetUnit = ctx.SourceUnit, TargetTeam = ctx.SourceUnit.Team,
+                    PendingDamage = dmg, AttackDirection = atkDir,
+                };
+                EventBus.Instance?.Fire(EventType.OnBeforeAttack, attackCtx, instigator: ctx.SourceUnit);
+                EventBus.Instance?.Fire(EventType.OnBeforeTakeDamage, defendCtx, instigator: target);
                 finalDmg = System.Math.Max(0, dmg + attackCtx.DamageModifier + defendCtx.DamageModifier);
             }
 
@@ -43,17 +53,33 @@ public partial class DamageAction : GameAction
 
             GD.Print($"[DamageAction] 对 {target.UnitData?.UnitName} 造成 {dealt} 点伤害");
 
-            // 有来源单位时触发战斗被动事件
+            // 有来源单位时触发战斗被动事件（各事件补全 SourceUnit/SourceTeam——手牌被动
+            // 的 SourceUnit 依赖事件载荷，缺失会读到 null）
             if (ctx.SourceUnit != null)
             {
                 var atkDir = TargetResolver.DirectionBetween(ctx.SourceUnit.GridPos, target.GridPos);
                 EventBus.Instance?.Fire(EventType.OnDealDamage,
-                    new Context { TargetUnit = target, AttackDirection = atkDir }, subject: ctx.SourceUnit);
+                    new Context
+                    {
+                        SourceUnit = ctx.SourceUnit, SourceTeam = ctx.SourceUnit.Team,
+                        TargetUnit = target, TargetTeam = target.Team,
+                        AttackDirection = atkDir,
+                    }, instigator: ctx.SourceUnit);
                 EventBus.Instance?.Fire(EventType.OnTakeDamage,
-                    new Context { TargetUnit = ctx.SourceUnit, AttackDirection = atkDir }, subject: target);
+                    new Context
+                    {
+                        SourceUnit = target, SourceTeam = target.Team,
+                        TargetUnit = ctx.SourceUnit, TargetTeam = ctx.SourceUnit.Team,
+                        AttackDirection = atkDir,
+                    }, instigator: target);
                 if (!target.IsAlive)
                     EventBus.Instance?.Fire(EventType.OnKill,
-                        new Context { TargetUnit = target, AttackDirection = atkDir }, subject: ctx.SourceUnit);
+                        new Context
+                        {
+                            SourceUnit = ctx.SourceUnit, SourceTeam = ctx.SourceUnit.Team,
+                            TargetUnit = target, TargetTeam = target.Team,
+                            AttackDirection = atkDir,
+                        }, instigator: ctx.SourceUnit);
             }
         }
     }

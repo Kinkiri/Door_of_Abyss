@@ -3,4 +3,5 @@ public enum BuffInfoType
 {
     StackCount,
     RemainingTurns,
+    StackChanged
 }

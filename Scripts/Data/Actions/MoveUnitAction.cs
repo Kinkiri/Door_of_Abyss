@@ -4,7 +4,7 @@ using System.Collections.Generic;
 /// <summary>
 /// 强制位移动作：将目标单位（TargetUnits）拉拽、击退或传送到指定位置。不消耗 AP、不检查行动次数。
 /// 与其他 GameAction（伤害/治疗/Buff）一致，作用于 TargetUnits：
-/// - 卡牌路径 = 卡牌 TargetFilter 筛选出的目标；被动路径 = TargetFilter 解析或 Target=Self/EventTarget。
+/// - 卡牌路径 = 卡牌 TargetFilter 筛选出的目标；被动路径 = TargetFilter 解析或 Target=Self/EventOther。
 /// - Push（击退）= 目标沿"锚点 → 目标"方向远离；Pull（拉拽）= 靠近锚点。
 /// - 锚点 = DirectionAnchor（坐标值源，可推离门口/环境格等）→ SourceUnit（施法者/被动所有者）。
 /// - 方向可用 DirectionValueSource 显式指定（值源优先），否则自动（锚点 → 目标，曼哈顿单轴）。

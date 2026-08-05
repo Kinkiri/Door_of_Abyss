@@ -17,7 +17,7 @@ public enum UnitInfoType
 [GlobalClass]
 public partial class UnitInfoValue : ValueSource
 {
-    /// <summary>读取哪个单位：Target=目标，Source=来源，EventTarget=事件另一方（死亡事件=死者）</summary>
+    /// <summary>读取哪个单位：Target=目标，Source=来源，EventOther=事件另一方（死亡事件=死者）</summary>
     [Export] public ValueTarget Unit { get; set; } = ValueTarget.Target;
 
     [Export] public UnitInfoType Info { get; set; } = UnitInfoType.Type;
@@ -31,7 +31,7 @@ public partial class UnitInfoValue : ValueSource
         {
             ValueTarget.Source => ctx.SourceUnit,
             ValueTarget.Target => ctx.TargetUnit,
-            ValueTarget.EventTarget => ctx.EventTargetUnit,
+            ValueTarget.EventOther => ctx.EventOtherUnit,
             _ => null,
         };
         if (unit == null) return DefaultValue;

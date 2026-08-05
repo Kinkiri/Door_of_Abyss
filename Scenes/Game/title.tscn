@@ -1,72 +1,463 @@
 [gd_scene format=3 uid="uid://di1dqmhwfo5lm"]
 
-[ext_resource type="Texture2D" uid="uid://b6qnolos2hokg" path="res://Resource/Art/标题白.png" id="1_crdls"]
-[ext_resource type="Script" uid="uid://b8lyfx8k5628i" path="res://Scripts/View/MainMenu.cs" id="1_y8j27"]
+[ext_resource type="Script" uid="uid://b8lyfx8k5628i" path="res://Scripts/View/MainMenu.cs" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://b6qnolos2hokg" path="res://Resource/Art/标题白.png" id="2_title"]
+[ext_resource type="Texture2D" uid="uid://f6nnnkcrgmak" path="res://Resource/Art/A53DF446FF0F2906C7869E2FA8D9D9D2.jpg" id="3_night"]
 
-[node name="Control" type="Control" unique_id=18785710 node_paths=PackedStringArray("_title")]
+[sub_resource type="Gradient" id="Gradient_vignette"]
+colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.82)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_vignette"]
+gradient = SubResource("Gradient_vignette")
+fill = 1
+fill_to = Vector2(0, 0)
+
+[sub_resource type="Gradient" id="Gradient_dot"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_dot"]
+gradient = SubResource("Gradient_dot")
+fill = 1
+fill_from = Vector2(0.5641026, 0.4871795)
+fill_to = Vector2(0.72649574, 0.31623933)
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_dust"]
+emission_shape = 1
+emission_sphere_radius = 1.0
+direction = Vector3(0, -1, 0)
+spread = 22.0
+initial_velocity_min = 5.0
+initial_velocity_max = 16.0
+gravity = Vector3(0, 0, 0)
+scale_min = 0.5
+scale_max = 1.6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_credits"]
+content_margin_left = 36.0
+content_margin_top = 26.0
+content_margin_right = 36.0
+content_margin_bottom = 26.0
+bg_color = Color(0.05, 0.05, 0.08, 0.92)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_list"]
+content_margin_left = 14.0
+content_margin_top = 12.0
+content_margin_right = 14.0
+content_margin_bottom = 12.0
+bg_color = Color(0.05, 0.05, 0.08, 0.5)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="Control" type="Control" unique_id=757809722 node_paths=PackedStringArray("_title", "_background", "_dust", "_menu", "_fadeOut", "_version", "_toast", "_creditsBackdrop", "_creditsPanel", "_levelSelectBackdrop", "_levelSelectPanel")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_y8j27")
-_title = NodePath("TextureRect")
+script = ExtResource("1_script")
+_title = NodePath("TitleArea/Title")
+_background = NodePath("Background")
+_dust = NodePath("Dust")
+_menu = NodePath("Menu")
+_fadeOut = NodePath("FadeOut")
+_version = NodePath("Version")
+_toast = NodePath("Toast")
+_creditsBackdrop = NodePath("CreditsBackdrop")
+_creditsPanel = NodePath("CreditsPanel")
+_levelSelectBackdrop = NodePath("LevelSelectBackdrop")
+_levelSelectPanel = NodePath("LevelSelectPanel")
+_dustSpeed = 12000.0
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=846928234]
-layout_mode = 0
-offset_right = 1943.0
-offset_bottom = 1115.0
-color = Color(0.10747976, 0.10747973, 0.10747973, 1)
-
-[node name="TextureRect" type="TextureRect" parent="." unique_id=1304986895]
+[node name="Background" type="TextureRect" parent="." unique_id=329584635]
+modulate = Color(0.62, 0.7, 0.9, 1)
 layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -599.0
-offset_top = 35.0
-offset_right = 599.0
-offset_bottom = 960.0
-grow_horizontal = 2
-scale = Vector2(0.9599997, 0.9599997)
-pivot_offset = Vector2(606.8157, 462.34012)
-texture = ExtResource("1_crdls")
-
-[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1653246637]
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -843.0
-offset_top = -148.0
-offset_right = 843.0
 grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_night")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Vignette" type="TextureRect" parent="." unique_id=1047664630]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_vignette")
+expand_mode = 1
+
+[node name="Dust" type="GPUParticles2D" parent="." unique_id=176449889]
+position = Vector2(45, 1046)
+amount = 180
+amount_ratio = 0.6154
+texture = SubResource("GradientTexture2D_dot")
+lifetime = 96.09
+preprocess = 4.3
+speed_scale = 5.22
+process_material = SubResource("ParticleProcessMaterial_dust")
+
+[node name="TitleArea" type="CenterContainer" parent="." unique_id=607783784]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 660.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="Title" type="TextureRect" parent="TitleArea" unique_id=1062429985]
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_title")
+
+[node name="Menu" type="VBoxContainer" parent="." unique_id=1450699006]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -812.0
+offset_top = 234.0
+offset_right = -572.0
+offset_bottom = 444.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 30
+
+[node name="RowStart" type="HBoxContainer" parent="Menu" unique_id=952640877]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Indicator" type="ColorRect" parent="Menu/RowStart" unique_id=800026349]
+custom_minimum_size = Vector2(3, 22)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Button" type="Button" parent="Menu/RowStart" unique_id=601566845]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.55)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 30
+text = "开始游戏"
+flat = true
+
+[node name="RowSettings" type="HBoxContainer" parent="Menu" unique_id=470742591]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Indicator" type="ColorRect" parent="Menu/RowSettings" unique_id=1755236325]
+custom_minimum_size = Vector2(3, 22)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Button" type="Button" parent="Menu/RowSettings" unique_id=2028495408]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.55)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 30
+text = "设置"
+flat = true
+
+[node name="RowCredits" type="HBoxContainer" parent="Menu" unique_id=2119818276]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Indicator" type="ColorRect" parent="Menu/RowCredits" unique_id=591874461]
+custom_minimum_size = Vector2(3, 22)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Button" type="Button" parent="Menu/RowCredits" unique_id=722397789]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.55)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 30
+text = "关于"
+flat = true
+
+[node name="RowExit" type="HBoxContainer" parent="Menu" unique_id=913562146]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Indicator" type="ColorRect" parent="Menu/RowExit" unique_id=295134682]
+custom_minimum_size = Vector2(3, 22)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Button" type="Button" parent="Menu/RowExit" unique_id=2050852205]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.55)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 30
+text = "退出游戏"
+flat = true
+
+[node name="Version" type="Label" parent="." unique_id=1246043176]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -160.0
+offset_top = -52.0
+offset_right = -40.0
+offset_bottom = -24.0
+grow_horizontal = 0
 grow_vertical = 0
-alignment = 1
+theme_override_font_sizes/font_size = 18
+text = "v0.1.3-a"
+horizontal_alignment = 2
 
-[node name="Button" type="Button" parent="HBoxContainer" unique_id=1160372015]
-layout_mode = 2
-theme_override_font_sizes/font_size = 80
-text = "   开始游戏   "
+[node name="Toast" type="Label" parent="." unique_id=1809171299]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 880.0
+offset_bottom = 940.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.8)
+theme_override_font_sizes/font_size = 24
+text = "功能开发中，敬请期待"
+horizontal_alignment = 1
 
-[node name="Button2" type="Button" parent="HBoxContainer" unique_id=834903720]
-layout_mode = 2
-theme_override_font_sizes/font_size = 80
-text = "   设置（假）   "
-
-[node name="Button4" type="Button" parent="HBoxContainer" unique_id=368696933]
-layout_mode = 2
-theme_override_font_sizes/font_size = 80
-text = "  制作名单   "
-
-[node name="ColorRect2" type="ColorRect" parent="." unique_id=1958764907]
+[node name="CreditsPanel" type="PanelContainer" parent="." unique_id=205995039]
 visible = false
-layout_mode = 0
-offset_right = 1943.0
-offset_bottom = 1115.0
-color = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -621.0
+offset_top = -280.0
+offset_right = 578.0
+offset_bottom = 453.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_credits")
 
-[connection signal="button_down" from="HBoxContainer/Button" to="." method="OnButtonDown"]
+[node name="Margin" type="MarginContainer" parent="CreditsPanel" unique_id=713742342]
+layout_mode = 2
+
+[node name="Root" type="VBoxContainer" parent="CreditsPanel/Margin" unique_id=415804378]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Header" type="HBoxContainer" parent="CreditsPanel/Margin/Root" unique_id=319400705]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="CreditsPanel/Margin/Root/Header" unique_id=1860282005]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 39
+text = " 关于"
+
+[node name="CloseButton" type="Button" parent="CreditsPanel/Margin/Root/Header" unique_id=1264884942]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.6)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 30
+text = "✕"
+flat = true
+
+[node name="Sep" type="HSeparator" parent="CreditsPanel/Margin/Root" unique_id=1635708283]
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="CreditsPanel/Margin/Root" unique_id=2122707050]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="CreditsPanel/Margin/Root/Scroll" unique_id=1945122129]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="CreditsPanel/Margin/Root/Scroll/Content" unique_id=1977942458]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "《深秘之门》
+
+还没写东西呢看什么看
+
+开发团队
+"
+autowrap_mode = 1
+
+[node name="LevelSelectBackdrop" type="ColorRect" parent="." unique_id=1821512768]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="LevelSelectPanel" type="PanelContainer" parent="." unique_id=1644000623]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -640.0
+offset_top = -380.0
+offset_right = 640.0
+offset_bottom = 380.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_credits")
+
+[node name="Margin" type="MarginContainer" parent="LevelSelectPanel" unique_id=1892654877]
+layout_mode = 2
+
+[node name="Root" type="VBoxContainer" parent="LevelSelectPanel/Margin" unique_id=1649302821]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Header" type="HBoxContainer" parent="LevelSelectPanel/Margin/Root" unique_id=2027571981]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="LevelSelectPanel/Margin/Root/Header" unique_id=1115282986]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 32
+text = "选择关卡"
+
+[node name="CloseButton" type="Button" parent="LevelSelectPanel/Margin/Root/Header" unique_id=1958040080]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.6)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 30
+text = "✕"
+flat = true
+
+[node name="Sep" type="HSeparator" parent="LevelSelectPanel/Margin/Root" unique_id=1480160671]
+layout_mode = 2
+
+[node name="Body" type="HBoxContainer" parent="LevelSelectPanel/Margin/Root" unique_id=2131449113]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="ListPanel" type="PanelContainer" parent="LevelSelectPanel/Margin/Root/Body" unique_id=1797648411]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_list")
+
+[node name="Scroll" type="ScrollContainer" parent="LevelSelectPanel/Margin/Root/Body/ListPanel" unique_id=391450863]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="LevelList" type="VBoxContainer" parent="LevelSelectPanel/Margin/Root/Body/ListPanel/Scroll" unique_id=514779396]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Right" type="VBoxContainer" parent="LevelSelectPanel/Margin/Root/Body" unique_id=158848323]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="DetailScroll" type="ScrollContainer" parent="LevelSelectPanel/Margin/Root/Body/Right" unique_id=2128188472]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="DetailContent" type="VBoxContainer" parent="LevelSelectPanel/Margin/Root/Body/Right/DetailScroll" unique_id=537791896]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="DetailName" type="Label" parent="LevelSelectPanel/Margin/Root/Body/Right/DetailScroll/DetailContent" unique_id=1391716592]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 34
+text = "未选择关卡"
+
+[node name="DetailDesc" type="Label" parent="LevelSelectPanel/Margin/Root/Body/Right/DetailScroll/DetailContent" unique_id=324879397]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 0.7)
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+
+[node name="DetailSep" type="HSeparator" parent="LevelSelectPanel/Margin/Root/Body/Right/DetailScroll/DetailContent" unique_id=904001273]
+layout_mode = 2
+
+[node name="DetailInfo" type="Label" parent="LevelSelectPanel/Margin/Root/Body/Right/DetailScroll/DetailContent" unique_id=1051255124]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+
+[node name="BottomBar" type="HBoxContainer" parent="LevelSelectPanel/Margin/Root/Body/Right" unique_id=283770556]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="EnterButton" type="Button" parent="LevelSelectPanel/Margin/Root/Body/Right/BottomBar" unique_id=1408469484]
+layout_mode = 2
+size_flags_horizontal = 6
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.75)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "  进入关卡  →"
+flat = true
+
+[node name="CreditsBackdrop" type="ColorRect" parent="." unique_id=180686521]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.2784314)
+
+[node name="FadeOut" type="ColorRect" parent="." unique_id=391542010]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)

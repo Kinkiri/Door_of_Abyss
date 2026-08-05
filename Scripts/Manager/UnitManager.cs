@@ -81,14 +81,19 @@ public partial class UnitManager : Node
 
         unit.UpdateUnit();
 
-        // 注册被动效果 + 触发登场事件
+        // 注册被动效果 + 触发登场事件（载荷：SourceUnit=登场单位、TargetCell=登场格，供手牌被动识别"谁登场/在哪里"）
         EventBus.Instance?.Subscribe(unit, unitData.PassiveEffects);
-        EventBus.Instance?.Fire(EventType.OnSpawn, new Context(), subject: unit);
+        EventBus.Instance?.Fire(EventType.OnSpawn, new Context
+        {
+            SourceUnit = unit,
+            SourceTeam = team,
+            TargetCell = cell,
+        }, instigator: unit);
 
         // 单位出现在格子（占用从空→有）：触发环境"进入"被动（TargetCell=该格，TargetUnit=单位）
         EventBus.Instance?.Fire(EventType.OnUnitEnterCell,
             new Context { TargetCell = cell, TargetUnit = unit, SourceUnit = unit, SourceTeam = team },
-            subject: unit);
+            instigator: unit);
 
         return unit;
     }
@@ -162,7 +167,7 @@ public partial class UnitManager : Node
         OnUnitTransformed?.Invoke(unit);
         GD.Print($"[Transform] ⑥ OnUnitTransformed?.Invoke 完成，订阅者数={OnUnitTransformed?.GetInvocationList().Length ?? 0}");
         EventBus.Instance?.Fire(EventType.OnUnitTransformed,
-            new Context { TargetUnit = unit, SourceUnit = unit, SourceTeam = unit.Team });
+            new Context { TargetUnit = unit, EventOtherUnit = unit, SourceUnit = unit, SourceTeam = unit.Team });
         GD.Print("[Transform] ⑦ Fire(OnUnitTransformed) 完成");
     }
 
@@ -189,7 +194,7 @@ public partial class UnitManager : Node
         // 占用从有→空：触发环境"离开"被动（TargetCell=原格子，SourceCell=目标格子，TargetUnit=离开的单位）
         EventBus.Instance?.Fire(EventType.OnUnitLeaveCell,
             new Context { TargetCell = cell, TargetUnit = unit, SourceUnit = unit, SourceTeam = unit.Team, SourceCell = destCell },
-            subject: unit);
+            instigator: unit);
     }
 
     /// <summary>对单位造成伤害，HP 归零则自动移除</summary>
@@ -243,7 +248,7 @@ public partial class UnitManager : Node
                 SourceUnit = unit,
                 SourceTeam = unit.Team,
             },
-            subject: unit);
+            instigator: unit);
 
         // 任意单位死亡事件（无 subject 定向）：存活单位的被动可监听"其他单位死亡"。
         // 区别于亡语 OnUnitDeath（只触发死者自身）；本事件死者被 EventBus 存活检查排除，
@@ -333,7 +338,7 @@ public partial class UnitManager : Node
         targetCell.CanStand = false;
         EventBus.Instance?.Fire(EventType.OnUnitEnterCell,
             new Context { TargetCell = targetCell, TargetUnit = unit, SourceUnit = unit, SourceTeam = unit.Team, SourceCell = oldCell },
-            subject: unit);
+            instigator: unit);
 
         unit.UpdateUnit();
         return true;
@@ -361,7 +366,7 @@ public partial class UnitManager : Node
             newCell.CanStand = false;
             EventBus.Instance?.Fire(EventType.OnUnitEnterCell,
                 new Context { TargetCell = newCell, TargetUnit = unit, SourceUnit = unit, SourceTeam = unit.Team, SourceCell = oldCell },
-                subject: unit);
+                instigator: unit);
         }
 
         unit.UpdateUnit();

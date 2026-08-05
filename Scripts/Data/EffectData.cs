@@ -15,7 +15,7 @@ public partial class EffectData : Resource
     [Export] public PassiveTarget Target { get; set; } = PassiveTarget.Self;
 
     /// <summary>
-    /// 目标筛选器数组（默认 And 组合）。为 null/空时使用 Target（Self/EventTarget）选择目标。
+    /// 目标筛选器数组（默认 And 组合）。为 null/空时使用 Target（Self/EventOther）选择目标。
     /// 替代旧 Shape + Filter + AreaRange 三个字段。
     /// </summary>
     [Export] public TargetFilter[] TargetFilters { get; set; }

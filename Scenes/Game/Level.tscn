@@ -31,6 +31,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/Prefabs/UnitInfoPanel.tscn" id="30_uipanel"]
 [ext_resource type="PackedScene" path="res://Scenes/Prefabs/RoundInfoPanel.tscn" id="31_roundpanel"]
 [ext_resource type="Script" uid="uid://d051m8qdn0xj8" path="res://Scripts/View/TouchInputAdapter.cs" id="32_touch"]
+[ext_resource type="Script" uid="uid://b70miqpw61rr8" path="res://Scripts/View/LevelFadeIn.cs" id="33_fade"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8od7v"]
 texture = ExtResource("19_pu45w")
@@ -178,3 +179,26 @@ grow_vertical = 0
 
 [node name="Node" type="Node" parent="." unique_id=1273218073]
 script = ExtResource("27_73o0s")
+
+[node name="FadeInLayer" type="CanvasLayer" parent="." unique_id=1250427062 node_paths=PackedStringArray("_black")]
+layer = 10
+script = ExtResource("33_fade")
+_black = NodePath("Control/Black")
+
+[node name="Control" type="Control" parent="FadeInLayer" unique_id=1261946846]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Black" type="ColorRect" parent="FadeInLayer/Control" unique_id=1801980958]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)

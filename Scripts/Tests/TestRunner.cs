@@ -881,13 +881,13 @@ public partial class TestRunner : Node
             eb.Subscribe(attacker, new[] { actCapture });
             CaptureDirectionAction.Captured = null;
             eb.Fire(EventType.OnUnitAct,
-                new Context { ActType = UnitActType.Attack, AttackDirection = CellDirection.Up }, subject: attacker);
+                new Context { ActType = UnitActType.Attack, AttackDirection = CellDirection.Up }, instigator: attacker);
             VAssert("OnUnitAct 透传攻击方向（PassiveTarget 分支）", () => CaptureDirectionAction.Captured == CellDirection.Up);
 
             // 非攻击事件：方向为 null → 值源读 DefaultValue
             CaptureDirectionAction.Captured = null;
             eb.Fire(EventType.OnUnitAct,
-                new Context { ActType = UnitActType.Move }, subject: attacker);
+                new Context { ActType = UnitActType.Move }, instigator: attacker);
             VAssert("移动事件无攻击方向（null）", () => CaptureDirectionAction.Captured == null);
 
             CaptureDirectionAction.Captured = null;
@@ -1119,15 +1119,15 @@ public partial class TestRunner : Node
             bm.ApplyBuff(durable, prosthetic, null, 2);
             VAssert("耐用初始 2 层 ATK=7", () => durable.AttackPower == 7);
 
-            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Move, SourceUnit = durable }, subject: durable);
+            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Move, SourceUnit = durable }, instigator: durable);
             VAssert("耐用+移动：不减层（仍 2 层）", () => bm.GetBuff(durable, "义肢")?.StackCount == 2);
             VAssert("耐用+移动：ATK 仍 7", () => durable.AttackPower == 7);
 
-            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack, SourceUnit = durable }, subject: durable);
+            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack, SourceUnit = durable }, instigator: durable);
             VAssert("耐用+攻击：减 1 层", () => bm.GetBuff(durable, "义肢")?.StackCount == 1);
             VAssert("耐用+攻击：ATK=6", () => durable.AttackPower == 6);
 
-            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack, SourceUnit = durable }, subject: durable);
+            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack, SourceUnit = durable }, instigator: durable);
             VAssert("攻击已达 MaxTriggerCount=1：不再减层", () => bm.GetBuff(durable, "义肢")?.StackCount == 1);
 
             eb.Unsubscribe(durable);
@@ -1139,11 +1139,11 @@ public partial class TestRunner : Node
             bm.ApplyBuff(tough, prosthetic, null, 2);
             VAssert("耐打初始 2 层 ATK=7", () => tough.AttackPower == 7);
 
-            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack, SourceUnit = tough }, subject: tough);
+            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack, SourceUnit = tough }, instigator: tough);
             VAssert("耐打+攻击：不减层（仍 2 层）", () => bm.GetBuff(tough, "义肢")?.StackCount == 2);
             VAssert("耐打+攻击：ATK 仍 7", () => tough.AttackPower == 7);
 
-            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Move, SourceUnit = tough }, subject: tough);
+            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Move, SourceUnit = tough }, instigator: tough);
             VAssert("耐打+移动：减 1 层", () => bm.GetBuff(tough, "义肢")?.StackCount == 1);
             VAssert("耐打+移动：ATK=6", () => tough.AttackPower == 6);
 
@@ -1155,7 +1155,7 @@ public partial class TestRunner : Node
             bm.ApplyBuff(plain, prosthetic, null, 2);
             VAssert("普通单位初始 2 层 ATK=7", () => plain.AttackPower == 7);
 
-            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Move, SourceUnit = plain }, subject: plain);
+            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Move, SourceUnit = plain }, instigator: plain);
             VAssert("普通+移动：减 1 层", () => bm.GetBuff(plain, "义肢")?.StackCount == 1);
             VAssert("普通+移动：ATK=6", () => plain.AttackPower == 6);
 
@@ -1164,7 +1164,7 @@ public partial class TestRunner : Node
 
             var plain2 = MakeUnit("普通单位2", 5, 10);
             bm.ApplyBuff(plain2, prosthetic, null, 2);
-            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack, SourceUnit = plain2 }, subject: plain2);
+            eb.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Attack, SourceUnit = plain2 }, instigator: plain2);
             VAssert("普通+攻击：减 1 层", () => bm.GetBuff(plain2, "义肢")?.StackCount == 1);
 
             eb.Unsubscribe(plain2);
@@ -1189,10 +1189,10 @@ public partial class TestRunner : Node
             };
             eb.Subscribe(unit, new[] { effect });
 
-            eb.Fire(EventType.OnUseCard, new Context { SourceUnit = unit }, subject: unit);
+            eb.Fire(EventType.OnUseCard, new Context { SourceUnit = unit }, instigator: unit);
             VAssert("OnUseCard 触发被动：ATK=6", () => unit.AttackPower == 6);
 
-            eb.Fire(EventType.OnUnitAct, new Context { SourceUnit = unit, ActType = UnitActType.Move }, subject: unit);
+            eb.Fire(EventType.OnUnitAct, new Context { SourceUnit = unit, ActType = UnitActType.Move }, instigator: unit);
             VAssert("OnUnitAct 不触发 OnUseCard 被动：ATK 仍 6", () => unit.AttackPower == 6);
 
             eb.Unsubscribe(unit);
@@ -2234,13 +2234,13 @@ public partial class TestRunner : Node
             VAssert("死者自身不响应任意死亡（ATK 不变）", () => dying.AttackPower == d0);
             eb.Unsubscribe(dying);
 
-            // ── 用例 3：EventTarget → TargetUnit=死者（事件另一方可作目标/读取） ──
+            // ── 用例 3：EventOther → TargetUnit=死者（事件另一方可作目标/读取） ──
             var tListener = MakeUnit("事件目标监听", 5, 10);
             var tVictim = MakeUnit("事件目标死者", 3, 10);
             eb.Subscribe(tListener, new[] { new EffectData
             {
                 TriggerEvent = EventType.OnAnyUnitDeath,
-                Target = PassiveTarget.EventTarget,
+                Target = PassiveTarget.EventOther,
                 Actions = new GameAction[]
                 {
                     new ModifyStatAction { TargetStat = ModifyStatType.AttackPower, Value = 100 },
@@ -2249,7 +2249,7 @@ public partial class TestRunner : Node
             int tv0 = tVictim.AttackPower;
             eb.Fire(EventType.OnAnyUnitDeath,
                 new Context { TargetUnit = tVictim, SourceUnit = tVictim, SourceTeam = tVictim.Team });
-            VAssert("EventTarget 解析为死者（死者 ATK+100）", () => tVictim.AttackPower == tv0 + 100);
+            VAssert("EventOther 解析为死者（死者 ATK+100）", () => tVictim.AttackPower == tv0 + 100);
             eb.Unsubscribe(tListener);
 
             // ── 用例 4：真实链路 UnitManager.DestroyUnit 触发 OnAnyUnitDeath ──
@@ -2277,7 +2277,7 @@ public partial class TestRunner : Node
             }
         });
 
-        // ── 事件另一方读取（ValueTarget.EventTarget：死亡事件读死者） ──
+        // ── 事件另一方读取（ValueTarget.EventOther：死亡事件读死者） ──
         RunGroup("事件另一方读取", () =>
         {
             var eb = EventBus.Instance;
@@ -2295,14 +2295,14 @@ public partial class TestRunner : Node
                     // 死者是兵种（UnitType.兵种=0）
                     new CompareCondition
                     {
-                        Left = new UnitInfoValue { Unit = ValueTarget.EventTarget, Info = UnitInfoType.Type },
+                        Left = new UnitInfoValue { Unit = ValueTarget.EventOther, Info = UnitInfoType.Type },
                         Op = CompareOp.Equal,
                         Right = new ConstantValue { Value = (int)UnitType.兵种 },
                     },
                     // 死者是友方（死者阵营 == 来源阵营）
                     new CompareCondition
                     {
-                        Left = new UnitInfoValue { Unit = ValueTarget.EventTarget, Info = UnitInfoType.Team },
+                        Left = new UnitInfoValue { Unit = ValueTarget.EventOther, Info = UnitInfoType.Team },
                         Op = CompareOp.Equal,
                         Right = new UnitInfoValue { Unit = ValueTarget.Source, Info = UnitInfoType.Team },
                     },
@@ -2312,7 +2312,7 @@ public partial class TestRunner : Node
                     new ApplyBuffAction
                     {
                         BuffData = limbBuff,
-                        ValueSource = new BuffInfoValue { Unit = ValueTarget.EventTarget, BuffID = "义肢" },
+                        ValueSource = new BuffInfoValue { Unit = ValueTarget.EventOther, BuffID = "义肢" },
                     },
                 },
             };
@@ -2348,6 +2348,87 @@ public partial class TestRunner : Node
                 () => bm.GetBuff(mk0, "义肢") == null);
 
             eb.Unsubscribe(mk0);
+        });
+
+        // ── 事件载荷全量透传（克隆式 effectCtx 防回归：新字段自动继承 + 派生语义字段正确） ──
+        RunGroup("事件载荷透传", () =>
+        {
+            var eb = EventBus.Instance;
+            var bm = BattleManager.Instance;
+            if (eb == null || bm == null) { VAssert("Manager 未就绪，跳过", () => false); return; }
+
+            var tgt = MakeUnit("透传目标", 3, 10);
+            var srcCell = MakeCell(new Vector2I(5, 6), null);
+            var tgtCell = MakeCell(new Vector2I(1, 2), null);
+
+            // 条件链全部通过 = 各字段已透传；任一丢失则条件不满足，费用不变
+            Condition[] passThroughConds = new Condition[]
+            {
+                // TargetCell 透传（事件格 X=1）
+                new CompareCondition { Left = new CellCoordValue { Cell = new ContextCellValue { Cell = ContextCellType.Target }, Info = CellCoordInfo.PosX }, Op = CompareOp.Equal, Right = new ConstantValue { Value = 1 } },
+                // SourceCell 透传（来源格 X=5）
+                new CompareCondition { Left = new CellCoordValue { Cell = new ContextCellValue { Cell = ContextCellType.Source }, Info = CellCoordInfo.PosX }, Op = CompareOp.Equal, Right = new ConstantValue { Value = 5 } },
+                // PendingDamage 透传
+                new CompareCondition { Left = new PendingDamageValue(), Op = CompareOp.Equal, Right = new ConstantValue { Value = 7 } },
+                // AttackDirection 透传
+                new CompareCondition { Left = new AttackDirectionValue { DefaultValue = 99 }, Op = CompareOp.Equal, Right = new ConstantValue { Value = (int)CellDirection.Left } },
+                // ActType 透传（ActionKindCondition 读 ctx.ActType）
+                new ActionKindCondition { Kind = UnitActType.Move },
+            };
+
+            // ── 用例 1：PassiveTarget 路径——effectCtx 继承事件全部载荷 ──
+            // 用 RoundStart（无 subject 定向）：OnKill 等战斗事件带 subject 过滤，订阅者非触发者会被跳过
+            var listener = MakeUnit("透传监听", 5, 10);
+            eb.Subscribe(listener, new[] { new EffectData
+            {
+                TriggerEvent = EventType.RoundStart,
+                Target = PassiveTarget.EventOther,   // TargetUnit = 事件 TargetUnit（tgt）
+                Conditions = new Condition[]
+                {
+                    // EventOtherUnit 派生 = 事件 TargetUnit，且与 Source 同阵营（MakeUnit 同为 Player）
+                    new CompareCondition { Left = new UnitInfoValue { Unit = ValueTarget.Source, Info = UnitInfoType.Team }, Op = CompareOp.Equal, Right = new UnitInfoValue { Unit = ValueTarget.EventOther, Info = UnitInfoType.Team } },
+                    // TargetUnit（EventOther 语义）= 事件 TargetUnit
+                    new CompareCondition { Left = new UnitInfoValue { Unit = ValueTarget.Target, Info = UnitInfoType.Team }, Op = CompareOp.Equal, Right = new UnitInfoValue { Unit = ValueTarget.EventOther, Info = UnitInfoType.Team } },
+                }.Concat(passThroughConds).ToArray(),
+                Actions = new GameAction[] { new ModifyCostAction { Value = 1 } },
+            } });
+            int cost0 = bm.PlayerCost;
+            eb.Fire(EventType.RoundStart, new Context
+            {
+                TargetUnit = tgt,
+                SourceCell = srcCell,
+                TargetCell = tgtCell,
+                PendingDamage = 7,
+                AttackDirection = CellDirection.Left,
+                ActType = UnitActType.Move,
+            });
+            VAssert("PassiveTarget 路径：事件载荷全字段透传（条件全通过 → 费用+1）",
+                () => bm.PlayerCost == cost0 + 1);
+            eb.Unsubscribe(listener);
+
+            // ── 用例 2：TargetFilter 路径——effectCtx 继承事件载荷 + TargetUnits 覆盖解析结果 ──
+            var fListener = MakeUnit("透传过滤监听", 5, 10);
+            eb.Subscribe(fListener, new[] { new EffectData
+            {
+                TriggerEvent = EventType.RoundStart,
+                // 旧版 filter 分支丢失 TargetCell/SourceCell/PendingDamage/AttackDirection，克隆后应继承
+                TargetFilters = new TargetFilter[] { new ShapeTargetFilter { Shape = TargetShape.All } },
+                Conditions = passThroughConds,
+                Actions = new GameAction[] { new ModifyCostAction { Value = 1 } },
+            } });
+            int fcost0 = bm.PlayerCost;
+            eb.Fire(EventType.RoundStart, new Context
+            {
+                TargetUnit = tgt,
+                SourceCell = srcCell,
+                TargetCell = tgtCell,
+                PendingDamage = 7,
+                AttackDirection = CellDirection.Left,
+                ActType = UnitActType.Move,
+            });
+            VAssert("TargetFilter 路径：事件载荷继承（条件全通过 → 费用+1）",
+                () => bm.PlayerCost == fcost0 + 1);
+            eb.Unsubscribe(fListener);
         });
 
         // ── CardInfoValue 卡牌值源 ───────────────────────────────
@@ -2688,12 +2769,12 @@ public partial class TestRunner : Node
 
                 // 进入：事件单位 = ctx.TargetUnit（Fire 时格子可能尚未绑定或刚绑定）
                 EventBus.Instance.Fire(EventType.OnUnitEnterCell,
-                    new Context { TargetCell = enterCell, TargetUnit = walker }, subject: walker);
+                    new Context { TargetCell = enterCell, TargetUnit = walker }, instigator: walker);
                 VAssert("进入事件：环境被动对进入单位造成1伤（5→4）", () => walker.CurrentHP == 4);
 
                 // 离开：格子已释放，事件单位仍取 ctx.TargetUnit
                 EventBus.Instance.Fire(EventType.OnUnitLeaveCell,
-                    new Context { TargetCell = enterCell, TargetUnit = walker }, subject: walker);
+                    new Context { TargetCell = enterCell, TargetUnit = walker }, instigator: walker);
                 VAssert("离开事件：环境被动对离开单位造成1伤（4→3）", () => walker.CurrentHP == 3);
 
                 // 格子匹配过滤：Fire 到 enterCell，其他格子的环境不被触发
@@ -2715,7 +2796,7 @@ public partial class TestRunner : Node
                 em.ApplyEnvironment(otherCell, otherEnv, null);
                 var bystander = MakeUnit("路人", 0, 10);
                 EventBus.Instance.Fire(EventType.OnUnitEnterCell,
-                    new Context { TargetCell = enterCell, TargetUnit = bystander }, subject: bystander);
+                    new Context { TargetCell = enterCell, TargetUnit = bystander }, instigator: bystander);
                 VAssert("格子过滤：进入格环境命中（路人 10→9），非目标格环境不触发", () => bystander.CurrentHP == 9);
 
                 // 清理
@@ -2773,29 +2854,29 @@ public partial class TestRunner : Node
 
                 // 同环境内移动（A→B）：离开/进入均不触发（对面环境 ID 相同）
                 EventBus.Instance.Fire(EventType.OnUnitLeaveCell,
-                    new Context { TargetCell = sameEnvA, SourceCell = sameEnvB, TargetUnit = mover }, subject: mover);
+                    new Context { TargetCell = sameEnvA, SourceCell = sameEnvB, TargetUnit = mover }, instigator: mover);
                 EventBus.Instance.Fire(EventType.OnUnitEnterCell,
-                    new Context { TargetCell = sameEnvB, SourceCell = sameEnvA, TargetUnit = mover }, subject: mover);
+                    new Context { TargetCell = sameEnvB, SourceCell = sameEnvA, TargetUnit = mover }, instigator: mover);
                 VAssert("同环境内移动：进入/离开均不触发（HP 不变）", () => mover.CurrentHP == 10);
 
                 // 跨环境移动（A→C）：起点环境触发离开（10→9）
                 EventBus.Instance.Fire(EventType.OnUnitLeaveCell,
-                    new Context { TargetCell = sameEnvA, SourceCell = diffEnvCell, TargetUnit = mover }, subject: mover);
+                    new Context { TargetCell = sameEnvA, SourceCell = diffEnvCell, TargetUnit = mover }, instigator: mover);
                 VAssert("跨环境移动：起点环境触发离开（10→9）", () => mover.CurrentHP == 9);
 
                 // 跨环境移动（A→C）：终点环境触发进入（9→8）
                 EventBus.Instance.Fire(EventType.OnUnitEnterCell,
-                    new Context { TargetCell = diffEnvCell, SourceCell = sameEnvA, TargetUnit = mover }, subject: mover);
+                    new Context { TargetCell = diffEnvCell, SourceCell = sameEnvA, TargetUnit = mover }, instigator: mover);
                 VAssert("跨环境移动：终点环境触发进入（9→8）", () => mover.CurrentHP == 8);
 
                 // 有→无：对面无环境触发离开（8→7）
                 EventBus.Instance.Fire(EventType.OnUnitLeaveCell,
-                    new Context { TargetCell = sameEnvA, SourceCell = plainCell, TargetUnit = mover }, subject: mover);
+                    new Context { TargetCell = sameEnvA, SourceCell = plainCell, TargetUnit = mover }, instigator: mover);
                 VAssert("有→无：离开触发（8→7）", () => mover.CurrentHP == 7);
 
                 // 无→有：对面无环境触发进入（7→6）
                 EventBus.Instance.Fire(EventType.OnUnitEnterCell,
-                    new Context { TargetCell = sameEnvA, SourceCell = plainCell, TargetUnit = mover }, subject: mover);
+                    new Context { TargetCell = sameEnvA, SourceCell = plainCell, TargetUnit = mover }, instigator: mover);
                 VAssert("无→有：进入触发（7→6）", () => mover.CurrentHP == 6);
 
                 // 清理
@@ -2920,17 +3001,17 @@ public partial class TestRunner : Node
             };
             UnitManager.Instance.TransformUnit(u, passiveData);
             VAssert("变身前状态：MaxHP=8 满血", () => u.MaxHP == 8 && u.CurrentHP == 8);
-            EventBus.Instance?.Fire(EventType.RoundStart, new Context(), subject: u);
+            EventBus.Instance?.Fire(EventType.RoundStart, new Context(), instigator: u);
             VAssert("新被动订阅生效：RoundStart 伤害1（8→7）", () => u.CurrentHP == 7);
 
-            // 变身事件：其他单位被动监听 OnUnitTransformed（Target=EventTarget=变身单位，伤害1）
+            // 变身事件：其他单位被动监听 OnUnitTransformed（Target=EventOther=变身单位，伤害1）
             var observer = MakeUnit("变身观察者", 0, 10);
             EventBus.Instance?.Subscribe(observer, new[]
             {
                 new EffectData
                 {
                     TriggerEvent = EventType.OnUnitTransformed,
-                    Target = PassiveTarget.EventTarget,
+                    Target = PassiveTarget.EventOther,
                     Actions = new GameAction[] { new DamageAction { Value = 1 } },
                 },
             });
@@ -3070,8 +3151,8 @@ public partial class TestRunner : Node
                 () => new UnitCellValue { Unit = ValueTarget.Target }.GetCell(MakeCtx(src, tgt)) == new Vector2I(7, 1));
             VAssert("UnitCellValue 读 Source 坐标",
                 () => new UnitCellValue { Unit = ValueTarget.Source }.GetCell(MakeCtx(src, tgt)) == new Vector2I(3, 4));
-            VAssert("UnitCellValue 读 EventTarget 坐标",
-                () => new UnitCellValue { Unit = ValueTarget.EventTarget }.GetCell(new Context { EventTargetUnit = evt }) == new Vector2I(0, 9));
+            VAssert("UnitCellValue 读 EventOther 坐标",
+                () => new UnitCellValue { Unit = ValueTarget.EventOther }.GetCell(new Context { EventOtherUnit = evt }) == new Vector2I(0, 9));
             VAssert("UnitCellValue 单位缺失 → null",
                 () => new UnitCellValue { Unit = ValueTarget.Target }.GetCell(new Context { SourceUnit = src }) == null);
 

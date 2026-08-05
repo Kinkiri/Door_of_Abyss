@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://0vn6gjo16bde"]
+
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_1fwwj"]
+[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="1_6nn58"]
+[ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_xd15w"]
+[ext_resource type="Resource" uid="uid://cx1oa5cbd2al8" path="res://Resource/Data/Units/擢升之手/废件熔铸厂.tres" id="3_4hk2i"]
+
+[sub_resource type="Resource" id="Resource_hc4h2"]
+script = ExtResource("1_1fwwj")
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[resource]
+script = ExtResource("1_6nn58")
+UnitData = ExtResource("3_4hk2i")
+CardID = "废件熔铸厂"
+CardName = "废件熔铸厂"
+Description = "与其修补破碎的义肢，不如把它们送去回收利用"
+Type = 0
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+Rarity = 1
+Cost = 2
+TargetFilters = Array[Object]([ExtResource("2_xd15w")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_hc4h2")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://p1hhkgy2pem"

@@ -96,7 +96,7 @@ public enum EventType
 
     /// <summary>
     /// Buff 叠层变化/设置后（含新建 initialStacks、叠层刷新、ModifyBuffAction 增减层；
-    /// 归零移除走 OnBuffRemoved 不触发）。TargetUnit=层数变化的单位，subject=该单位（定向，自己响应）。
+    /// 归零移除走 OnBuffRemoved 不触发）。TargetUnit=层数变化的单位，所有人都能响应。
     /// 监听者用条件判断层数（如 BuffInfoValue{Unit=Source, BuffID, StackCount} > 2）。
     /// </summary>
     OnBuffStackChanged,

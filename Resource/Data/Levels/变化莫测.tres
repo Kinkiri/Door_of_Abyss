@@ -48,8 +48,8 @@ metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [resource]
 script = ExtResource("5_yvd2k")
-LevelName = "变化"
-Description = "小种子竞技场（"
+LevelName = "残蛆竞技场"
+Description = "欢迎来到擢升之手第 42 号义肢回收厂——这里本该是报废零件安享晚年的地方。但显然，我们的“报废品”并不这么想。一群构造体工程师正在流水线上加班加点地“复活”废弃义肢，组装破碎残躯，让它们以别样的姿态重生。请务必在它们把整座工厂拆成零件之前，重新教它们什么叫“报废”。祝你好运——别忘了，它们是机器，不用充电，但你能。"
 Waves = Array[Object]([SubResource("Resource_1os30"), SubResource("Resource_a5yd7"), SubResource("Resource_wdvom"), SubResource("Resource_te1ex"), SubResource("Resource_u5qqc")])
 MapData = ExtResource("10_cvjv1")
 DoorPlaceZoneMax = Vector2i(3, 3)

@@ -29,7 +29,7 @@ public partial class DirectionValue : ValueSource
     {
         ValueTarget.Source => ctx.SourceUnit,
         ValueTarget.Target => ctx.TargetUnit,
-        ValueTarget.EventTarget => ctx.EventTargetUnit,
+        ValueTarget.EventOther => ctx.EventOtherUnit,
         _ => null,
     };
 }

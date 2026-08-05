@@ -17,11 +17,15 @@ public partial class BuffInfoValue : ValueSource
 
     public override int GetValue(Context ctx)
     {
+        GD.Print($"[BuffInfoValue] Info={Info}, BuffID={BuffID}, ctx.SourceBuffID={ctx?.SourceBuffID}");
+        if (Info == BuffInfoType.StackChanged && ctx.SourceBuffID == BuffID)
+            return ctx.BuffChangedStacks;
+
         var unit = Unit switch
         {
             ValueTarget.Source => ctx.SourceUnit,
             ValueTarget.Target => ctx.TargetUnit,
-            ValueTarget.EventTarget => ctx.EventTargetUnit,
+            ValueTarget.EventOther => ctx.EventOtherUnit,
             _ => null,
         };
         if (unit == null) return DefaultValue;
@@ -33,6 +37,7 @@ public partial class BuffInfoValue : ValueSource
         {
             BuffInfoType.StackCount => buff.StackCount,
             BuffInfoType.RemainingTurns => buff.RemainingTurns,
+            BuffInfoType.StackChanged => ctx.BuffChangedStacks,
             _ => DefaultValue,
         };
     }

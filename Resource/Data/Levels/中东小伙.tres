@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://24v55ttqt4ks"]
 
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="1_t8o3p"]
+[ext_resource type="Resource" uid="uid://b1tyd7186gfh1" path="res://Resource/Data/Deck/中东打法.tres" id="1_xucor"]
 [ext_resource type="Resource" path="res://Resource/Data/Maps/new map.tres" id="8_31lwp"]
 [ext_resource type="Resource" uid="uid://bqf677fitv6wi" path="res://Resource/Data/Units/测试/炸弹手.tres" id="9_drmll"]
 [ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="10_iegl3"]
@@ -49,9 +50,11 @@ metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 [resource]
 script = ExtResource("1_t8o3p")
 LevelName = "中东"
+Description = "中东小伙当量大"
 Waves = Array[Object]([SubResource("Resource_mrntf"), SubResource("Resource_q6p3j"), SubResource("Resource_mt5ji"), SubResource("Resource_cge07"), SubResource("Resource_mj3vb"), SubResource("Resource_k7wen")])
 MapData = ExtResource("8_31lwp")
 DoorPlaceZoneMin = Vector2i(3, 3)
 DoorPlaceZoneMax = Vector2i(4, 4)
 DefaultSpawnAreaMax = Vector2i(0, 6)
+LevelDeck = ExtResource("1_xucor")
 metadata/_custom_type_script = "uid://wk0covoailum"

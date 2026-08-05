@@ -81,6 +81,12 @@ public partial class BattleManager : Node2D
     override public void _Ready()
     {
         Instance = this;
+        // 通过主界面选关进入时，覆盖 Level.tscn 中的固定引用
+        if (LevelSelection.Selected != null)
+        {
+            LevelData = LevelSelection.Selected;
+            GD.Print($"[Battle] 选关加载: {LevelData.LevelName}");
+        }
     }
 
     public void Init()
@@ -126,6 +132,7 @@ public partial class BattleManager : Node2D
             return;
         }
 
+        var oldPos = unit.GridPos;   // MoveUnit 前记录旧格（供事件载荷 SourceCell 使用）
         if (!UnitManager.Instance.MoveUnit(unit, targetPos)) return;
 
         unit.ActionPoints--;
@@ -134,8 +141,22 @@ public partial class BattleManager : Node2D
         unit.UpdateUnit();
         GD.Print($"[Battle] 移动单位至 ({targetPos.X}, {targetPos.Y})，剩余 AP: {unit.ActionPoints}");
 
-        EventBus.Instance?.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Move }, subject: unit);
-        EventBus.Instance?.Fire(EventType.OnMove, new Context(), subject: unit);
+        // 事件载荷：SourceUnit=行动单位、TargetCell=到达格、SourceCell=原格（克隆式透传依赖调用点填全）
+        var targetCell = MapManager.Instance.TryGetCell(targetPos, out var tc) ? tc : null;
+        var oldCell = MapManager.Instance.TryGetCell(oldPos, out var oc) ? oc : null;
+        EventBus.Instance?.Fire(EventType.OnUnitAct, new Context
+        {
+            ActType = UnitActType.Move,
+            SourceUnit = unit,
+            TargetCell = targetCell,
+            SourceCell = oldCell,
+        }, instigator: unit);
+        EventBus.Instance?.Fire(EventType.OnMove, new Context
+        {
+            SourceUnit = unit,
+            TargetCell = targetCell,
+            SourceCell = oldCell,
+        }, instigator: unit);
         UnitActed?.Invoke(unit);
 
         // AP 耗尽不取消选中（保留面板与范围显示供查看）——MoveUnit 已触发 UpdateUnit→RecalculateRanges，此处显式刷新双保险
@@ -182,11 +203,16 @@ public partial class BattleManager : Node2D
             attacker.UpdateUnit();
             attacker.ActionsThisTurn++;
             CheckVictory();
+            // 事件载荷：SourceUnit=攻击者、TargetUnit=受击者、格子（手牌被动靠 SourceUnit 识别发起方）
             EventBus.Instance?.Fire(EventType.OnUnitAct, new Context
             {
                 ActType = UnitActType.Attack,
+                SourceUnit = attacker,
+                TargetUnit = target,
+                SourceCell = MapManager.Instance.TryGetCell(attacker.GridPos, out var ac) ? ac : null,
+                TargetCell = MapManager.Instance.TryGetCell(target.GridPos, out var tcc) ? tcc : null,
                 AttackDirection = TargetResolver.DirectionBetween(attacker.GridPos, target.GridPos),
-            }, subject: attacker);
+            }, instigator: attacker);
             UnitActed?.Invoke(attacker);
 
             // AP 耗尽不取消选中（保留面板与范围显示供查看）
@@ -245,7 +271,7 @@ public partial class BattleManager : Node2D
         ctx.SourceTeam = BattleManager.Instance.CurrentTeam;
 
         // 出牌成功（扣费+移出手牌）即触发 OnUseCard，被动先于卡牌动作执行
-        EventBus.Instance?.Fire(EventType.OnUseCard, ctx, subject: ctx.SourceUnit);
+        EventBus.Instance?.Fire(EventType.OnUseCard, ctx, instigator: ctx.SourceUnit);
 
         // 通过 ActionQueue 逐个执行，支持动画节奏；完成后回调（携带 card/ctx 用于选中新召唤单位）
         ActionQueue.Instance?.Enqueue(card.CardData.Actions, ctx, Callable.From(() => OnCardPlayActionsDone(card, ctx)));
@@ -273,6 +299,7 @@ public partial class BattleManager : Node2D
             GD.Print($"[Battle][AI] {unit.UnitData?.UnitName} 无AP，跳过移动");
             return;
         }
+        var oldPos = unit.GridPos;   // MoveUnit 前记录旧格（供事件载荷 SourceCell 使用）
         if (!UnitManager.Instance.MoveUnit(unit, targetPos))
         {
             GD.Print($"[Battle][AI] {unit.UnitData?.UnitName} MoveUnit 失败: {unit.GridPos} → {targetPos}");
@@ -284,8 +311,23 @@ public partial class BattleManager : Node2D
         unit.ActionsThisTurn++;
         unit.UpdateUnit();
         GD.Print($"[Battle][AI] 移动 {unit.UnitData?.UnitName} 至 ({targetPos.X}, {targetPos.Y})");
-        EventBus.Instance?.Fire(EventType.OnUnitAct, new Context { ActType = UnitActType.Move }, subject: unit);
-        EventBus.Instance?.Fire(EventType.OnMove, new Context(), subject: unit);
+
+        // 事件载荷：SourceUnit=行动单位、TargetCell=到达格、SourceCell=原格
+        var targetCell = MapManager.Instance.TryGetCell(targetPos, out var tc) ? tc : null;
+        var oldCell = MapManager.Instance.TryGetCell(oldPos, out var oc) ? oc : null;
+        EventBus.Instance?.Fire(EventType.OnUnitAct, new Context
+        {
+            ActType = UnitActType.Move,
+            SourceUnit = unit,
+            TargetCell = targetCell,
+            SourceCell = oldCell,
+        }, instigator: unit);
+        EventBus.Instance?.Fire(EventType.OnMove, new Context
+        {
+            SourceUnit = unit,
+            TargetCell = targetCell,
+            SourceCell = oldCell,
+        }, instigator: unit);
         UnitActed?.Invoke(unit);
     }
 
@@ -317,11 +359,16 @@ public partial class BattleManager : Node2D
             attacker.UpdateUnit();
             attacker.ActionsThisTurn++;
             CheckVictory();
+            // 事件载荷：SourceUnit=攻击者、TargetUnit=受击者、格子
             EventBus.Instance?.Fire(EventType.OnUnitAct, new Context
             {
                 ActType = UnitActType.Attack,
+                SourceUnit = attacker,
+                TargetUnit = target,
+                SourceCell = MapManager.Instance.TryGetCell(attacker.GridPos, out var ac) ? ac : null,
+                TargetCell = MapManager.Instance.TryGetCell(target.GridPos, out var tcc) ? tcc : null,
                 AttackDirection = TargetResolver.DirectionBetween(attacker.GridPos, target.GridPos),
-            }, subject: attacker);
+            }, instigator: attacker);
             UnitActed?.Invoke(attacker);
         }));
     }

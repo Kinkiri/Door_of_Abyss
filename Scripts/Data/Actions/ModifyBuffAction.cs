@@ -116,8 +116,10 @@ public partial class ModifyBuffAction : GameAction
         // 叠层实际变化（未归零移除）：触发叠层变化事件（层数已更新，监听条件可读到新值）
         if (newStacks != oldStacks)
         {
+
+            GD.Print($"[ModifyBuffAction] {BuffID} 叠层变化事件触发，变化量={StacksDelta}");
             EventBus.Instance?.Fire(EventType.OnBuffStackChanged,
-                new Context { TargetUnit = ctx.TargetUnit }, subject: ctx.TargetUnit);
+                new Context { TargetUnit = ctx.TargetUnit, SourceUnit = ctx.SourceUnit, SourceBuffID = BuffID, BuffChangedStacks = StacksDelta });
         }
     }
 }

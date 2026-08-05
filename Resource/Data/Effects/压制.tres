@@ -3,8 +3,11 @@
 [ext_resource type="Script" uid="uid://s84ks60onupf" path="res://Scripts/Data/ValueSource/UnitStatValue.cs" id="1_ay0vy"]
 [ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="1_tm52l"]
 [ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="2_fm213"]
+[ext_resource type="Script" uid="uid://60td6vwf41d0" path="res://Scripts/Data/ValueSource/Cell/UnitCellValue.cs" id="3_4uf5p"]
 [ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_y3lq0"]
 [ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="4_4uf5p"]
+[ext_resource type="Script" uid="uid://mdui273vel7y" path="res://Scripts/Data/ValueSource/Cell/DirectionValue.cs" id="4_5u2rj"]
+[ext_resource type="Script" uid="uid://ceb04cu2nug3" path="res://Scripts/Data/Shapes/RayShape.cs" id="5_80r5h"]
 
 [sub_resource type="Resource" id="Resource_fm213"]
 script = ExtResource("1_ay0vy")
@@ -16,16 +19,30 @@ script = ExtResource("2_fm213")
 ValueSource = SubResource("Resource_fm213")
 metadata/_custom_type_script = "uid://bcjncmte44un1"
 
-[sub_resource type="Resource" id="Resource_wp8c3"]
+[sub_resource type="Resource" id="Resource_fw11u"]
+script = ExtResource("3_4uf5p")
+metadata/_custom_type_script = "uid://60td6vwf41d0"
+
+[sub_resource type="Resource" id="Resource_glvj2"]
+script = ExtResource("4_5u2rj")
+metadata/_custom_type_script = "uid://mdui273vel7y"
+
+[sub_resource type="Resource" id="Resource_aj6n3"]
 script = ExtResource("1_ay0vy")
 Unit = 0
 Stat = 3
 metadata/_custom_type_script = "uid://s84ks60onupf"
 
+[sub_resource type="Resource" id="Resource_n4hmb"]
+script = ExtResource("5_80r5h")
+DirectionValueSource = SubResource("Resource_glvj2")
+LengthValueSource = SubResource("Resource_aj6n3")
+metadata/_custom_type_script = "uid://ceb04cu2nug3"
+
 [sub_resource type="Resource" id="Resource_og6so"]
 script = ExtResource("3_y3lq0")
-Shape = 3
-AreaRangeValueSource = SubResource("Resource_wp8c3")
+CustomShape = SubResource("Resource_n4hmb")
+CenterOverride = SubResource("Resource_fw11u")
 metadata/_custom_type_script = "uid://bh835k2ig4ik"
 
 [sub_resource type="Resource" id="Resource_o1r2k"]
@@ -37,7 +54,7 @@ metadata/_custom_type_script = "uid://bjnrbd7iwxb5u"
 script = ExtResource("1_tm52l")
 TriggerEvent = 3
 TargetFilters = Array[Object]([SubResource("Resource_og6so"), SubResource("Resource_o1r2k")])
-MaxTriggerCount = 1
+MaxTriggerCount = 2
 Actions = Array[Object]([SubResource("Resource_rwahs")])
 Conditions = null
 metadata/_custom_type_script = "uid://5fvxtm1dtsgk"

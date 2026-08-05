@@ -145,20 +145,23 @@ public partial class EventBus : Node
     /// </summary>
     /// <param name="type">事件类型</param>
     /// <param name="ctx">事件上下文，TargetUnit 为"事件另一方"</param>
-    /// <param name="subject">触发者，不为 null 时只触发该单位的订阅（用于 OnDealDamage/OnTakeDamage/OnKill 等）</param>
-    public void Fire(EventType type, Context ctx, Unit subject = null)
+    /// <param name="instigator">触发者（触发该事件的单位），不为 null 时只触发该单位的订阅（用于 OnDealDamage/OnTakeDamage/OnKill 等）</param>
+    public void Fire(EventType type, Context ctx, Unit instigator = null)
     {
         if (!_subscriptions.TryGetValue(type, out var list))
         {
-            GD.Print($"[EventBus] Fire({type}) subject={(subject?.UnitData?.UnitName ?? "所有人")} — 无订阅者");
+            GD.Print($"[EventBus] Fire({type}) instigator={(instigator?.UnitData?.UnitName ?? "所有人")} — 无订阅者");
             return;
         }
 
-        GD.Print($"[EventBus] >>> Fire({type}) subject={(subject?.UnitData?.UnitName ?? "所有人")} 订阅者数={list.Count}");
+        GD.Print($"[EventBus] >>> Fire({type}) instigator={(instigator?.UnitData?.UnitName ?? "所有人")} 订阅者数={list.Count}");
+
+        // 事件载荷基座：克隆之源。effectCtx 从它全量继承（见下方"创建效果上下文"）
+        Context baseCtx = ctx ?? new Context();
 
         int triggered = 0;
         // 伤害修饰初值（攻击前/受击前被动经 ModifyDamageAction 修改后回写累加）
-        int dmgBase = ctx?.DamageModifier ?? 0;
+        int dmgBase = baseCtx.DamageModifier;
 
         // 快照遍历，防止递归 Fire 修改原 List 导致异常
         foreach (var entry in list.ToList())
@@ -177,18 +180,18 @@ public partial class EventBus : Node
                 if (type != EventType.OnUnitDeath && (!unit.IsAlive || unit.IsDead))
                     continue;
 
-                if (subject != null && owner != subject) continue;
+                if (instigator != null && owner != instigator) continue;
                 sourceUnit = unit;
             }
             else if (owner is Card card)
             {
-                // 手牌被动：不在手牌不触发；subject 定向不限制（由 Conditions 自行控制，如"击杀回费"）
+                // 手牌被动：不在手牌不触发；instigator 定向不限制（由 Conditions 自行控制，如"击杀回费"）
                 var cm = CardManager.Instance;
                 if (cm == null || !cm.HandCards.Contains(card))
                     continue;
 
                 // OnDrawCard 只响应"自己被抽到"（SourceCard==自己），避免被动卡连锁抽牌递归
-                if (type == EventType.OnDrawCard && ctx?.SourceCard != card)
+                if (type == EventType.OnDrawCard && baseCtx.SourceCard != card)
                     continue;
 
                 isCardOwner = true;
@@ -196,7 +199,7 @@ public partial class EventBus : Node
             }
             else if (owner is Environment env)
             {
-                // 环境被动：来源 = 环境的施加者（可能为 null）；不响应 subject 定向（同 Card，由 Conditions 自行控制）
+                // 环境被动：来源 = 环境的施加者（可能为 null）；不响应 instigator 定向（同 Card，由 Conditions 自行控制）
                 isEnvOwner = true;
                 envOwner = env;
                 sourceUnit = env.SourceUnit;
@@ -208,8 +211,8 @@ public partial class EventBus : Node
                 //      仅起终点环境改变（无→有 / 有→无 / 环境A→环境B）才触发。
                 if (type == EventType.OnUnitEnterCell || type == EventType.OnUnitLeaveCell)
                 {
-                    if (ctx?.TargetCell != env.Cell) continue;
-                    var otherEnv = ctx?.SourceCell?.Environment;
+                    if (baseCtx.TargetCell != env.Cell) continue;
+                    var otherEnv = baseCtx.SourceCell?.Environment;
                     if (otherEnv != null && otherEnv.Data.EnvironmentID == env.Data.EnvironmentID)
                         continue;
                 }
@@ -232,14 +235,24 @@ public partial class EventBus : Node
             triggered++;
 
             // ── 创建效果上下文 ──────────────────────────────
-            Context effectCtx;
+            // 从事件 ctx 克隆（全量继承载荷：TargetCell/SourceCell/SourceCard/Map/ActiveUnits/
+            // ActType/AttackDirection/PendingDamage/...，新增字段自动携带），只覆盖"订阅者语义"字段——
+            // 替代旧版三处 new Context{} 手写白名单透传（漏传即静默丢数据，且每加字段要改 3 处联动）
             Team sourceTeam = Team.Neutral;
             if (isCardOwner)
-                sourceTeam = ctx?.SourceTeam ?? Team.Player;
+                sourceTeam = baseCtx.SourceTeam;
             else if (owner is Unit uOwner)
                 sourceTeam = uOwner.Team;
             else if (owner is Environment eOwner)
                 sourceTeam = eOwner.SourceUnit?.Team ?? Team.Neutral;
+
+            var effectCtx = baseCtx.Clone();
+            effectCtx.SourceUnit = sourceUnit;
+            effectCtx.SourceTeam = sourceTeam;
+            effectCtx.DamageModifier = dmgBase;   // 伤害修饰统一初值（保持"两侧累加 + diff 回写"语义）
+            // 派生语义：EventOtherUnit = 事件另一方（ctx.TargetUnit 透传，见 README——
+            // 调用点只填 TargetUnit，不填 EventOtherUnit；克隆不会自动派生，需显式赋值）
+            effectCtx.EventOtherUnit = baseCtx.TargetUnit;
 
             if (entry.TargetFilter != null)
             {
@@ -260,9 +273,9 @@ public partial class EventBus : Node
                     centerPos = eCenter.Cell?.GridPos ?? default;
                     hasCenter = eCenter.Cell != null;
                 }
-                else if (ctx?.TargetCell != null)
+                else if (baseCtx.TargetCell != null)
                 {
-                    centerPos = ctx.TargetCell.GridPos;
+                    centerPos = baseCtx.TargetCell.GridPos;
                     hasCenter = true;
                 }
                 else if (sourceUnit != null)
@@ -274,78 +287,47 @@ public partial class EventBus : Node
                 if (map != null && hasCenter)
                     map.TryGetValue(centerPos, out centerCell);
 
-                var resolveCtx = new Context
-                {
-                    SourceUnit = sourceUnit,
-                    TargetCell = centerCell,
-                    // 环境被动：SingleUnit 形状命中"事件单位（进入/离开）"，回退"当前格子上单位"
-                    TargetUnit = isEnvOwner ? (ctx?.TargetUnit ?? envOwner.Cell?.OccupyingUnit) : null,
-                    SourceTeam = sourceTeam,
-                    Map = map,
-                    ActiveUnits = UnitManager.Instance?.ActiveUnits,
-                };
+                // 目标解析上下文：克隆事件载荷 + 覆盖订阅者语义（中心格/环境命中单位）
+                var resolveCtx = baseCtx.Clone();
+                resolveCtx.SourceUnit = sourceUnit;
+                resolveCtx.SourceTeam = sourceTeam;
+                resolveCtx.TargetCell = centerCell;
+                // 环境被动：SingleUnit 形状命中"事件单位（进入/离开）"，回退"当前格子上单位"
+                resolveCtx.TargetUnit = isEnvOwner ? (baseCtx.TargetUnit ?? envOwner.Cell?.OccupyingUnit) : null;
+                resolveCtx.Map = map;
+                resolveCtx.ActiveUnits = UnitManager.Instance?.ActiveUnits;
 
                 if (entry.TargetFilter.GetKind() == TargetKind.Cell)
                 {
                     var cells = TargetResolver.ResolveCells(entry.TargetFilter, resolveCtx);
                     GD.Print($"[EventBus]   -> 触发: {GetOwnerName(owner)} " +
                              $"filter={entry.TargetFilter.GetType().Name} 找到格子={cells?.Length ?? 0}");
-                    effectCtx = new Context
-                    {
-                        SourceUnit = sourceUnit,
-                        TargetCells = cells,
-                        SourceTeam = sourceTeam,
-                        TargetTeam = Team.Neutral,
-                        EventTargetUnit = ctx?.TargetUnit,
-                        ActType = ctx?.ActType ?? UnitActType.None,
-                        AttackDirection = ctx?.AttackDirection,
-                        DamageModifier = dmgBase,
-                        PendingDamage = ctx?.PendingDamage ?? 0,
-                    };
+                    effectCtx.TargetCells = cells;
                 }
                 else
                 {
                     var targets = TargetResolver.ResolveUnits(entry.TargetFilter, resolveCtx);
                     GD.Print($"[EventBus]   -> 触发: {GetOwnerName(owner)} " +
                              $"filter={entry.TargetFilter.GetType().Name} 找到目标={targets?.Length ?? 0}");
-                    effectCtx = new Context
-                    {
-                        SourceUnit = sourceUnit,
-                        TargetUnits = targets,
-                        SourceTeam = sourceTeam,
-                        TargetTeam = Team.Neutral,
-                        EventTargetUnit = ctx?.TargetUnit,
-                        ActType = ctx?.ActType ?? UnitActType.None,
-                        AttackDirection = ctx?.AttackDirection,
-                        DamageModifier = dmgBase,
-                        PendingDamage = ctx?.PendingDamage ?? 0,
-                    };
+                    effectCtx.TargetUnits = targets;
                 }
+
+                // 语义保持：filter 路径动作目标由 TargetUnits/TargetCells 承载，
+                // TargetUnit 置 null（基线行为），避免事件 TargetUnit 污染单目标语义
+                effectCtx.TargetUnit = null;
             }
             else
             {
-                // 传统 PassiveTarget 逻辑
+                // 传统 PassiveTarget 逻辑（克隆已全量继承事件载荷，仅覆盖目标角色与手牌被动特例）
                 GD.Print($"[EventBus]   -> 触发: {GetOwnerName(owner)} " +
-                         $"targetMode={entry.PassiveTarget} otherParty={ctx?.TargetUnit?.UnitData?.UnitName}");
+                         $"targetMode={entry.PassiveTarget} otherParty={baseCtx.TargetUnit?.UnitData?.UnitName}");
 
-                // Card/Environment 订阅者无自身单位：Self → null；EventTarget → 事件另一方
+                // Card/Environment 订阅者无自身单位：Self → null；EventOther → 事件另一方
                 Unit selfUnit = owner is Unit uSelf ? uSelf : null;
-                effectCtx = new Context
-                {
-                    SourceUnit = sourceUnit,
-                    TargetUnit = entry.PassiveTarget == PassiveTarget.Self
-                        ? selfUnit : (ctx?.TargetUnit ?? selfUnit),
-                    EventTargetUnit = ctx?.TargetUnit,
-                    TargetCell = ctx?.TargetCell,
-                    SourceCell = ctx?.SourceCell,
-                    SourceCard = isCardOwner ? null : ctx?.SourceCard,
-                    SourceTeam = sourceTeam,
-                    TargetTeam = ctx?.TargetTeam ?? Team.Neutral,
-                    ActType = ctx?.ActType ?? UnitActType.None,
-                    AttackDirection = ctx?.AttackDirection,
-                    DamageModifier = dmgBase,
-                    PendingDamage = ctx?.PendingDamage ?? 0,
-                };
+                effectCtx.TargetUnit = entry.PassiveTarget == PassiveTarget.Self
+                    ? selfUnit : (baseCtx.TargetUnit ?? selfUnit);
+                // 原语义保留：手牌被动不读 SourceCard（避免"出牌后"被动读到被出的牌自身）
+                if (isCardOwner) effectCtx.SourceCard = null;
             }
 
             // ── 条件检查（ECA，逐个打印结果便于排查"条件不满足"） ────

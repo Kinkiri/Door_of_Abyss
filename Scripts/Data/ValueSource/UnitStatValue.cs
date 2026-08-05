@@ -20,7 +20,7 @@ public partial class UnitStatValue : ValueSource
         {
             ValueTarget.Source => ctx.SourceUnit,
             ValueTarget.Target => ctx.TargetUnit,
-            ValueTarget.EventTarget => ctx.EventTargetUnit,
+            ValueTarget.EventOther => ctx.EventOtherUnit,
             _ => null,
         };
         if (unit == null) return 0;

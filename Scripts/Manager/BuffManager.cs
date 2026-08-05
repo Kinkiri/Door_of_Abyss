@@ -77,9 +77,9 @@ public partial class BuffManager : Node
                 GD.Print($"[BuffManager] 刷新+叠层: {buffData.BuffName} ×{existing.StackCount} " +
                          $"(新增{added}层) 剩余{existing.RemainingTurns}回合 目标={target.UnitData?.UnitName}");
 
-                // 叠层变化后触发（层数已更新，监听条件可读到新值；subject=自己定向）
+                // 叠层变化后触发（层数已更新，监听条件可读到新值；SourceUnit=施加方）
                 EventBus.Instance?.Fire(EventType.OnBuffStackChanged,
-                    new Context { TargetUnit = target }, subject: target);
+                    new Context { TargetUnit = target, SourceUnit = sourceUnit, SourceBuffID = existing.Data.BuffID, BuffChangedStacks = added });
                 return;
             }
         }
@@ -108,10 +108,10 @@ public partial class BuffManager : Node
             EventBus.Instance?.Subscribe(target, buffData.PassiveEffects, tag);
         }
 
-        // 触发事件
+        // 触发事件（SourceUnit=施加方，供手牌被动识别"谁施加了 Buff"）
         target.UpdateUnit();
         EventBus.Instance?.Fire(EventType.OnBuffApplied,
-            new Context { TargetUnit = target }, subject: target);
+            new Context { TargetUnit = target, SourceUnit = sourceUnit, SourceTeam = sourceUnit?.Team ?? Team.Neutral }, instigator: target);
 
         // 通知 View 层创建 Buff 图标（事件驱动）。
         // 必须**先**创建图标、**再**触发叠层变化被动：若顺序颠倒，"施加即触发变身清 buff"
@@ -120,9 +120,9 @@ public partial class BuffManager : Node
         if (!buff.IsExpired)
             BuffApplied?.Invoke(target, buff);
 
-        // 叠层设置后触发（initialStacks 可能直接 > 目标层数，如"继承死者义肢层数"；subject=自己定向）
+        // 叠层设置后触发（initialStacks 可能直接 > 目标层数，如"继承死者义肢层数"；SourceUnit=施加方）
         EventBus.Instance?.Fire(EventType.OnBuffStackChanged,
-            new Context { TargetUnit = target }, subject: target);
+            new Context { TargetUnit = target, SourceUnit = sourceUnit, SourceBuffID = buff.Data.BuffID, BuffChangedStacks = initialStacks });
 
         GD.Print($"[BuffManager] 施加: {buffData.BuffName} 于 {target.UnitData?.UnitName} " +
                  $"持续{buffData.Duration}回合 叠层上限{buffData.MaxStack}");
@@ -169,7 +169,7 @@ public partial class BuffManager : Node
         // ── 触发事件 ──────────────────────────────────────────────
         target.UpdateUnit();
         EventBus.Instance?.Fire(EventType.OnBuffRemoved,
-            new Context { TargetUnit = target }, subject: target);
+            new Context { TargetUnit = target, SourceUnit = buff.SourceUnit, SourceBuffID = buff.Data.BuffID }, instigator: target);
 
         // ── 通知 View 层销毁 Buff 图标（事件驱动）──────────────────
         BuffRemoved?.Invoke(target, buff);
