@@ -7,7 +7,7 @@
 script = ExtResource("2_nfeog")
 UnitID = "炮兵"
 UnitName = "炮兵"
-World = 1
+World = 3
 Faction = 4
 Tags = null
 AttackPower = 3

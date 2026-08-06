@@ -44,7 +44,6 @@ public partial class MainMenu : Control
         SetupMenu();
         SetupCredits();
         SetupLevelSelect();
-        BuildLevelList();
         PlayEntrance();
         StartBreathAnimation();
         StartBackgroundBreath();
@@ -242,6 +241,10 @@ public partial class MainMenu : Control
     {
         if (_levelSelectAnimating || _levelSelectPanel.Visible) return;
         _levelSelectAnimating = true;
+        // 关卡库懒加载：首次打开选关面板时才加载全部关卡数据（避免拖慢标题场景进入）
+        var list = _levelSelectPanel.GetNode<VBoxContainer>("Margin/Root/Body/ListPanel/Scroll/LevelList");
+        if (list.GetChildCount() == 0)
+            BuildLevelList();
         AnimatePanelIn(_levelSelectPanel, _levelSelectBackdrop, _levelSelectBasePos,
             () => _levelSelectAnimating = false);
     }

@@ -7,7 +7,7 @@
 script = ExtResource("2_wnllb")
 UnitID = "老兵"
 UnitName = "老兵"
-World = 1
+World = 3
 Faction = 4
 Tags = null
 AttackPower = 3

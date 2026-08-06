@@ -89,7 +89,6 @@ expand_mode = 1
 stretch_mode = 6
 
 [node name="Vignette" type="TextureRect" parent="." unique_id=1047664630]
-visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -101,7 +100,7 @@ texture = SubResource("GradientTexture2D_vignette")
 expand_mode = 1
 
 [node name="Dust" type="GPUParticles2D" parent="." unique_id=176449889]
-position = Vector2(45, 1046)
+position = Vector2(45, 1096)
 amount = 180
 amount_ratio = 0.6154
 texture = SubResource("GradientTexture2D_dot")
@@ -321,19 +320,22 @@ text = "《深秘之门》
 卡牌战棋策略游戏
 使用Godot4.7 + C# 开发
 代码部分已在github开源，非代码部分保留所有权利
-这是一群高中生20天做的，也是我们的第一作
+学生作品，尚不成熟
 
-当前版本是一个可运行的技术演示，展示了完整的战斗循环，但bug非常多，还没有美术和音效，称不上“可玩”
+当前版本是一个可运行的原型，展示了完整的战斗循环，但bug非常多，还没有美术和音效，称不上“可玩”
 我们接受一切反馈，欢迎与我们交流
 本项目纯为爱发电，如果你想要加入我们，十分欢迎
 
 
 开发团队
-策划：瑾雾、莫问君、书屋、域外星使
+策划：莫问君、树屋、瑾雾
 程序：瑾雾
-美术：水
+美术：H2O
 剧情：轻舟
 
+特别感谢
+HACHIMAN、感冒灵：手稿提供者
+域外星使、梦泽
 联系方式
 qq：813571651"
 autowrap_mode = 1

@@ -7,10 +7,10 @@
 script = ExtResource("2_2g285")
 UnitID = "步枪兵"
 UnitName = "步枪兵"
-World = 1
+World = 3
 Faction = 4
 Tags = null
-AttackDistance = 2
+AttackDistance = 3
 ActionPoints = 2
 Description = "攻击范围大，但伤害低，还脆"
 UnitPrefab = ExtResource("1_c7g8f")

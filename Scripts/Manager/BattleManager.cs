@@ -859,6 +859,7 @@ public partial class BattleManager : Node2D
             {
                 u.ActionPoints = u.MaxActionPoints;
                 u.ActionsThisTurn = 0;
+                u.UpdateUnit();   // 刷新单位视图（AP/HP/位置标签；本轮重置对视图可见）
             }
         }
         GD.Print($"[Battle] 回合 {RoundCount} 开始，所有单位行动次数已重置");

@@ -3,12 +3,19 @@
 [ext_resource type="Resource" uid="uid://ce81ji0jjv2yr" path="res://Resource/Data/Buff/强壮.tres" id="1_e53hn"]
 [ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="1_gdkcs"]
 [ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_156gy"]
+[ext_resource type="Script" uid="uid://bqdiie4v7k7l7" path="res://Scripts/Data/ValueSource/BuffInfoValue.cs" id="2_ed1jt"]
 [ext_resource type="Script" uid="uid://b3sdoj1kcep0a" path="res://Scripts/Data/BuffData.cs" id="3_e53hn"]
 [ext_resource type="Script" uid="uid://cq8v06lvy3mmc" path="res://Scripts/Data/Actions/RemoveBuffAction.cs" id="3_ed1jt"]
+
+[sub_resource type="Resource" id="Resource_dvc2c"]
+script = ExtResource("2_ed1jt")
+BuffID = "指挥官"
+metadata/_custom_type_script = "uid://bqdiie4v7k7l7"
 
 [sub_resource type="Resource" id="Resource_pntxf"]
 script = ExtResource("1_gdkcs")
 BuffData = ExtResource("1_e53hn")
+ValueSource = SubResource("Resource_dvc2c")
 metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
 
 [sub_resource type="Resource" id="Resource_orkxx"]

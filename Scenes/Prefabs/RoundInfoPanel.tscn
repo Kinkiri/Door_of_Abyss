@@ -13,7 +13,7 @@ corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
-[node name="RoundInfoPanel" type="PanelContainer" node_paths=PackedStringArray("PhaseLabel", "TeamLabel", "RoundLabel", "CostLabel", "HandCountLabel", "EndTurnButton")]
+[node name="RoundInfoPanel" type="PanelContainer" node_paths=PackedStringArray("PhaseLabel", "TeamLabel", "RoundLabel", "CostLabel", "HandCountLabel", "EndTurnButton", "BackToTitleButton")]
 script = ExtResource("1_panel")
 PhaseLabel = NodePath("Row/Phase")
 TeamLabel = NodePath("Row/Team")
@@ -21,6 +21,7 @@ RoundLabel = NodePath("Row/Round")
 CostLabel = NodePath("Row/Cost")
 HandCountLabel = NodePath("Row/HandCount")
 EndTurnButton = NodePath("Row/EndTurn")
+BackToTitleButton = NodePath("Row/BackToTitle")
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="Row" type="HBoxContainer" parent="."]
@@ -64,3 +65,9 @@ layout_mode = 2
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "结束回合"
+
+[node name="BackToTitle" type="Button" parent="Row"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "返回主界面"

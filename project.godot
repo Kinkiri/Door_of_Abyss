@@ -36,4 +36,5 @@ project/assembly_name="Door of Abyss"
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+renderer/rendering_method.mobile="compatibility"
 textures/vram_compression/import_etc2_astc=true

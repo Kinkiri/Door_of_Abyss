@@ -38,9 +38,9 @@
 |---|---|
 | 引擎 | Godot 4.7 |
 | 语言 | C# (.NET 8.0) |
-| 渲染 | Forward Plus (D3D12) |
+| 渲染 | 桌面 Forward Plus (D3D12)；安卓 Compatibility (GLES3) |
 | 物理 | Jolt Physics 3D（预留） |
-| 平台 | Windows（D3D12）/ Android（arm64，锁定横屏；Vulkan，无 Vulkan 设备回退 OpenGL） |
+| 平台 | Windows（D3D12）/ Android（arm64，锁定横屏；Compatibility 渲染，低端机可进） |
 | 分辨率 | 1920 x 1080，Canvas Items + Expand |
 
 ## 项目结构（程序员）
@@ -211,9 +211,9 @@ Scripts/                         ~7300 行 C#
 │   ├── EnvironmentViewManager.cs 环境图层渲染（订阅环境事件 SetCell/EraseCell）
 │   ├── HandPanel.cs             手牌面板（订阅 CardManager 事件）
 │   ├── LevelFadeIn.cs           战斗场景渐变入场（黑幕停留 1s → 0.9s 渐出，CanvasLayer 顶层）
-│   ├── MainMenu.cs              主界面（夜色背景/光尘粒子/呼吸标题/竖排菜单/选关·关于面板/退出）
+│   ├── MainMenu.cs              主界面（夜色背景/光尘粒子/呼吸标题/竖排菜单/选关·关于面板/退出；关卡库懒加载）
 │   ├── MapView.cs               地图渲染 + 高亮（含波次刷怪预告层 WavePreviewLayer）
-│   ├── RoundInfoPanel.cs        右上角战斗信息面板（横排：阶段/阵营/回合/费用/手牌 + 结束回合按钮）
+│   ├── RoundInfoPanel.cs        右上角战斗信息面板（横排：阶段/阵营/回合/费用/手牌 + 结束回合/返回主界面按钮）
 │   ├── UnitInfoPanel.cs         左下角信息面板（选中单位/格子/卡牌详情：描述/属性/Buff/装备/环境）
 │   ├── UnitView.cs              单位视觉 + 内建动画（入场/受伤/治疗/死亡/移动/Buff）
 │   └── UnitViewManager.cs       订阅 UnitManager/BuffManager 事件，创建/销毁 UnitView 与 BuffView
@@ -345,6 +345,7 @@ public class Context {
 - **菜单**：竖排细字按钮（flat + 半透明白字 + hover 左侧指示条渐显），入场错峰淡入（每行 scale 0.94→1 + alpha，时长 1s）
 - **面板**：「关于」「选关」共用通用动画 `AnimatePanelIn/Out`（暗幕渐显 + 面板下滑 60px 弹出，0.35s Cubic；✕/暗幕点击关闭，`_creditsBasePos` 归位防偏移累积）
 - **退出**：黑幕淡出 0.5s → `GetTree().Quit()`
+- **返回主界面**（战斗结束）：`RoundInfoPanel` 订阅 `BattleManager.GameEnded`，胜负已分时显示「返回主界面」按钮 → `ChangeSceneToFile(title.tscn)`
 
 ### 选关流程
 
@@ -355,6 +356,8 @@ public class Context {
   └─ 右下"进入关卡" → LevelSelection.Selected = 关卡 → 黑幕淡出 → ChangeSceneToFile(Level.tscn)
 战斗场景：BattleManager._Ready 读 LevelSelection.Selected 覆盖 Level.tscn 的固定引用（编辑器直跑保留 fallback）
 ```
+
+- **关卡库懒加载**：`LevelLibrary` 静态构造会级联加载全部关卡→波次→单位→卡组 .tres（数百文件），因此不在主菜单 `_Ready` 触发，改为**首次打开选关面板时**才 `BuildLevelList`（主界面先显示，安卓真机启动明显变快）
 
 ### 波次刷怪预告
 
@@ -384,8 +387,18 @@ public class Context {
 ### 平台状态
 
 - **Godot 4.7.1 .NET**，目标 **Android 12+（arm64-v8a）**，锁定横屏（`display/window/handheld/orientation="landscape"`）
-- 渲染：Vulkan（Forward+）；设备不支持 Vulkan 时 Godot 自动回退 OpenGL 3（模拟器常见）
-- 打包：标准导出模板（非 gradle），APK 约 100MB（含 .NET 运行时）
+- 渲染：**Compatibility（GLES3）**（`renderer/rendering_method.mobile="compatibility"`，桌面保持 Forward Plus/D3D12）——低端机 Vulkan 初始化慢/不稳，安卓端统一走 OpenGL 3，冷启动更快更稳
+- 打包：**Gradle 构建**（`use_gradle_build=true`）+ 程序集嵌入（`embed_build_outputs=true`）+ 不带调试符号（`include_debug_symbols=false`），APK 更小、启动加载更快
+
+### 启动优化（2026-08-07）
+
+真机冷启动慢（卡纯色屏几十秒）的根因：Godot 4.7.1 安卓 .NET 走 **Mono 运行时**（解释/JIT），
+**无 AOT 编译选项**（编辑器 GodotTools 无 AOT 代码路径；`PublishAot`=NativeAOT 不支持 Windows→Android 交叉编译），
+叠加桌面级 Forward Plus 渲染器 + 主菜单同步加载关卡库。已做三项优化：
+
+1. **渲染器 → Compatibility（GLES3）**：消除低端机 Vulkan 初始化慢/不稳定的问题
+2. **Gradle 构建 + 无调试符号 + 程序集嵌入**：打包与程序集加载链路更优
+3. **关卡库懒加载**：标题场景不再同步加载全部关卡 .tres，点「开始游戏」打开选关面板时才首次构建（详见主界面章节）
 
 ### 触摸输入（TouchInputAdapter）
 
@@ -410,17 +423,17 @@ SelectionManager / 放门 / Control 按钮直接可用），`Scripts/View/TouchI
 - `export_presets.cfg`：Android preset（包名 `com.doorofabbyss.game`，arm64-v8a，debug keystore 签名）
 - 环境：JDK 17 + Android SDK（platform-tools / platform-34 / build-tools 34.0.0 / NDK r25c）+ 4.7.1 .NET 导出模板
 - Godot 编辑器设置需配置 `export/android/java_sdk_path` / `android_sdk_path` / `android_ndk_path`
-- 命令行导出：
+- 命令行导出（Gradle 构建**首次会联网下载 Gradle 依赖**，耗时较长属正常）：
   ```
-  Godot_console --headless --path . --export-debug "Android" build/Android/DoorOfAbyss.apk
+  Godot_console --headless --path . --export-debug "Android 2" build/Android/DoorOfAbyss.apk
   ```
 - **导出时 TEMP 需指向空间充足的盘**：apksigner 签名写临时文件，C 盘空间不足会报"磁盘空间不足"
 
 ### 注意事项
 
 - **打包后 .tres 被 UID 重映射为 .tres.remap**：`Library.GetAllTresPaths` 已兼容（枚举时去掉 `.remap` 后缀，逻辑路径不变），Windows/Android 导出均正常加载（卡牌库 54 张）
-- **模拟器（MuMu/雷电）限制**：Vulkan 不可用自动回退 OpenGL；arm64 APK 经 houdini 指令转译，卡牌库加载可能极慢/卡死（真机原生 arm64 正常）；adb swipe 受 INJECT_EVENTS 权限限制无法自动化拖拽手势
-- **待真机验证**：单指拖镜头、双指捏合缩放、安卓端卡牌库加载性能
+- **模拟器（MuMu/雷电）限制**：Compatibility 渲染无 Vulkan 依赖；arm64 APK 经 houdini 指令转译，卡牌库加载可能极慢/卡死（真机原生 arm64 正常）；adb swipe 受 INJECT_EVENTS 权限限制无法自动化拖拽手势
+- **待真机验证**：单指拖镜头、双指捏合缩放、安卓端卡牌库加载性能、Compatibility 渲染下冷启动时间
 
 ---
 

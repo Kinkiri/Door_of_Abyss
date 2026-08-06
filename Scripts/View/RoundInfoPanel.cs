@@ -14,6 +14,7 @@ public partial class RoundInfoPanel : PanelContainer
     [Export] public Label CostLabel;
     [Export] public Label HandCountLabel;
     [Export] public Button EndTurnButton;
+    [Export] public Button BackToTitleButton;
 
     public override void _Ready()
     {
@@ -32,6 +33,8 @@ public partial class RoundInfoPanel : PanelContainer
 
         if (EndTurnButton != null)
             EndTurnButton.Pressed += OnEndTurnPressed;
+        if (BackToTitleButton != null)
+            BackToTitleButton.Pressed += OnBackToTitlePressed;
 
         UpdateDisplay(bm.CurrentPhase, bm.CurrentTeam, bm.RoundCount);
         OnCostChanged(bm.PlayerCost, BattleManager.MaxCost);
@@ -51,6 +54,8 @@ public partial class RoundInfoPanel : PanelContainer
             CardManager.Instance.OnCardsUpdated -= OnCardsUpdated;
         if (EndTurnButton != null)
             EndTurnButton.Pressed -= OnEndTurnPressed;
+        if (BackToTitleButton != null)
+            BackToTitleButton.Pressed -= OnBackToTitlePressed;
     }
 
     // ======================================================================
@@ -68,6 +73,8 @@ public partial class RoundInfoPanel : PanelContainer
             PhaseLabel.Text = $"游戏结束！{WinnerName(winner)}胜利";
         if (TeamLabel != null)
             TeamLabel.Text = "";
+        if (BackToTitleButton != null)
+            BackToTitleButton.Visible = true;
     }
 
     private void OnCostChanged(int current, int max)
@@ -105,6 +112,12 @@ public partial class RoundInfoPanel : PanelContainer
     private void OnEndTurnPressed()
     {
         BattleManager.Instance?.AdvancePhase();
+    }
+
+    /// <summary>返回主界面（游戏结束后显示）</summary>
+    private void OnBackToTitlePressed()
+    {
+        GetTree().ChangeSceneToFile("res://Scenes/Game/title.tscn");
     }
 
     // ======================================================================

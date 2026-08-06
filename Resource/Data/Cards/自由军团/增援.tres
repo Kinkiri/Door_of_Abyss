@@ -11,7 +11,7 @@ metadata/_custom_type_script = "uid://bh513nttrjbjn"
 
 [sub_resource type="Resource" id="Resource_4shy0"]
 script = ExtResource("2_mndse")
-Value = 2
+Value = 1
 Filters = Array[Object]([SubResource("Resource_tgi0o")])
 metadata/_custom_type_script = "uid://dnlsqjf0bupsk"
 
