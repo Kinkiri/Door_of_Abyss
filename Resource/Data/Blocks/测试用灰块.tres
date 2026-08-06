@@ -5,5 +5,5 @@
 [resource]
 script = ExtResource("1_i7fmi")
 BlockName = "灰块"
-BlockDescription = "不能站人"
+BlockDescription = "测试"
 metadata/_custom_type_script = "uid://ce0wxis7r8i0b"

@@ -16,8 +16,20 @@ public partial class TestRunner : Node
     private readonly List<string> _errors = new();
     private string _currentGroup = "";
 
+    /// <summary>
+    /// 场景加载后是否自动运行全部测试。默认关闭：测试会操作全局 Manager 状态
+    /// （如 ModifyCostAction 改全局费用），进入战斗场景自动跑会污染实际战斗。
+    /// 需要回归时在 Inspector 勾选。
+    /// </summary>
+    [Export] public bool RunTestsOnReady { get; set; } = false;
+
     public override void _Ready()
     {
+        if (!RunTestsOnReady)
+        {
+            GD.Print("[TestRunner] 已禁用（RunTestsOnReady=false），不运行测试");
+            return;
+        }
         // 延迟到所有 Manager 初始化完毕
         CallDeferred(nameof(RunAll));
     }

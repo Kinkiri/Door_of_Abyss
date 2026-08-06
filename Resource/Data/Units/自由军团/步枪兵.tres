@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://4y4yqupug01b"]
+
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_c7g8f"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="2_2g285"]
+
+[resource]
+script = ExtResource("2_2g285")
+UnitID = "步枪兵"
+UnitName = "步枪兵"
+World = 1
+Faction = 4
+Tags = null
+AttackDistance = 2
+ActionPoints = 2
+Description = "攻击范围大，但伤害低，还脆"
+UnitPrefab = ExtResource("1_c7g8f")
+PassiveEffects = null
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

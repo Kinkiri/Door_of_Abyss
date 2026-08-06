@@ -1,0 +1,92 @@
+[gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://ekxfalscq7fs"]
+
+[ext_resource type="Resource" uid="uid://bmlrjar80lfyq" path="res://Resource/Data/Cards/自由军团/先锋.tres" id="1_fyid3"]
+[ext_resource type="Resource" uid="uid://1vxdaslartpn" path="res://Resource/Data/Cards/自由军团/军医.tres" id="2_gf515"]
+[ext_resource type="Resource" uid="uid://bp5vm31nllexs" path="res://Resource/Data/Cards/自由军团/军粮.tres" id="3_x7o6k"]
+[ext_resource type="Resource" uid="uid://0gvxwt7xeawg" path="res://Resource/Data/Cards/自由军团/增援.tres" id="4_shx7f"]
+[ext_resource type="Resource" uid="uid://cuq0hjqnixkf2" path="res://Resource/Data/Cards/自由军团/指挥官.tres" id="5_js4l8"]
+[ext_resource type="Resource" uid="uid://batuwt1akfm5r" path="res://Resource/Data/Cards/自由军团/振奋.tres" id="6_bwpky"]
+[ext_resource type="Resource" uid="uid://cthq2iqnjrc0c" path="res://Resource/Data/Cards/自由军团/新兵.tres" id="7_suel2"]
+[ext_resource type="Resource" uid="uid://xw50uw116iss" path="res://Resource/Data/Cards/自由军团/步枪兵.tres" id="8_jbw4p"]
+[ext_resource type="Resource" uid="uid://ckdf28q1oi48h" path="res://Resource/Data/Cards/自由军团/炮兵.tres" id="9_ovbyf"]
+[ext_resource type="Resource" uid="uid://b1c22fwu3g480" path="res://Resource/Data/Cards/自由军团/燃烧弹.tres" id="10_idt2s"]
+[ext_resource type="Resource" uid="uid://b3ro8ae005jdc" path="res://Resource/Data/Cards/自由军团/狙击手.tres" id="11_bt0kv"]
+[ext_resource type="Resource" uid="uid://caxsku5uakdiv" path="res://Resource/Data/Cards/自由军团/维护.tres" id="12_4liva"]
+[ext_resource type="Resource" uid="uid://cm6g0cv0gra0i" path="res://Resource/Data/Cards/自由军团/老兵.tres" id="13_0j6gw"]
+[ext_resource type="Resource" uid="uid://b7q4hi5df4l72" path="res://Resource/Data/Cards/自由军团/防御工事.tres" id="14_vtcrs"]
+[ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="15_7hifu"]
+[ext_resource type="Resource" uid="uid://ce6bu28qumhkv" path="res://Resource/Data/Cards/擢升之手/腾跃.tres" id="15_skqe5"]
+[ext_resource type="Resource" path="res://Resource/Data/Maps/初入战场.tres" id="17_jbw4p"]
+[ext_resource type="Resource" uid="uid://vyqut7nte65d" path="res://Resource/Data/Units/自由军团/老兵.tres" id="17_t6xo4"]
+[ext_resource type="Resource" uid="uid://c88fw4ryw05k3" path="res://Resource/Data/Units/自由军团/新兵.tres" id="18_y0qnh"]
+[ext_resource type="Resource" uid="uid://cqrsbb234uglr" path="res://Resource/Data/Units/自由军团/先锋.tres" id="19_ovbyf"]
+[ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="19_qn088"]
+[ext_resource type="Resource" uid="uid://4y4yqupug01b" path="res://Resource/Data/Units/自由军团/步枪兵.tres" id="20_u7ypm"]
+[ext_resource type="Resource" uid="uid://bwwcvxll4uiq3" path="res://Resource/Data/Units/自由军团/军医.tres" id="21_qnnp0"]
+[ext_resource type="Resource" uid="uid://g00voouo7lc2" path="res://Resource/Data/Units/自由军团/炮兵.tres" id="22_3xc2c"]
+[ext_resource type="Resource" uid="uid://c52vijing117o" path="res://Resource/Data/Units/自由军团/狙击手.tres" id="23_gdifb"]
+[ext_resource type="Resource" uid="uid://c25vffb06hqi2" path="res://Resource/Data/Units/自由军团/指挥官.tres" id="24_idt2s"]
+[ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="24_whytc"]
+[ext_resource type="Resource" uid="uid://f8jwdartjjfi" path="res://Resource/Data/Units/擢升之手/门卫.tres" id="27_bt0kv"]
+[ext_resource type="Resource" uid="uid://ccuyks7y3yc4n" path="res://Resource/Data/Units/擢升之手/构造体工程师.tres" id="28_4liva"]
+[ext_resource type="Resource" uid="uid://berq0byplvsig" path="res://Resource/Data/Units/擢升之手/秒速尖兵.tres" id="29_0j6gw"]
+[ext_resource type="Resource" uid="uid://bbkq67n50v7xu" path="res://Resource/Data/Units/擢升之手/飞拳斗士.tres" id="30_vtcrs"]
+
+[sub_resource type="Resource" id="Resource_4gouf"]
+script = ExtResource("15_7hifu")
+DeckName = "0-5 演习固定"
+Cards = Array[Object]([ExtResource("1_fyid3"), ExtResource("2_gf515"), ExtResource("3_x7o6k"), ExtResource("4_shx7f"), ExtResource("5_js4l8"), ExtResource("6_bwpky"), ExtResource("7_suel2"), ExtResource("8_jbw4p"), ExtResource("9_ovbyf"), ExtResource("10_idt2s"), ExtResource("11_bt0kv"), ExtResource("12_4liva"), ExtResource("13_0j6gw"), ExtResource("14_vtcrs"), ExtResource("1_fyid3"), ExtResource("2_gf515"), ExtResource("3_x7o6k"), ExtResource("4_shx7f"), ExtResource("5_js4l8"), ExtResource("6_bwpky"), ExtResource("7_suel2"), ExtResource("8_jbw4p"), ExtResource("9_ovbyf"), ExtResource("10_idt2s"), ExtResource("11_bt0kv"), ExtResource("12_4liva"), ExtResource("13_0j6gw"), ExtResource("14_vtcrs"), ExtResource("15_skqe5"), ExtResource("15_skqe5")])
+metadata/_custom_type_script = "uid://b1eamjx1y7exn"
+
+[sub_resource type="Resource" id="Resource_skqe5"]
+script = ExtResource("19_qn088")
+Round = 2
+SpawnAreaMin = Vector2i(3, 3)
+SpawnAreaMax = Vector2i(5, 5)
+UnitDatas = Array[Object]([ExtResource("18_y0qnh"), ExtResource("18_y0qnh"), ExtResource("19_ovbyf")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_sv6jl"]
+script = ExtResource("19_qn088")
+Round = 3
+SpawnAreaMin = Vector2i(6, 1)
+SpawnAreaMax = Vector2i(7, 6)
+UnitDatas = Array[Object]([ExtResource("20_u7ypm"), ExtResource("20_u7ypm"), ExtResource("17_t6xo4"), ExtResource("21_qnnp0")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_2ef0t"]
+script = ExtResource("19_qn088")
+Round = 4
+UnitDatas = Array[Object]([ExtResource("24_idt2s"), ExtResource("21_qnnp0"), ExtResource("22_3xc2c"), ExtResource("22_3xc2c")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_5dyfj"]
+script = ExtResource("19_qn088")
+Round = 6
+UnitDatas = Array[Object]([ExtResource("24_idt2s"), ExtResource("23_gdifb"), ExtResource("23_gdifb"), ExtResource("21_qnnp0")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_t7weq"]
+script = ExtResource("19_qn088")
+Round = 8
+UnitDatas = Array[Object]([ExtResource("27_bt0kv"), ExtResource("27_bt0kv"), ExtResource("28_4liva")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_3p8hw"]
+script = ExtResource("19_qn088")
+Round = 10
+UnitDatas = Array[Object]([ExtResource("28_4liva"), ExtResource("29_0j6gw"), ExtResource("30_vtcrs"), ExtResource("27_bt0kv")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[resource]
+script = ExtResource("24_whytc")
+LevelName = "0-5 演习"
+Description = "较的大地图与长线作战，还有新敌人"
+Waves = Array[Object]([SubResource("Resource_skqe5"), SubResource("Resource_sv6jl"), SubResource("Resource_2ef0t"), SubResource("Resource_5dyfj"), SubResource("Resource_t7weq"), SubResource("Resource_3p8hw")])
+MapData = ExtResource("17_jbw4p")
+DoorPlaceZoneMin = Vector2i(0, 1)
+DoorPlaceZoneMax = Vector2i(1, 2)
+DefaultSpawnAreaMin = Vector2i(8, 0)
+DefaultSpawnAreaMax = Vector2i(12, 7)
+LevelDeck = SubResource("Resource_4gouf")
+metadata/_custom_type_script = "uid://wk0covoailum"

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://vyqut7nte65d"]
+
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_gnpsm"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="2_wnllb"]
+
+[resource]
+script = ExtResource("2_wnllb")
+UnitID = "老兵"
+UnitName = "老兵"
+World = 1
+Faction = 4
+Tags = null
+AttackPower = 3
+HealthPoints = 5
+ActionPoints = 2
+Description = "大白板"
+UnitPrefab = ExtResource("1_gnpsm")
+PassiveEffects = null
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

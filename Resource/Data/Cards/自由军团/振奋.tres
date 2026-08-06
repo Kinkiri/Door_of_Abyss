@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://batuwt1akfm5r"]
+
+[ext_resource type="Resource" uid="uid://ce81ji0jjv2yr" path="res://Resource/Data/Buff/强壮.tres" id="1_70hte"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_qabpp"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_db3q3"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="4_auisb"]
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="5_5s24a"]
+
+[sub_resource type="Resource" id="Resource_7ksab"]
+script = ExtResource("2_qabpp")
+BuffData = ExtResource("1_70hte")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_5263j"]
+script = ExtResource("3_db3q3")
+Shape = 5
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_r2lqg"]
+script = ExtResource("4_auisb")
+Team = 1
+metadata/_custom_type_script = "uid://bjnrbd7iwxb5u"
+
+[resource]
+script = ExtResource("5_5s24a")
+CardID = "振奋"
+CardName = "振奋"
+Description = "全体友方本回合攻击力+1（可叠加）"
+Type = 1
+World = 1
+Faction = 4
+Tags = null
+Cost = 2
+TargetFilters = Array[Object]([SubResource("Resource_5263j"), SubResource("Resource_r2lqg")])
+Conditions = Array[Object]([])
+Actions = Array[Object]([SubResource("Resource_7ksab")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

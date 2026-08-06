@@ -438,7 +438,7 @@ GameStart（游戏开始）
   ├─ 加载地图（含预置环境，瓦片化自动加载）
   ├─ 预告第 1 波刷怪位置（红色警示格）
   ├─ 手动放门
-  └─ 初始化卡组 → 抽 2 张牌
+  └─ 初始化卡组（开局不抽牌，手牌为空，抽牌由回合/效果获得）
   ↓ 自动
 RoundStart（回合开始）
   ├─ 所有单位行动点恢复满上限，费用 +2
@@ -991,7 +991,7 @@ OnEnterGameStart
 
 `Scripts/Tests/TestRunner.cs` - 全面系统性单元测试，直接在场景中运行。
 
-**用法：** 在场景根节点加 Node，挂载 TestRunner.cs，运行即可。**482 项用例**覆盖：
+**用法：** 在场景根节点加 Node，挂载 TestRunner.cs，**默认不运行**（`RunTestsOnReady=false`，防止测试副作用污染战斗全局状态，如修改全局费用）；需要回归时在 Inspector 勾选 `RunTestsOnReady` 后运行。**482 项用例**覆盖：
 - ValueSource 运算（6 种公式 + 嵌套）
 - Condition 复合（And/Or/Not + Compare/HasBuff/Random）
 - Buff 生命周期（叠层/倒计时/还原/驱散）

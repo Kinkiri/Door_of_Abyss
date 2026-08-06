@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="MapData" format=3]
+
+[ext_resource type="Resource" path="res://Resource/Data/Blocks/测试用白块.tres" id="1_vcdap"]
+[ext_resource type="Resource" path="res://Resource/Data/Blocks/测试用灰块.tres" id="2_iy18v"]
+[ext_resource type="Script" path="res://Scripts/Data/Map/MapData.cs" id="3_1hv45"]
+
+[resource]
+script = ExtResource("3_1hv45")
+Positions = [Vector2i(-3, -2), Vector2i(-4, -1), Vector2i(-5, 0), Vector2i(-1, -2), Vector2i(-2, -1), Vector2i(-3, 0), Vector2i(-4, 1), Vector2i(3, -2), Vector2i(2, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(4, -1), Vector2i(3, 0), Vector2i(4, 0), Vector2i(3, -1), Vector2i(2, 0), Vector2i(1, 1), Vector2i(2, -2), Vector2i(1, -1), Vector2i(0, 0), Vector2i(-1, -1), Vector2i(-2, 0), Vector2i(-3, 1), Vector2i(-2, -2), Vector2i(-3, -1), Vector2i(-4, 0), Vector2i(-5, 1), Vector2i(0, -2), Vector2i(0, -1), Vector2i(-1, 0)]
+Blocks = [ExtResource("1_vcdap"), ExtResource("1_vcdap"), ExtResource("1_vcdap"), ExtResource("1_vcdap"), ExtResource("1_vcdap"), ExtResource("1_vcdap"), ExtResource("1_vcdap"), ExtResource("1_vcdap"), ExtResource("1_vcdap"), ExtResource("1_vcdap"), ExtResource("1_vcdap"), ExtResource("1_vcdap"), ExtResource("1_vcdap"), ExtResource("2_iy18v"), ExtResource("2_iy18v"), ExtResource("2_iy18v"), ExtResource("2_iy18v"), ExtResource("2_iy18v"), ExtResource("2_iy18v"), ExtResource("2_iy18v"), ExtResource("2_iy18v"), ExtResource("2_iy18v"), ExtResource("2_iy18v"), ExtResource("2_iy18v"), ExtResource("2_iy18v"), ExtResource("2_iy18v"), ExtResource("2_iy18v"), ExtResource("2_iy18v"), ExtResource("1_vcdap"), ExtResource("1_vcdap")]

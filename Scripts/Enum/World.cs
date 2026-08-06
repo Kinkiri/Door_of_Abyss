@@ -6,4 +6,5 @@ public enum World
 
     /// <summary>无/不限制（用于筛选器的"不筛选"哨兵）</summary>
     无,
+    冢
 }

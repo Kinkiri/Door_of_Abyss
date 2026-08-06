@@ -1,32 +1,20 @@
 [gd_resource type="Resource" script_class="EnvironmentData" format=3 uid="uid://cjejmedpg47cy"]
 
 [ext_resource type="Script" uid="uid://lxjpnv33tlmg" path="res://Scripts/Data/EnvironmentData.cs" id="1_env"]
-[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_effect"]
 [ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="3_damage"]
-[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="4_shape"]
 
-[sub_resource type="Resource" id="Resource_damage"]
+[sub_resource type="Resource" id="Resource_a06mu"]
 script = ExtResource("3_damage")
-Value = 1
-
-[sub_resource type="Resource" id="Resource_shape"]
-script = ExtResource("4_shape")
-Shape = 1
-
-[sub_resource type="Resource" id="Resource_effect"]
-script = ExtResource("2_effect")
-TriggerEvent = 1
-TargetFilters = Array[Object]([SubResource("Resource_shape")])
-Actions = Array[Object]([SubResource("Resource_damage")])
-Conditions = null
+Value = 2
+metadata/_custom_type_script = "uid://bcjncmte44un1"
 
 [resource]
 script = ExtResource("1_env")
 EnvironmentID = "火焰之地"
 EnvironmentName = "火焰之地"
-Description = "灼烧一切胆敢站上来的家伙：回合结束对其上单位造成1点伤害"
-AtlasCoords = Vector2i(16, 0)
+Description = "回合结束对其上单位造成2点伤害并消失"
+Duration = 1
 OnApplyActions = null
 OnExpireActions = null
-OnRoundEndActions = null
-PassiveEffects = Array[Object]([SubResource("Resource_effect")])
+OnRoundEndActions = Array[Object]([SubResource("Resource_a06mu")])
+PassiveEffects = null

@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_hor06"]
 [ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="1_nxvsf"]
-[ext_resource type="Resource" uid="uid://cqrsbb234uglr" path="res://Resource/Data/Units/测试/先锋.tres" id="2_c7ljo"]
 [ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="2_yuh41"]
 
 [sub_resource type="Resource" id="Resource_byygr"]
@@ -17,13 +16,11 @@ metadata/_custom_type_script = "uid://bh835k2ig4ik"
 
 [resource]
 script = ExtResource("1_nxvsf")
-UnitData = ExtResource("2_c7ljo")
-CardID = "先锋"
-CardName = "先锋"
 Description = "向日葵（不是"
 Type = 0
-TargetFilters = Array[Object]([SubResource("Resource_mfbjc")])
 Tags = null
+TargetFilters = Array[Object]([SubResource("Resource_mfbjc")])
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_byygr")])
+PassiveEffects = null
 metadata/_custom_type_script = "uid://p1hhkgy2pem"

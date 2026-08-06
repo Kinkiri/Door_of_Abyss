@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://b7q4hi5df4l72"]
+
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_dvc2c"]
+[ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_ke3x6"]
+[ext_resource type="Resource" uid="uid://b1e0a235rnowo" path="res://Resource/Data/Units/自由军团/防御工事.tres" id="3_dvc2c"]
+[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="4_ccu2w"]
+
+[sub_resource type="Resource" id="Resource_4w5cr"]
+script = ExtResource("1_dvc2c")
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[resource]
+script = ExtResource("4_ccu2w")
+UnitData = ExtResource("3_dvc2c")
+CardID = "防御工事"
+CardName = "防御工事"
+Description = "躲在后边并不安全"
+Type = 0
+World = 1
+Faction = 4
+Tags = null
+Cost = 2
+TargetFilters = Array[Object]([ExtResource("2_ke3x6")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_4w5cr")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://p1hhkgy2pem"

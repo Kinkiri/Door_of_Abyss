@@ -86,8 +86,8 @@ public partial class CardManager : Node
         {
             // 终极保障：牌库和弃牌堆均为空时从全部已加载卡牌重新建库。
             // 用于开发调试阶段避免抽牌中断；正式发布时建议移除或限制次数
-            GD.Print("[CardManager] 牌库和弃牌堆均为空，从卡牌库新建");
-            InitializeDrawPile(CardLibrary.CardList.Count);
+            //GD.Print("[CardManager] 牌库和弃牌堆均为空，从卡牌库新建");
+            //InitializeDrawPile(CardLibrary.CardList.Count);
         }
     }
 

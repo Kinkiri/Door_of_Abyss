@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://1vxdaslartpn"]
+
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_dge8d"]
+[ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_01v6p"]
+[ext_resource type="Resource" uid="uid://bwwcvxll4uiq3" path="res://Resource/Data/Units/自由军团/军医.tres" id="3_dge8d"]
+[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="4_kr1ow"]
+
+[sub_resource type="Resource" id="Resource_4w5cr"]
+script = ExtResource("1_dge8d")
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[resource]
+script = ExtResource("4_kr1ow")
+UnitData = ExtResource("3_dge8d")
+CardID = "军医"
+CardName = "军医"
+Description = "战场天使"
+Type = 0
+World = 1
+Faction = 4
+Tags = null
+Cost = 2
+TargetFilters = Array[Object]([ExtResource("2_01v6p")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_4w5cr")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://p1hhkgy2pem"

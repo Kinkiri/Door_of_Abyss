@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://xw50uw116iss"]
+
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_t538l"]
+[ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_ytfif"]
+[ext_resource type="Resource" uid="uid://4y4yqupug01b" path="res://Resource/Data/Units/自由军团/步枪兵.tres" id="3_t538l"]
+[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="4_7gemg"]
+
+[sub_resource type="Resource" id="Resource_4w5cr"]
+script = ExtResource("1_t538l")
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[resource]
+script = ExtResource("4_7gemg")
+UnitData = ExtResource("3_t538l")
+CardID = "步枪兵"
+CardName = "步枪兵"
+Description = "这枪伤害不行啊"
+Type = 0
+World = 1
+Faction = 4
+Tags = null
+Cost = 3
+TargetFilters = Array[Object]([ExtResource("2_ytfif")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_4w5cr")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://p1hhkgy2pem"

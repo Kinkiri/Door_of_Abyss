@@ -222,7 +222,7 @@ public partial class MapView : Node2D
     private void RenderDoorPlaceZone(HashSet<Vector2I> cells)
     {
         if (AttackMapLayer == null) return;
-        var atlas = new Vector2I(16, 0); // 用攻击高亮色表示可放置
+        var atlas = new Vector2I(0, 0); // 用攻击高亮色表示可放置
         foreach (var pos in cells)
             AttackMapLayer.SetCell(pos, HighlightSourceId, atlas);
     }

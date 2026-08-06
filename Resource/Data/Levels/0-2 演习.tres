@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://c273wo0pve7sf"]
+
+[ext_resource type="Resource" uid="uid://batuwt1akfm5r" path="res://Resource/Data/Cards/自由军团/振奋.tres" id="1_cgkju"]
+[ext_resource type="Resource" uid="uid://cthq2iqnjrc0c" path="res://Resource/Data/Cards/自由军团/新兵.tres" id="1_snw31"]
+[ext_resource type="Resource" uid="uid://xw50uw116iss" path="res://Resource/Data/Cards/自由军团/步枪兵.tres" id="2_yg52s"]
+[ext_resource type="Resource" uid="uid://bp5vm31nllexs" path="res://Resource/Data/Cards/自由军团/军粮.tres" id="3_0bmid"]
+[ext_resource type="Resource" uid="uid://ckdf28q1oi48h" path="res://Resource/Data/Cards/自由军团/炮兵.tres" id="3_m1wr0"]
+[ext_resource type="Resource" uid="uid://0gvxwt7xeawg" path="res://Resource/Data/Cards/自由军团/增援.tres" id="4_0bsr8"]
+[ext_resource type="Resource" uid="uid://cm6g0cv0gra0i" path="res://Resource/Data/Cards/自由军团/老兵.tres" id="4_cgkju"]
+[ext_resource type="Resource" uid="uid://bmlrjar80lfyq" path="res://Resource/Data/Cards/自由军团/先锋.tres" id="5_0bmid"]
+[ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="6_0bsr8"]
+[ext_resource type="Resource" path="res://Resource/Data/Maps/横向1.tres" id="7_rs8oh"]
+[ext_resource type="Resource" uid="uid://c88fw4ryw05k3" path="res://Resource/Data/Units/自由军团/新兵.tres" id="8_wdqcc"]
+[ext_resource type="Resource" uid="uid://ce6bu28qumhkv" path="res://Resource/Data/Cards/擢升之手/腾跃.tres" id="9_0bmid"]
+[ext_resource type="Resource" uid="uid://4y4yqupug01b" path="res://Resource/Data/Units/自由军团/步枪兵.tres" id="9_l6s73"]
+[ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="10_yi0m2"]
+[ext_resource type="Resource" uid="uid://vyqut7nte65d" path="res://Resource/Data/Units/自由军团/老兵.tres" id="11_tbwe1"]
+[ext_resource type="Resource" uid="uid://g00voouo7lc2" path="res://Resource/Data/Units/自由军团/炮兵.tres" id="12_7vx37"]
+[ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="13_33kc0"]
+
+[sub_resource type="Resource" id="Resource_1f0gd"]
+script = ExtResource("6_0bsr8")
+DeckName = "0-2 演习固定"
+Cards = Array[Object]([ExtResource("1_cgkju"), ExtResource("5_0bmid"), ExtResource("3_0bmid"), ExtResource("4_0bsr8"), ExtResource("1_snw31"), ExtResource("2_yg52s"), ExtResource("3_m1wr0"), ExtResource("4_cgkju"), ExtResource("1_cgkju"), ExtResource("3_0bmid"), ExtResource("4_0bsr8"), ExtResource("9_0bmid"), ExtResource("9_0bmid")])
+metadata/_custom_type_script = "uid://b1eamjx1y7exn"
+
+[sub_resource type="Resource" id="Resource_jnwx2"]
+script = ExtResource("10_yi0m2")
+SpawnAreaMin = Vector2i(0, -1)
+SpawnAreaMax = Vector2i(1, 1)
+UnitDatas = Array[Object]([ExtResource("8_wdqcc"), ExtResource("8_wdqcc"), ExtResource("9_l6s73")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_hfokx"]
+script = ExtResource("10_yi0m2")
+Round = 3
+SpawnAreaMin = Vector2i(2, -2)
+SpawnAreaMax = Vector2i(3, 0)
+UnitDatas = Array[Object]([ExtResource("9_l6s73"), ExtResource("11_tbwe1"), ExtResource("9_l6s73")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_udl6o"]
+script = ExtResource("10_yi0m2")
+Round = 4
+SpawnAreaMin = Vector2i(4, -1)
+SpawnAreaMax = Vector2i(4, 0)
+UnitDatas = Array[Object]([ExtResource("12_7vx37"), ExtResource("12_7vx37")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[resource]
+script = ExtResource("13_33kc0")
+LevelName = "0-2 演习"
+Description = "使用魔法卡出其不意"
+Waves = Array[Object]([SubResource("Resource_jnwx2"), SubResource("Resource_hfokx"), SubResource("Resource_udl6o")])
+MapData = ExtResource("7_rs8oh")
+DoorPlaceZoneMin = Vector2i(-5, 0)
+DoorPlaceZoneMax = Vector2i(-5, 1)
+DefaultSpawnAreaMin = Vector2i(1, -2)
+DefaultSpawnAreaMax = Vector2i(4, 1)
+LevelDeck = SubResource("Resource_1f0gd")
+metadata/_custom_type_script = "uid://wk0covoailum"

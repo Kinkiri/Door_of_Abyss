@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://buj844f4hvouu"]
+
+[ext_resource type="Resource" uid="uid://caxsku5uakdiv" path="res://Resource/Data/Cards/自由军团/维护.tres" id="6_v0q2j"]
+[ext_resource type="Resource" uid="uid://b3ro8ae005jdc" path="res://Resource/Data/Cards/自由军团/狙击手.tres" id="7_m37hh"]
+[ext_resource type="Resource" uid="uid://ckdf28q1oi48h" path="res://Resource/Data/Cards/自由军团/炮兵.tres" id="7_wxum1"]
+[ext_resource type="Resource" uid="uid://b7q4hi5df4l72" path="res://Resource/Data/Cards/自由军团/防御工事.tres" id="8_j68p7"]
+[ext_resource type="Resource" uid="uid://b1c22fwu3g480" path="res://Resource/Data/Cards/自由军团/燃烧弹.tres" id="9_28b8c"]
+[ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="10_k18qg"]
+[ext_resource type="Resource" path="res://Resource/Data/Maps/横向1.tres" id="11_dop7p"]
+[ext_resource type="Resource" uid="uid://c88fw4ryw05k3" path="res://Resource/Data/Units/自由军团/新兵.tres" id="12_k0a2x"]
+[ext_resource type="Resource" uid="uid://4y4yqupug01b" path="res://Resource/Data/Units/自由军团/步枪兵.tres" id="13_c7dqi"]
+[ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="14_t0yki"]
+[ext_resource type="Resource" uid="uid://vyqut7nte65d" path="res://Resource/Data/Units/自由军团/老兵.tres" id="15_1ntt3"]
+[ext_resource type="Resource" uid="uid://g00voouo7lc2" path="res://Resource/Data/Units/自由军团/炮兵.tres" id="16_5qm25"]
+[ext_resource type="Resource" uid="uid://bwwcvxll4uiq3" path="res://Resource/Data/Units/自由军团/军医.tres" id="16_wxum1"]
+[ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="17_qew63"]
+[ext_resource type="Resource" uid="uid://c52vijing117o" path="res://Resource/Data/Units/自由军团/狙击手.tres" id="18_ertcf"]
+
+[sub_resource type="Resource" id="Resource_4gouf"]
+script = ExtResource("10_k18qg")
+DeckName = "0-3 演习固定"
+Cards = Array[Object]([ExtResource("8_j68p7"), ExtResource("8_j68p7"), ExtResource("8_j68p7"), ExtResource("9_28b8c"), ExtResource("9_28b8c"), ExtResource("9_28b8c"), ExtResource("7_m37hh"), ExtResource("6_v0q2j"), ExtResource("6_v0q2j"), ExtResource("7_wxum1"), ExtResource("9_28b8c")])
+metadata/_custom_type_script = "uid://b1eamjx1y7exn"
+
+[sub_resource type="Resource" id="Resource_jnwx2"]
+script = ExtResource("14_t0yki")
+UnitDatas = Array[Object]([ExtResource("15_1ntt3"), ExtResource("12_k0a2x"), ExtResource("12_k0a2x")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_hfokx"]
+script = ExtResource("14_t0yki")
+Round = 3
+UnitDatas = Array[Object]([ExtResource("13_c7dqi"), ExtResource("16_wxum1"), ExtResource("13_c7dqi"), ExtResource("15_1ntt3"), ExtResource("15_1ntt3")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_udl6o"]
+script = ExtResource("14_t0yki")
+Round = 4
+UnitDatas = Array[Object]([ExtResource("16_5qm25"), ExtResource("16_5qm25"), ExtResource("18_ertcf"), ExtResource("18_ertcf"), ExtResource("16_wxum1")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[resource]
+script = ExtResource("17_qew63")
+LevelName = "0-3 演习"
+Description = "用防守建筑配合环境卡阻挡来势汹汹的敌人"
+Waves = Array[Object]([SubResource("Resource_jnwx2"), SubResource("Resource_hfokx"), SubResource("Resource_udl6o")])
+MapData = ExtResource("11_dop7p")
+DoorPlaceZoneMin = Vector2i(-5, 0)
+DoorPlaceZoneMax = Vector2i(-5, 1)
+DefaultSpawnAreaMin = Vector2i(0, -2)
+DefaultSpawnAreaMax = Vector2i(4, 1)
+LevelDeck = SubResource("Resource_4gouf")
+metadata/_custom_type_script = "uid://wk0covoailum"

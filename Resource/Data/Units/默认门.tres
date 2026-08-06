@@ -5,13 +5,14 @@
 
 [resource]
 script = ExtResource("1_u8aac")
-UnitID = "默认门"
-UnitName = "默认门"
+UnitID = "自由之门"
+UnitName = "自由之门"
+Tags = null
 AttackPower = 0
 HealthPoints = 6
 AttackDistance = 0
 Type = 5
-Description = "每回合为你回复2费1卡"
+Description = "血量较少；每回合为你回复2费1卡"
 UnitPrefab = ExtResource("1_vd3qs")
-PassiveEffects = Array[Object]([])
+PassiveEffects = null
 metadata/_custom_type_script = "uid://d0dw5ofs4ec7f"

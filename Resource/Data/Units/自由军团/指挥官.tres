@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://c25vffb06hqi2"]
+
+[ext_resource type="Resource" uid="uid://o5cbd3chi0q2" path="res://Resource/Data/Buff/指挥官.tres" id="1_oa3ua"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_yw1wq"]
+[ext_resource type="Script" uid="uid://dso6efmkhromg" path="res://Scripts/Data/Conditions/HasActedCondition.cs" id="3_dww1v"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="4_qjrub"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="5_tc6xw"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="6_fpaow"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="7_nvky2"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="8_0xgtd"]
+
+[sub_resource type="Resource" id="Resource_2drm0"]
+script = ExtResource("2_yw1wq")
+BuffData = ExtResource("1_oa3ua")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_rsgkk"]
+script = ExtResource("3_dww1v")
+HasActed = false
+metadata/_custom_type_script = "uid://dso6efmkhromg"
+
+[sub_resource type="Resource" id="Resource_8cr30"]
+script = ExtResource("4_qjrub")
+Shape = 5
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_syyr8"]
+script = ExtResource("5_tc6xw")
+Team = 1
+metadata/_custom_type_script = "uid://bjnrbd7iwxb5u"
+
+[sub_resource type="Resource" id="Resource_olo3x"]
+script = ExtResource("6_fpaow")
+TriggerEvent = 1
+TargetFilters = Array[Object]([SubResource("Resource_8cr30"), SubResource("Resource_syyr8")])
+Actions = Array[Object]([SubResource("Resource_2drm0")])
+Conditions = Array[Object]([SubResource("Resource_rsgkk")])
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("8_0xgtd")
+UnitID = "指挥官"
+UnitName = "指挥官"
+World = 2
+Faction = 4
+Tags = null
+AttackPower = 2
+HealthPoints = 5
+ActionPoints = 2
+Description = "本回合未行动，下回合我方全体攻击+1"
+UnitPrefab = ExtResource("7_nvky2")
+PassiveEffects = Array[Object]([SubResource("Resource_olo3x")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

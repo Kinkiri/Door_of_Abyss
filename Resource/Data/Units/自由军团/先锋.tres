@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://cqrsbb234uglr"]
+
+[ext_resource type="Script" uid="uid://dvi5cm6ic86ev" path="res://Scripts/Data/Actions/ModifyCostAction.cs" id="1_l7bn3"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_sni5c"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="3_otou6"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="4_jaq0i"]
+
+[sub_resource type="Resource" id="Resource_yhmld"]
+script = ExtResource("1_l7bn3")
+Value = 1
+metadata/_custom_type_script = "uid://dvi5cm6ic86ev"
+
+[sub_resource type="Resource" id="Resource_orq3q"]
+script = ExtResource("2_sni5c")
+TriggerEvent = 5
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_yhmld")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("4_jaq0i")
+UnitID = "先锋"
+UnitName = "先锋"
+World = 3
+Faction = 4
+Tags = null
+AttackPower = 2
+HealthPoints = 3
+Stamina = 2
+ActionPoints = 2
+Description = "跑得快，击杀敌人加1费"
+UnitPrefab = ExtResource("3_otou6")
+PassiveEffects = Array[Object]([SubResource("Resource_orq3q")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

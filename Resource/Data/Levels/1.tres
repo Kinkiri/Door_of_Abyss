@@ -4,7 +4,7 @@
 [ext_resource type="Resource" path="res://Resource/Data/Maps/1.tres" id="1_l5mm8"]
 [ext_resource type="Resource" uid="uid://besew5ondee15" path="res://Resource/Data/Units/测试/小兵.tres" id="2_ao2qh"]
 [ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="3_nk2b2"]
-[ext_resource type="Resource" uid="uid://cqrsbb234uglr" path="res://Resource/Data/Units/测试/先锋.tres" id="4_5nuxy"]
+[ext_resource type="Resource" uid="uid://cqrsbb234uglr" path="res://Resource/Data/Units/自由军团/先锋.tres" id="4_5nuxy"]
 [ext_resource type="Resource" uid="uid://bn23m0b6t8tvw" path="res://Resource/Data/Units/测试/弓手.tres" id="4_jllce"]
 [ext_resource type="Resource" uid="uid://f8jwdartjjfi" path="res://Resource/Data/Units/擢升之手/门卫.tres" id="5_32wfu"]
 [ext_resource type="Resource" uid="uid://cl8dt7np6l2rg" path="res://Resource/Data/Units/测试/战墙.tres" id="5_cq6hx"]
@@ -47,8 +47,8 @@ metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [resource]
 script = ExtResource("1_hyohf")
-LevelName = "1"
-Description = "第一关"
+LevelName = "测试用"
+Description = "别玩"
 Waves = Array[Object]([SubResource("Resource_ij2mw"), SubResource("Resource_vikhu"), SubResource("Resource_1065p"), SubResource("Resource_bkrlr")])
 MapData = ExtResource("1_l5mm8")
 DoorPlaceZoneMax = Vector2i(0, 2)

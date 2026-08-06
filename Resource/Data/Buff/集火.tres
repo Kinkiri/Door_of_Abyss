@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="BuffData" format=3 uid="uid://jlgc18hw7th7"]
+
+[ext_resource type="Script" uid="uid://b3sdoj1kcep0a" path="res://Scripts/Data/BuffData.cs" id="1_6eflt"]
+[ext_resource type="Script" uid="uid://bubokmjt34mm" path="res://Scripts/Data/Actions/ModifyBuffAction.cs" id="1_n1qmx"]
+[ext_resource type="Script" uid="uid://bqdiie4v7k7l7" path="res://Scripts/Data/ValueSource/BuffInfoValue.cs" id="2_qy4h0"]
+[ext_resource type="Script" uid="uid://c3uoprervqo60" path="res://Scripts/Data/Actions/ModifyDamageAction.cs" id="3_5pgvc"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="4_d60r3"]
+
+[sub_resource type="Resource" id="Resource_he1ow"]
+script = ExtResource("1_n1qmx")
+BuffID = "集火"
+StacksDelta = -1
+metadata/_custom_type_script = "uid://bubokmjt34mm"
+
+[sub_resource type="Resource" id="Resource_n1qmx"]
+script = ExtResource("2_qy4h0")
+BuffID = "集火"
+metadata/_custom_type_script = "uid://bqdiie4v7k7l7"
+
+[sub_resource type="Resource" id="Resource_wc1jo"]
+script = ExtResource("3_5pgvc")
+ValueSource = SubResource("Resource_n1qmx")
+metadata/_custom_type_script = "uid://c3uoprervqo60"
+
+[sub_resource type="Resource" id="Resource_qy4h0"]
+script = ExtResource("1_n1qmx")
+BuffID = "集火"
+StacksDelta = -1
+metadata/_custom_type_script = "uid://bubokmjt34mm"
+
+[sub_resource type="Resource" id="Resource_5xmgh"]
+script = ExtResource("4_d60r3")
+TriggerEvent = 14
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_wc1jo"), SubResource("Resource_qy4h0")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("1_6eflt")
+BuffID = "集火"
+BuffName = "集火"
+Description = "每次受到的伤害+x，并减一层，回合结束减一层"
+Duration = -1
+MaxStack = -1
+OnApplyActions = null
+OnExpireActions = null
+OnRoundEndActions = Array[Object]([SubResource("Resource_he1ow")])
+PassiveEffects = Array[Object]([SubResource("Resource_5xmgh")])
+metadata/_custom_type_script = "uid://b3sdoj1kcep0a"

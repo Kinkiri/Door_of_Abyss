@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://bmlrjar80lfyq"]
+
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_ia6jv"]
+[ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_dlfvd"]
+[ext_resource type="Resource" uid="uid://cqrsbb234uglr" path="res://Resource/Data/Units/自由军团/先锋.tres" id="3_osx7q"]
+[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="4_e5vt5"]
+
+[sub_resource type="Resource" id="Resource_5ivut"]
+script = ExtResource("1_ia6jv")
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[resource]
+script = ExtResource("4_e5vt5")
+UnitData = ExtResource("3_osx7q")
+CardID = "先锋"
+CardName = "先锋"
+Description = "填线宝宝"
+Type = 0
+World = 1
+Faction = 4
+Tags = null
+Cost = 2
+TargetFilters = Array[Object]([ExtResource("2_dlfvd")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_5ivut")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://p1hhkgy2pem"

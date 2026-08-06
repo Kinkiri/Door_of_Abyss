@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="BuffData" format=3 uid="uid://o5cbd3chi0q2"]
+
+[ext_resource type="Resource" uid="uid://ce81ji0jjv2yr" path="res://Resource/Data/Buff/强壮.tres" id="1_e53hn"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="1_gdkcs"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_156gy"]
+[ext_resource type="Script" uid="uid://b3sdoj1kcep0a" path="res://Scripts/Data/BuffData.cs" id="3_e53hn"]
+[ext_resource type="Script" uid="uid://cq8v06lvy3mmc" path="res://Scripts/Data/Actions/RemoveBuffAction.cs" id="3_ed1jt"]
+
+[sub_resource type="Resource" id="Resource_pntxf"]
+script = ExtResource("1_gdkcs")
+BuffData = ExtResource("1_e53hn")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_orkxx"]
+script = ExtResource("3_ed1jt")
+BuffID = "指挥官"
+metadata/_custom_type_script = "uid://cq8v06lvy3mmc"
+
+[sub_resource type="Resource" id="Resource_rsgkk"]
+script = ExtResource("2_156gy")
+TargetFilters = null
+MaxTriggerCount = 1
+Actions = Array[Object]([SubResource("Resource_pntxf"), SubResource("Resource_orkxx")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("3_e53hn")
+BuffID = "指挥官"
+BuffName = "指挥官"
+Description = ""
+Duration = -1
+MaxStack = -1
+FixedEffect = true
+OnApplyActions = null
+OnExpireActions = null
+OnRoundEndActions = null
+PassiveEffects = Array[Object]([SubResource("Resource_rsgkk")])
+metadata/_custom_type_script = "uid://b3sdoj1kcep0a"

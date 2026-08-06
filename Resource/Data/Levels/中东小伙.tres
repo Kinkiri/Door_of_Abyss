@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="1_t8o3p"]
 [ext_resource type="Resource" uid="uid://b1tyd7186gfh1" path="res://Resource/Data/Deck/中东打法.tres" id="1_xucor"]
-[ext_resource type="Resource" path="res://Resource/Data/Maps/new map.tres" id="8_31lwp"]
+[ext_resource type="Resource" uid="uid://ccc1ego2v0rya" path="res://Resource/Data/Maps/国际象棋.tres" id="8_31lwp"]
 [ext_resource type="Resource" uid="uid://bqf677fitv6wi" path="res://Resource/Data/Units/测试/炸弹手.tres" id="9_drmll"]
 [ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="10_iegl3"]
 [ext_resource type="Resource" uid="uid://bn23m0b6t8tvw" path="res://Resource/Data/Units/测试/弓手.tres" id="11_baohl"]

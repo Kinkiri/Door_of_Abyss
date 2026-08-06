@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://0gvxwt7xeawg"]
+
+[ext_resource type="Script" uid="uid://bh513nttrjbjn" path="res://Scripts/Data/Card/Filters/CardTypeFilter.cs" id="1_a8ahn"]
+[ext_resource type="Script" uid="uid://dnlsqjf0bupsk" path="res://Scripts/Data/Actions/DrawCardAction.cs" id="2_mndse"]
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="3_sopfu"]
+
+[sub_resource type="Resource" id="Resource_tgi0o"]
+script = ExtResource("1_a8ahn")
+Types = Array[int]([0])
+metadata/_custom_type_script = "uid://bh513nttrjbjn"
+
+[sub_resource type="Resource" id="Resource_4shy0"]
+script = ExtResource("2_mndse")
+Value = 2
+Filters = Array[Object]([SubResource("Resource_tgi0o")])
+metadata/_custom_type_script = "uid://dnlsqjf0bupsk"
+
+[resource]
+script = ExtResource("3_sopfu")
+CardID = "增援"
+CardName = "增援"
+Description = "抽1张单位牌"
+Type = 1
+World = 3
+Faction = 4
+Tags = null
+TargetFilters = null
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_4shy0")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

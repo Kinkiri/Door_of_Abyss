@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://c52vijing117o"]
+
+[ext_resource type="Script" uid="uid://dmcuun7fe32rx" path="res://Scripts/Data/Shapes/CrossShape.cs" id="1_bo02q"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="2_pk0d0"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="3_ncq7i"]
+
+[sub_resource type="Resource" id="Resource_28vug"]
+script = ExtResource("1_bo02q")
+metadata/_custom_type_script = "uid://dmcuun7fe32rx"
+
+[resource]
+script = ExtResource("3_ncq7i")
+UnitID = "狙击手"
+UnitName = "狙击手"
+World = 1
+Faction = 4
+Tags = null
+AttackPower = 3
+AttackDistance = 5
+AttackShape = SubResource("Resource_28vug")
+Description = "十字超大打击范围"
+UnitPrefab = ExtResource("2_pk0d0")
+PassiveEffects = null
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

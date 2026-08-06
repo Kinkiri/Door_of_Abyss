@@ -1,0 +1,57 @@
+[gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://dbmytp1x7rnkv"]
+
+[ext_resource type="Resource" uid="uid://cthq2iqnjrc0c" path="res://Resource/Data/Cards/自由军团/新兵.tres" id="1_ojsd4"]
+[ext_resource type="Resource" uid="uid://xw50uw116iss" path="res://Resource/Data/Cards/自由军团/步枪兵.tres" id="2_8nmfo"]
+[ext_resource type="Resource" uid="uid://ckdf28q1oi48h" path="res://Resource/Data/Cards/自由军团/炮兵.tres" id="3_xq7rg"]
+[ext_resource type="Resource" uid="uid://cm6g0cv0gra0i" path="res://Resource/Data/Cards/自由军团/老兵.tres" id="4_gt157"]
+[ext_resource type="Resource" uid="uid://bmlrjar80lfyq" path="res://Resource/Data/Cards/自由军团/先锋.tres" id="5_gt157"]
+[ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="5_hj5ga"]
+[ext_resource type="Resource" path="res://Resource/Data/Maps/横向1.tres" id="6_8nmfo"]
+[ext_resource type="Resource" uid="uid://c88fw4ryw05k3" path="res://Resource/Data/Units/自由军团/新兵.tres" id="6_dqv5v"]
+[ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="7_d7fbq"]
+[ext_resource type="Resource" uid="uid://4y4yqupug01b" path="res://Resource/Data/Units/自由军团/步枪兵.tres" id="8_53l5h"]
+[ext_resource type="Resource" uid="uid://vyqut7nte65d" path="res://Resource/Data/Units/自由军团/老兵.tres" id="9_1wfvg"]
+[ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="10_ijv8q"]
+[ext_resource type="Resource" uid="uid://g00voouo7lc2" path="res://Resource/Data/Units/自由军团/炮兵.tres" id="12_hj5ga"]
+
+[sub_resource type="Resource" id="Resource_skj4i"]
+script = ExtResource("5_hj5ga")
+DeckName = "0-1 演习固定"
+Cards = Array[Object]([ExtResource("1_ojsd4"), ExtResource("2_8nmfo"), ExtResource("3_xq7rg"), ExtResource("4_gt157"), ExtResource("1_ojsd4"), ExtResource("2_8nmfo"), ExtResource("3_xq7rg"), ExtResource("4_gt157"), ExtResource("5_gt157"), ExtResource("5_gt157")])
+metadata/_custom_type_script = "uid://b1eamjx1y7exn"
+
+[sub_resource type="Resource" id="Resource_jnwx2"]
+script = ExtResource("7_d7fbq")
+SpawnAreaMin = Vector2i(0, -1)
+SpawnAreaMax = Vector2i(1, 1)
+UnitDatas = Array[Object]([ExtResource("6_dqv5v"), ExtResource("6_dqv5v"), ExtResource("8_53l5h")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_hfokx"]
+script = ExtResource("7_d7fbq")
+Round = 3
+SpawnAreaMin = Vector2i(2, -2)
+SpawnAreaMax = Vector2i(3, 0)
+UnitDatas = Array[Object]([ExtResource("8_53l5h"), ExtResource("9_1wfvg"), ExtResource("8_53l5h")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_udl6o"]
+script = ExtResource("7_d7fbq")
+Round = 4
+SpawnAreaMin = Vector2i(4, -1)
+SpawnAreaMax = Vector2i(4, 0)
+UnitDatas = Array[Object]([ExtResource("12_hj5ga"), ExtResource("12_hj5ga")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[resource]
+script = ExtResource("10_ijv8q")
+LevelName = "0-1 演习"
+Description = "熟悉流程与操作"
+Waves = Array[Object]([SubResource("Resource_jnwx2"), SubResource("Resource_hfokx"), SubResource("Resource_udl6o")])
+MapData = ExtResource("6_8nmfo")
+DoorPlaceZoneMin = Vector2i(-5, 0)
+DoorPlaceZoneMax = Vector2i(-5, 1)
+DefaultSpawnAreaMin = Vector2i(1, -2)
+DefaultSpawnAreaMax = Vector2i(4, 1)
+LevelDeck = SubResource("Resource_skj4i")
+metadata/_custom_type_script = "uid://wk0covoailum"

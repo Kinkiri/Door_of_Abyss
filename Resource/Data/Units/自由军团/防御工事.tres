@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://b1e0a235rnowo"]
+
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_gf0bj"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="2_8pjvu"]
+
+[resource]
+script = ExtResource("2_8pjvu")
+UnitID = "防御工事"
+UnitName = "防御工事"
+World = 1
+Faction = 4
+Tags = null
+AttackPower = 0
+HealthPoints = 8
+Stamina = 0
+AttackDistance = 0
+Type = 1
+ActionPoints = -9
+Description = "阻挡敌方（也阻挡自己），可以拉仇恨"
+UnitPrefab = ExtResource("1_gf0bj")
+PassiveEffects = null
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

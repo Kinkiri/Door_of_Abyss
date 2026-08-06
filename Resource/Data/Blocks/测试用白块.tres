@@ -4,6 +4,6 @@
 
 [resource]
 script = ExtResource("1_fww2i")
-BlockName = "别踩白块"
-BlockDescription = "踩了就输"
+BlockName = "白块"
+BlockDescription = "测试"
 metadata/_custom_type_script = "uid://ce0wxis7r8i0b"

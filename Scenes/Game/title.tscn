@@ -89,6 +89,7 @@ expand_mode = 1
 stretch_mode = 6
 
 [node name="Vignette" type="TextureRect" parent="." unique_id=1047664630]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -232,7 +233,7 @@ offset_bottom = -24.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_font_sizes/font_size = 18
-text = "v0.1.3-a"
+text = "v0.1.4-a"
 horizontal_alignment = 2
 
 [node name="Toast" type="Label" parent="." unique_id=1809171299]
@@ -317,10 +318,24 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "《深秘之门》
 
-还没写东西呢看什么看
+卡牌战棋策略游戏
+使用Godot4.7 + C# 开发
+代码部分已在github开源，非代码部分保留所有权利
+这是一群高中生20天做的，也是我们的第一作
+
+当前版本是一个可运行的技术演示，展示了完整的战斗循环，但bug非常多，还没有美术和音效，称不上“可玩”
+我们接受一切反馈，欢迎与我们交流
+本项目纯为爱发电，如果你想要加入我们，十分欢迎
+
 
 开发团队
-"
+策划：瑾雾、莫问君、书屋、域外星使
+程序：瑾雾
+美术：水
+剧情：轻舟
+
+联系方式
+qq：813571651"
 autowrap_mode = 1
 
 [node name="LevelSelectBackdrop" type="ColorRect" parent="." unique_id=1821512768]

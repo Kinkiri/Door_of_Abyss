@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://cuq0hjqnixkf2"]
+
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_1tah7"]
+[ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_wbq18"]
+[ext_resource type="Resource" uid="uid://c25vffb06hqi2" path="res://Resource/Data/Units/自由军团/指挥官.tres" id="3_1tah7"]
+[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="4_n0tjv"]
+
+[sub_resource type="Resource" id="Resource_4w5cr"]
+script = ExtResource("1_1tah7")
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[resource]
+script = ExtResource("4_n0tjv")
+UnitData = ExtResource("3_1tah7")
+CardID = "指挥官"
+CardName = "指挥官"
+Description = "指挥官怎么不开麦啊"
+Type = 0
+World = 3
+Faction = 4
+Tags = null
+Cost = 4
+TargetFilters = Array[Object]([ExtResource("2_wbq18")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_4w5cr")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://p1hhkgy2pem"

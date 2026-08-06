@@ -7,7 +7,7 @@
 [ext_resource type="Resource" uid="uid://bn23m0b6t8tvw" path="res://Resource/Data/Units/测试/弓手.tres" id="2_nvsh4"]
 [ext_resource type="Resource" uid="uid://cl8dt7np6l2rg" path="res://Resource/Data/Units/测试/战墙.tres" id="2_wp8c3"]
 [ext_resource type="Resource" uid="uid://besew5ondee15" path="res://Resource/Data/Units/测试/小兵.tres" id="3_cs3pf"]
-[ext_resource type="Resource" uid="uid://cqrsbb234uglr" path="res://Resource/Data/Units/测试/先锋.tres" id="3_nvsh4"]
+[ext_resource type="Resource" uid="uid://cqrsbb234uglr" path="res://Resource/Data/Units/自由军团/先锋.tres" id="3_nvsh4"]
 [ext_resource type="Resource" uid="uid://bqf677fitv6wi" path="res://Resource/Data/Units/测试/炸弹手.tres" id="7_gcxre"]
 [ext_resource type="Resource" uid="uid://brpvxdujqqh5b" path="res://Resource/Data/Units/测试/吸血鬼.tres" id="8_pt52y"]
 [ext_resource type="Resource" uid="uid://casbp4wx7562d" path="res://Resource/Data/Units/测试/巨型战士.tres" id="9_gk8k7"]

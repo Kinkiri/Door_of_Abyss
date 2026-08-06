@@ -685,10 +685,10 @@ public partial class BattleManager : Node2D
         FinishGameStart();
     }
 
-    /// <summary>GameStart 公共后续：初始化卡组 → 抽牌 → 推进</summary>
+    /// <summary>GameStart 公共后续：初始化卡组 → 推进</summary>
     private void FinishGameStart()
     {
-        // 游戏开始抽 2 张牌
+        // 弃用（2026-08-06）：游戏开始不再抽 2 张牌，开局手牌为空
         if (CardManager.Instance != null)
         {
             // 优先级：关卡固定卡组 > 玩家构筑卡组 > 默认随机
@@ -709,7 +709,8 @@ public partial class BattleManager : Node2D
                 GD.Print($"[Battle] 未配置卡组，走默认随机");
             }
 
-            CardManager.Instance.DrawCards(2);
+            // 弃用（2026-08-06）：开局不抽牌，手牌由门/卡牌效果抽牌获得
+            // CardManager.Instance.DrawCards(2);
         }
 
         ScheduleAutoAdvance();

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://bp5vm31nllexs"]
+
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_o1ka6"]
+[ext_resource type="Script" uid="uid://bndowl6u6n8uh" path="res://Scripts/Data/Actions/HealAction.cs" id="1_tgi0o"]
+[ext_resource type="Resource" uid="uid://6ar1d2ju8h46" path="res://Resource/Data/选择器预设/单体我方兵种.tres" id="2_se8rw"]
+
+[sub_resource type="Resource" id="Resource_se8rw"]
+script = ExtResource("1_tgi0o")
+Value = 2
+metadata/_custom_type_script = "uid://bndowl6u6n8uh"
+
+[resource]
+script = ExtResource("1_o1ka6")
+CardID = "军粮"
+CardName = "军粮"
+Description = "恢复己方兵种2血"
+Type = 1
+World = 1
+Faction = 4
+Tags = null
+TargetFilters = Array[Object]([ExtResource("2_se8rw")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_se8rw")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="BuffData" format=3 uid="uid://crsdp07fp2ly8"]
+
+[ext_resource type="Script" uid="uid://b3sdoj1kcep0a" path="res://Scripts/Data/BuffData.cs" id="1_45mwb"]
+[ext_resource type="Script" uid="uid://bubokmjt34mm" path="res://Scripts/Data/Actions/ModifyBuffAction.cs" id="1_55y1m"]
+[ext_resource type="Script" uid="uid://bqdiie4v7k7l7" path="res://Scripts/Data/ValueSource/BuffInfoValue.cs" id="2_nvtnk"]
+[ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="3_sagom"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="4_yrme1"]
+
+[sub_resource type="Resource" id="Resource_4gwxq"]
+script = ExtResource("1_55y1m")
+BuffID = "流血"
+StacksDelta = -1
+metadata/_custom_type_script = "uid://bubokmjt34mm"
+
+[sub_resource type="Resource" id="Resource_nvtnk"]
+script = ExtResource("2_nvtnk")
+BuffID = "流血"
+metadata/_custom_type_script = "uid://bqdiie4v7k7l7"
+
+[sub_resource type="Resource" id="Resource_55y1m"]
+script = ExtResource("3_sagom")
+ValueSource = SubResource("Resource_nvtnk")
+metadata/_custom_type_script = "uid://bcjncmte44un1"
+
+[sub_resource type="Resource" id="Resource_yrme1"]
+script = ExtResource("1_55y1m")
+BuffID = "流血"
+StacksDelta = -1
+metadata/_custom_type_script = "uid://bubokmjt34mm"
+
+[sub_resource type="Resource" id="Resource_frdbm"]
+script = ExtResource("4_yrme1")
+TriggerEvent = 8
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_55y1m"), SubResource("Resource_yrme1")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("1_45mwb")
+BuffID = "流血"
+BuffName = "流血"
+Description = "每次行动受到x点伤害，减少一层；回合结束减少一层"
+Duration = -1
+MaxStack = -1
+OnApplyActions = null
+OnExpireActions = null
+OnRoundEndActions = Array[Object]([SubResource("Resource_4gwxq")])
+PassiveEffects = Array[Object]([SubResource("Resource_frdbm")])
+metadata/_custom_type_script = "uid://b3sdoj1kcep0a"
