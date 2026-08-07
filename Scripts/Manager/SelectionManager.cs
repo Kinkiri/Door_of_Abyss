@@ -66,6 +66,7 @@ public partial class SelectionManager : Node2D
 
         SelectedCard = card;
         IsAimingMode = true;
+        AudioManager.Instance?.PlayUiSfx("card_select");
         GD.Print($"[Selection] 选中卡牌: [{card.CardID}] {card.CardName}，请选择目标");
         // 通知 View 层（信息面板等）卡牌选中状态变化
         EmitSignal(SignalName.SelectionUpdated);
@@ -168,6 +169,7 @@ public partial class SelectionManager : Node2D
             // 无法出牌（非玩家阶段 / 费用不足 / 目标无效）：取消出牌模式，作为普通点击继续处理
             // （点单位则选中单位、点格子则选中格子），避免卡牌信息残留在信息面板
             GD.Print("[Selection] 无法出牌（非玩家阶段/费用不足/目标无效），取消出牌模式，作为普通点击处理");
+            AudioManager.Instance?.PlayUiSfx("deny");
             SelectedCard = null;
             IsAimingMode = false;
             LastCardPreviewCells = null;

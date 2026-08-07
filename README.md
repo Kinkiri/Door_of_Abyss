@@ -27,6 +27,7 @@
   - [13. 动画系统](#13-动画系统)
   - [14. 装备系统](#14-装备系统)
   - [15. 环境系统](#15-环境系统)
+  - [16. 音频系统](#16-音频系统)
 
 ---
 
@@ -193,7 +194,7 @@ Scripts/                         ~7300 行 C#
 │   ├── Environment.cs           环境运行时
 │   └── Unit.cs                  单位运行时
 ├── Manager/                     逻辑层（Godot Node 单例，服务定位器）
-│   ├── ActionQueue.cs           动作序列器（逐个执行 + 动画间隔 + 插队）
+│   ├── ActionQueue.cs           动作序列器（逐个执行 + 动画间隔）
 │   ├── BattleManager.cs         战斗阶段 + 费用 + 胜利 + 行为执行 + 波次
 │   ├── BuffManager.cs           Buff 生命周期（发事件驱动视图）
 │   ├── CardManager.cs           牌库/手牌/弃牌（发事件驱动视图）
@@ -217,6 +218,8 @@ Scripts/                         ~7300 行 C#
 │   ├── UnitInfoPanel.cs         左下角信息面板（选中单位/格子/卡牌详情：描述/属性/Buff/装备/环境）
 │   ├── UnitView.cs              单位视觉 + 内建动画（入场/受伤/治疗/死亡/移动/Buff）
 │   └── UnitViewManager.cs       订阅 UnitManager/BuffManager 事件，创建/销毁 UnitView 与 BuffView
+├── Audio/
+│   └── AudioManager.cs          音频管理器（Autoload：总线/BGM/SFX 池/事件驱动响应）
 ├── Tests/
 │   └── TestRunner.cs            全面系统性测试（485 项，场景内集成运行）
 ├── Tools/
@@ -268,10 +271,10 @@ BattleManager.OnCardPlay
 	   └─ ProcessNext() → 执行第一个 → 等待 AnimationDuration 秒
 			└─ ProcessNext() → 第二个 → ...
 			└─ 队列空 → onComplete 回调
-	   └─ EnqueueFront(action, ctx) — 插队到头部
 ```
 
-支持插队（反击/连击/被动触发），空队列回调通知调用方。发射 `ActionStarted` 信号供 View 层播动画。
+逐个执行，空队列回调通知调用方。发射 `ActionStarted` 信号供 View 层播动画。
+> 注意：**被动/连锁动作（EventBus 触发、Buff/环境的 OnApply/OnExpire/OnRoundEnd）直接 `action.Execute()`，不走 ActionQueue**（无节奏排队，仅卡牌/攻击/回合回复类经队列）。
 
 ### Buff 生命周期
 
@@ -1397,7 +1400,8 @@ OnUnitAttack / AIDoAttack
 	→ 回调: CheckVictory, OnUnitAct
 ```
 
-BattleManager 的 `OnUnitMove`/`OnUnitAttack`/`AIDoAttack`/`AIDoMove` 均通过 ActionQueue 执行，确保动画时序一致。
+BattleManager 的 `OnUnitAttack`/`AIDoAttack`（攻击）通过 DamageAction + ActionQueue 执行，确保动画时序一致。
+**移动不排队**：`OnUnitMove`/`AIDoMove` 直接调 `UnitManager.MoveUnit`（同步更新格子占用 + 发 OnUnitEnterCell 事件 + `UnitMoved` 事件），视图移动动画由 UnitView 订阅事件驱动——移动没有封装成动作对象（见 §16.3 音效挂接依赖该事件）。
 
 ### 13.4 浮动数字配置
 
@@ -1560,3 +1564,64 @@ EnvironmentData：EnvironmentID=沼泽, Duration=-1, MoveCostDelta=2, CanStandOv
 ```
 
 **新增环境：** 建 EnvironmentData 资源（Resource/Data/Environments/，如毒沼.tres）→ 在环境图集加一个瓦片并绑定该资源 → 地图上画。占位图集当前只有 0:0 一瓦（绑毒沼），等环境美术素材就绪后替换贴图并按瓦片更新各环境资源的 `AtlasSourceId/AtlasCoords`。
+
+---
+
+## 16. 音频系统
+
+`Scripts/Audio/AudioManager.cs`，**Autoload 单例**（项目首个 Autoload，`project.godot` 注册）。与渲染同层的**事件驱动**设计：规则逻辑（Manager/EventBus/ActionQueue）零音频调用，AudioManager 只订阅事件/信号响应播放。BGM 跨场景延续（主界面→战斗→返回主界面不中断）。
+
+### 16.1 架构
+
+```
+AudioManager（Autoload 常驻）
+  ├─ 总线：运行时确保 Master / Music / SFX / UI 四条总线（AudioServer）
+  ├─ BGM：单个 AudioStreamPlayer（Music 总线），PlayBgm(key) 切换，播放器层循环
+  ├─ SFX：12 个 AudioStreamPlayer 池（SFX 总线，轮转复用，支持重叠播放）+ UI 音效 4 个池（UI 总线）
+  ├─ 事件订阅（场景切换时自动重建）：ActionQueue.OnActionExecuted + 各 Manager 事件/信号
+  └─ 调试：F9 循环试听全部已配置音效 key
+```
+
+### 16.2 素材约定（策划友好）
+
+- **音效**：放入 `Resource/Audio/Sfx/`，命名 `{key}.wav`（支持 .wav/.ogg/.mp3）即被识别，**无需改代码**；文件缺失仅打 Warning，不影响游戏
+- **BGM**：`Resource/Music/`，路径映射见 `AudioManager.BgmPaths`（title/battle/boss，boss 曲目已配置待接入 Boss 关卡）
+
+### 16.3 事件 → 音效映射表
+
+| 触发 | 音效 key | 说明 |
+|---|---|---|
+| DamageAction 执行 | `hit` | 玩家/AI/法术/自动攻击统一走 ActionQueue（被动直发伤害 v1 静音） |
+| HealAction 执行 | `heal` | |
+| UnitManager.OnUnitMoved（新增事件） | `move` | **玩家/AI 普通移动**（共用 MoveUnit 入口；移动失败不触发） |
+| MoveUnitAction 执行 | `move` / `teleport` | **强制位移**（击退/拉拽=move，传送=teleport；走 TeleportUnit，与普通移动不重复） |
+| OnUnitSpawned | `summon` | 含波次刷怪、放门 |
+| OnUnitRemoved | `death` | |
+| OnUnitTransformed | `transform` | |
+| BuffApplied / BuffRemoved | `buff` / `debuff` | 唯一挂点（覆盖动作+被动全路径，防双响） |
+| EquipmentApplied / EquipmentRemoved | `equip` / `unequip` | |
+| EnvironmentApplied / EnvironmentRemoved | `place_env` / `remove_env` | |
+| CardManager.OnCardDrawn（新增事件） | `draw` | 覆盖回合开始/卡牌动作/被动连锁全部抽牌 |
+| SelectionManager.CardPlayRequest | `card_play` | 输入层已验证费用+目标，仅有效出牌触发 |
+| BattleManager.GameEnded（信号） | `victory` / `defeat` | |
+| UI 直调（View/输入层） | `ui_click` / `ui_hover` / `card_select` / `end_turn` / `deny` | MainMenu 按钮/选卡/结束回合/无效操作 |
+
+**防双响约定**：召唤/Buff/变身/抽牌等既有 Manager 事件、又有对应动作类型的场景，只挂 Manager 事件一侧；ActionQueue 分支只保留队列独有声音（伤害/治疗/位移）。
+
+### 16.4 BGM 切换
+
+- **主界面**：`MainMenu._Ready` → `PlayBgm("title")`（战斗结束返回主界面自动恢复）
+- **战斗**：`BattleManager.PhaseChanged` 首次进入 PlayerAction（回合 1）→ `PlayBgm("battle")`
+- **Boss**：`PlayBgm("boss")` API 已就绪，Boss 关卡接入时调用即可
+
+### 16.5 对外 API
+
+```csharp
+AudioManager.Instance.PlayBgm("title" | "battle" | "boss");   // 同名曲播放中不重启
+AudioManager.Instance.StopBgm();
+AudioManager.Instance.PlaySfx("hit", volumeDb: 0f);            // 战斗音效（SFX 总线），key 见映射表
+AudioManager.Instance.PlayUiSfx("ui_click");                   // UI 音效（UI 总线，与战斗音效分轨）
+AudioManager.Instance.SetMusicVolume(0~1) / SetSfxVolume / SetUiVolume;  // 分轨音量（总线级）
+```
+
+> 音量持久化（user:// 存档）与设置面板待做；BGM 淡入淡出切换为预留优化项。

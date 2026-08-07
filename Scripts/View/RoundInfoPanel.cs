@@ -111,12 +111,14 @@ public partial class RoundInfoPanel : PanelContainer
     /// <summary>结束回合：推进战斗到下一阶段（绑定到面板内按钮）</summary>
     private void OnEndTurnPressed()
     {
+        AudioManager.Instance?.PlayUiSfx("end_turn");
         BattleManager.Instance?.AdvancePhase();
     }
 
     /// <summary>返回主界面（游戏结束后显示）</summary>
     private void OnBackToTitlePressed()
     {
+        AudioManager.Instance?.PlayUiSfx("ui_click");
         GetTree().ChangeSceneToFile("res://Scenes/Game/title.tscn");
     }
 

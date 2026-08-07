@@ -17,6 +17,10 @@ boot_splash/bg_color=Color(0.16748387, 0.20086834, 0.21485168, 1)
 boot_splash/show_image=false
 config/icon="res://Resource/Art/icon.svg"
 
+[autoload]
+
+AudioManager="*res://Scripts/Audio/AudioManager.cs"
+
 [display]
 
 window/size/viewport_width=1920

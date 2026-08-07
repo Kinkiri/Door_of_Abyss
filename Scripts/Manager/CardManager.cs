@@ -20,6 +20,9 @@ public partial class CardManager : Node
     /// <summary>卡牌更新信号</summary>
     public event System.Action OnCardsUpdated;
 
+    /// <summary>抽牌后（覆盖全部抽牌路径：回合开始/卡牌动作/被动连锁），供 View/音频等订阅</summary>
+    public event System.Action<Card> OnCardDrawn;
+
     public void NotifyCardsUpdated() => OnCardsUpdated?.Invoke();
 
     public override void _Ready()
@@ -115,7 +118,7 @@ public partial class CardManager : Node
         DrawPile.RemoveAt(0);
         HandCards.Add(card);
         GD.Print($"[CardManager] 抽牌: [{card.CardID}] {card.CardName}  手牌={HandCards.Count}");
-        OnCardDrawn(card);
+        HandleCardDrawn(card);
         return card;
     }
 
@@ -158,7 +161,7 @@ public partial class CardManager : Node
         DrawPile.Remove(card);
         HandCards.Add(card);
         GD.Print($"[CardManager] 筛选抽牌: [{card.CardID}] {card.CardName}  手牌={HandCards.Count}");
-        OnCardDrawn(card);
+        HandleCardDrawn(card);
         return card;
     }
     /// <summary>
@@ -230,7 +233,7 @@ public partial class CardManager : Node
     // ======================================================================
 
     /// <summary>抽牌公共流程：订阅手牌被动 → 发抽牌事件（OnDrawCard）</summary>
-    private void OnCardDrawn(Card card)
+    private void HandleCardDrawn(Card card)
     {
         SubscribeCardPassives(card);
         EventBus.Instance?.Fire(EventType.OnDrawCard, new Context
@@ -238,6 +241,7 @@ public partial class CardManager : Node
             SourceCard = card,
             SourceTeam = Team.Player,
         });
+        OnCardDrawn?.Invoke(card);
         NotifyCardsUpdated();
     }
 

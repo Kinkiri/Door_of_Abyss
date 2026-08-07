@@ -4,8 +4,7 @@ using System.Collections.Generic;
 
 /// <summary>
 /// 动作序列器，按顺序逐个执行动作，每个动作之间等待 AnimationDuration 秒。
-/// 支持 EnqueueFront 插队（反击/连击），队列空时回调 onComplete。
-/// 后续由 View 层订阅 ActionStarted 信号播放对应动画，完成后调 Next()。
+/// 队列空时回调 onComplete。后续由 View 层订阅 ActionStarted 信号播放对应动画，完成后调 Next()。
 /// </summary>
 public partial class ActionQueue : Node
 {
@@ -39,19 +38,6 @@ public partial class ActionQueue : Node
             // 队列尾部标记一个空动作，携带回调
             _queue.Enqueue(new QueuedAction { Action = null, Context = null, OnComplete = onComplete });
         }
-
-        if (!_isProcessing) ProcessNext();
-    }
-
-    /// <summary>插队到队头（反击/连击/被动触发）</summary>
-    public void EnqueueFront(GameAction action, Context ctx)
-    {
-        if (action == null) return;
-        PopulateBattleData(ctx);
-        var temp = new List<QueuedAction> { new QueuedAction { Action = action, Context = CloneContext(ctx) } };
-        temp.AddRange(_queue);
-        _queue.Clear();
-        foreach (var q in temp) _queue.Enqueue(q);
 
         if (!_isProcessing) ProcessNext();
     }

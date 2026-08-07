@@ -47,6 +47,9 @@ public partial class MainMenu : Control
         PlayEntrance();
         StartBreathAnimation();
         StartBackgroundBreath();
+
+        // 标题 BGM（战斗结束返回主界面时自动恢复）
+        AudioManager.Instance?.PlayBgm("title");
     }
 
     public override void _Process(double delta)
@@ -76,7 +79,11 @@ public partial class MainMenu : Control
             Button button = row.GetChild<Button>(1);
             indicator.Modulate = new Color(1, 1, 1, 0);
             button.Pressed += () => OnMenuPressed(button);
-            button.MouseEntered += () => SetIndicator(indicator, true);
+            button.MouseEntered += () =>
+            {
+                SetIndicator(indicator, true);
+                AudioManager.Instance?.PlayUiSfx("ui_hover");
+            };
             button.MouseExited += () => SetIndicator(indicator, false);
         }
     }
@@ -137,6 +144,7 @@ public partial class MainMenu : Control
 
     private void SelectLevel(LevelData level, Button btn)
     {
+        AudioManager.Instance?.PlayUiSfx("ui_click");
         if (_selectedLevelButton != null)
             _selectedLevelButton.AddThemeColorOverride("font_color", new Color(1, 1, 1, 0.7f));
         _selectedLevelButton = btn;
@@ -190,6 +198,7 @@ public partial class MainMenu : Control
 
     private void OnMenuPressed(Button button)
     {
+        AudioManager.Instance?.PlayUiSfx("ui_click");
         if (button.Text == "开始游戏") ShowLevelSelect();
         else if (button.Text == "关于") ShowCredits();
         else if (button.Text == "退出游戏") StartExit();
@@ -214,6 +223,7 @@ public partial class MainMenu : Control
         }
         if (_switching) return;
         _switching = true;
+        AudioManager.Instance?.PlayUiSfx("ui_click");
         LevelSelection.Selected = _selectedLevel;
         Tween tween = CreateTween();
         tween.TweenProperty(_fadeOut, "color:a", 1f, 0.55f);
@@ -224,6 +234,7 @@ public partial class MainMenu : Control
     private void ShowCredits()
     {
         if (_creditsAnimating || _creditsPanel.Visible) return;
+        AudioManager.Instance?.PlayUiSfx("ui_click");
         _creditsAnimating = true;
         AnimatePanelIn(_creditsPanel, _creditsBackdrop, _creditsBasePos,
             () => _creditsAnimating = false);
@@ -232,6 +243,7 @@ public partial class MainMenu : Control
     private void HideCredits()
     {
         if (_creditsAnimating || !_creditsPanel.Visible) return;
+        AudioManager.Instance?.PlayUiSfx("ui_click");
         _creditsAnimating = true;
         AnimatePanelOut(_creditsPanel, _creditsBackdrop, _creditsBasePos,
             () => _creditsAnimating = false);
@@ -240,6 +252,7 @@ public partial class MainMenu : Control
     private void ShowLevelSelect()
     {
         if (_levelSelectAnimating || _levelSelectPanel.Visible) return;
+        AudioManager.Instance?.PlayUiSfx("ui_click");
         _levelSelectAnimating = true;
         // 关卡库懒加载：首次打开选关面板时才加载全部关卡数据（避免拖慢标题场景进入）
         var list = _levelSelectPanel.GetNode<VBoxContainer>("Margin/Root/Body/ListPanel/Scroll/LevelList");
@@ -252,6 +265,7 @@ public partial class MainMenu : Control
     private void HideLevelSelect()
     {
         if (_levelSelectAnimating || !_levelSelectPanel.Visible) return;
+        AudioManager.Instance?.PlayUiSfx("ui_click");
         _levelSelectAnimating = true;
         AnimatePanelOut(_levelSelectPanel, _levelSelectBackdrop, _levelSelectBasePos,
             () => _levelSelectAnimating = false);

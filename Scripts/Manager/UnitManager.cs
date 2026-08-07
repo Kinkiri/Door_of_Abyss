@@ -20,6 +20,9 @@ public partial class UnitManager : Node
     /// <summary>单位移除事件（View 层订阅，负责清理 UnitView 引用）</summary>
     public event System.Action<Unit> OnUnitRemoved;
 
+    /// <summary>单位移动事件（玩家/AI 普通移动共用 MoveUnit 入口；强制位移走 TeleportUnit 不触发）</summary>
+    public event System.Action<Unit> OnUnitMoved;
+
     /// <summary>获取指定阵营的所有存活门</summary>
     public static IEnumerable<Unit> GetDoors(Team team)
     {
@@ -341,6 +344,7 @@ public partial class UnitManager : Node
             instigator: unit);
 
         unit.UpdateUnit();
+        OnUnitMoved?.Invoke(unit);
         return true;
     }
 

@@ -877,9 +877,13 @@ public partial class BattleManager : Node2D
             }
         }
 
-        PlayerCost = Mathf.Min(PlayerCost + totalCost, MaxCost);
-        EmitSignal(SignalName.CostChanged, PlayerCost, MaxCost);
-        GD.Print($"[Battle] 费用回复 +{totalCost}（来自门），当前 {PlayerCost}/{MaxCost}");
+        if (totalCost > 0)
+        {
+            GD.Print($"[Battle] 费用回复 +{totalCost}（来自门），走 ModifyCostAction 队列");
+            ActionQueue.Instance?.Enqueue(
+                new[] { new ModifyCostAction { Value = totalCost, AnimationDuration = 0.3f } },
+                new Context());
+        }
 
         if (totalDraw > 0)
         {

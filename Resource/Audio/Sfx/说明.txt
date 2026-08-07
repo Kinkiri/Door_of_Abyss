@@ -1,0 +1,12 @@
+# 音效素材目录
+
+将音效文件放入本目录，命名为 `{key}.wav`（支持 .wav/.ogg/.mp3）即可被 AudioManager 识别，无需改代码。
+
+已配置的 key（对应 AllSfxKeys，按 F9 可逐个试听）：
+
+战斗：hit / heal / summon / death / buff / debuff / move / teleport / transform
+卡牌：draw / card_play / place_env / remove_env / equip / unequip
+结算：victory / defeat
+UI：ui_click / ui_hover / card_select / end_turn / deny
+
+BGM 曲目放 ../Music/（路径映射见 AudioManager.BgmPaths）。

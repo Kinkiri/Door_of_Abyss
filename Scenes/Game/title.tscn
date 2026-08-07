@@ -313,6 +313,7 @@ size_flags_vertical = 3
 theme_override_constants/separation = 12
 
 [node name="Label" type="Label" parent="CreditsPanel/Margin/Root/Scroll/Content" unique_id=1977942458]
+visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "《深秘之门》
@@ -336,8 +337,12 @@ text = "《深秘之门》
 特别感谢
 HACHIMAN、感冒灵：手稿提供者
 域外星使、梦泽
+使用了免版税音乐
+
 联系方式
-qq：813571651"
+qq：813571651
+
+”我不想开学啊啊啊“"
 autowrap_mode = 1
 
 [node name="LevelSelectBackdrop" type="ColorRect" parent="." unique_id=1821512768]
