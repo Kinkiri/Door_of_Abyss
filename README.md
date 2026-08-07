@@ -346,9 +346,22 @@ public class Context {
 - **背景**：夜色 JPG 铺满（canvas_items 拉伸 + 冷色调压暗）+ 径向暗角遮罩 + 底部光尘粒子（GPUParticles2D，`_Process` 匀速左右往返，速度/边界为 Export 参数）
 - **标题**：白色标题图，呼吸动画（缩放 1.0↔1.05 + 亮度 0.86↔1.0，6.4s 循环）；`PivotOffset = 图片尺寸/2` 保证围绕图片中心缩放
 - **菜单**：竖排细字按钮（flat + 半透明白字 + hover 左侧指示条渐显），入场错峰淡入（每行 scale 0.94→1 + alpha，时长 1s）
-- **面板**：「关于」「选关」共用通用动画 `AnimatePanelIn/Out`（暗幕渐显 + 面板下滑 60px 弹出，0.35s Cubic；✕/暗幕点击关闭，`_creditsBasePos` 归位防偏移累积）
+- **面板**：「关于」「选关」「设置」共用通用动画 `AnimatePanelIn/Out`（暗幕渐显 + 面板下滑 60px 弹出，0.35s Cubic；✕/暗幕点击关闭，`_creditsBasePos` 归位防偏移累积）
+- **设置面板**：菜单「设置」打开（独立预制体 `Scenes/Prefabs/SettingsPanel.tscn` + `Scripts/View/SettingsPanel.cs`，**主界面与战斗暂停菜单共用**），**左侧选项卡**（音量/画面，仿选关列表样式：选中白字高亮），右侧内容页切换：
+  - **音量页**：三轨滑块（音乐/音效/UI，0~100% 实时生效）→ `AudioManager.SetMusicVolume/SetSfxVolume/SetUiVolume`；持久化到 `user://settings.cfg` 的 `audio` 段（`AudioManager` `_Ready` 加载、改动自动保存；滑块初始化用 `SetValueNoSignal` 防重复写盘）
+  - **画面页**：分辨率（1280×720 ~ 2560×1440，仅窗口模式生效）+ 窗口模式（窗口/全屏，`DisplayServer.WindowSetMode/WindowSetSize`）；持久化到 `settings.cfg` 的 `video` 段（`SettingsPanel` 管理；audio/video 两段共用文件，两边都先 Load 再 Save 防覆盖）
 - **退出**：黑幕淡出 0.5s → `GetTree().Quit()`
 - **返回主界面**（战斗结束）：`RoundInfoPanel` 订阅 `BattleManager.GameEnded`，胜负已分时显示「返回主界面」按钮 → `ChangeSceneToFile(title.tscn)`
+
+### 暂停界面（战斗场景，Esc）
+
+`Scripts/View/PauseMenu.cs` + `Level.tscn` 的 `PauseLayer`（CanvasLayer layer=20，`process_mode=Always`）：
+
+- **触发**：Esc 切换暂停（`PauseMenu._UnhandledInput`）；暂停时 `GetTree().Paused = true` **真实暂停**——EnemyAI 计时器、ActionQueue、Tween 动画全部停止
+  > **约定**：`GetTree().CreateTimer(time)` 默认 `processAlways=true`（暂停时照常计时），核心逻辑计时器必须显式 `processAlways: false`（EnemyAI 行动间隔/推进、ActionQueue 动作节奏、BattleManager 自动推进、浮动数字隐藏均已按此约定），否则暂停形同虚设
+- **BGM**：暂停时**不暂停但降音量**（`AudioManager.DuckBgm`：录原音量 → 30%，恢复时读 settings.cfg 最新值——暂停中可能改过设置）；AudioManager 所有播放器 `ProcessMode.Always`（UI 按钮音效暂停时可用）
+- **面板**：「继续游戏 / 设置 / 标题画面 / 退出游戏」竖排按钮（仿主菜单样式）；「设置」打开同款 SettingsPanel 组件（盖在暂停面板上，关闭后回到暂停面板）；「标题画面」先解除暂停再切场景（否则新场景继承暂停状态）
+- **安卓**：触摸点击场景原生模拟鼠标可直接操作暂停面板；Esc 键待真机映射（安卓返回键）验证
 
 ### 选关流程
 

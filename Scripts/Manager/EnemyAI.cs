@@ -69,7 +69,8 @@ public partial class EnemyAI : Node
         if (_actionQueue.Count == 0)
         {
             GD.Print("[EnemyAI] 全部处理完毕，0.3s 后推进阶段");
-            var timer = GetTree().CreateTimer(0.3f);
+            // processAlways:false —— 树暂停（Esc 暂停）时 AI 计时器停止，真实暂停
+            var timer = GetTree().CreateTimer(0.3f, processAlways: false);
             timer.Timeout += () => BattleManager.Instance.AdvancePhase();
             return;
         }
@@ -81,7 +82,7 @@ public partial class EnemyAI : Node
         if (continueAction && enemy.ActionPoints > 0)
             _actionQueue.Enqueue(enemy);
 
-        var next = GetTree().CreateTimer(ActionDelay);
+        var next = GetTree().CreateTimer(ActionDelay, processAlways: false);
         next.Timeout += ProcessNext;
     }
 

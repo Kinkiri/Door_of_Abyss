@@ -268,7 +268,8 @@ public partial class UnitView : Node2D
         FloatLabel.Modulate = color;
         FloatLabel.Visible = true;
 
-        GetTree().CreateTimer(FloatLifetime).Timeout += () =>
+        // processAlways:false —— 暂停时浮动数字停留，恢复后再隐藏
+        GetTree().CreateTimer(FloatLifetime, processAlways: false).Timeout += () =>
         {
             FloatLabel.Visible = false;
         };

@@ -32,6 +32,8 @@
 [ext_resource type="Script" uid="uid://d051m8qdn0xj8" path="res://Scripts/View/TouchInputAdapter.cs" id="32_touch"]
 [ext_resource type="Script" uid="uid://b70miqpw61rr8" path="res://Scripts/View/LevelFadeIn.cs" id="33_fade"]
 [ext_resource type="TileSet" uid="uid://b7vv082k3m1qm" path="res://Resource/Data/MapSet/EnvironmentTileSet.tres" id="34_envts"]
+[ext_resource type="Script" uid="uid://c75xttj6cg6tf" path="res://Scripts/View/PauseMenu.cs" id="35_pause"]
+[ext_resource type="PackedScene" path="res://Scenes/Prefabs/SettingsPanel.tscn" id="36_settings"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8od7v"]
 texture = ExtResource("19_pu45w")
@@ -47,6 +49,17 @@ tile_size = Vector2i(128, 128)
 custom_data_layer_0/name = "data"
 custom_data_layer_0/type = 24
 sources/2 = SubResource("TileSetAtlasSource_8od7v")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pause"]
+content_margin_left = 36.0
+content_margin_top = 26.0
+content_margin_right = 36.0
+content_margin_bottom = 26.0
+bg_color = Color(0.05, 0.05, 0.08, 0.92)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 
 [node name="Game" type="Node2D" unique_id=1802915340]
 
@@ -207,3 +220,101 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 1)
+
+[node name="PauseLayer" type="CanvasLayer" parent="." unique_id=2100000200]
+layer = 20
+visible = false
+
+[node name="PauseMenu" type="Control" parent="PauseLayer" unique_id=2100000201 node_paths=PackedStringArray("SettingsPanelUI")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("35_pause")
+SettingsPanelUI = NodePath("SettingsPanelUI")
+
+[node name="Backdrop" type="ColorRect" parent="PauseLayer/PauseMenu" unique_id=2100000202]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="Panel" type="PanelContainer" parent="PauseLayer/PauseMenu" unique_id=2100000203]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -220.0
+offset_right = 200.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_pause")
+
+[node name="Margin" type="MarginContainer" parent="PauseLayer/PauseMenu/Panel" unique_id=2100000204]
+layout_mode = 2
+
+[node name="Root" type="VBoxContainer" parent="PauseLayer/PauseMenu/Panel/Margin" unique_id=2100000205]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="PauseLayer/PauseMenu/Panel/Margin/Root" unique_id=2100000206]
+layout_mode = 2
+theme_override_font_sizes/font_size = 39
+text = "暂停"
+horizontal_alignment = 1
+
+[node name="Sep" type="HSeparator" parent="PauseLayer/PauseMenu/Panel/Margin/Root" unique_id=2100000207]
+layout_mode = 2
+
+[node name="Buttons" type="VBoxContainer" parent="PauseLayer/PauseMenu/Panel/Margin/Root" unique_id=2100000208]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="ResumeButton" type="Button" parent="PauseLayer/PauseMenu/Panel/Margin/Root/Buttons" unique_id=2100000209]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.75)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "继续游戏"
+flat = true
+
+[node name="SettingsButton" type="Button" parent="PauseLayer/PauseMenu/Panel/Margin/Root/Buttons" unique_id=2100000210]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.75)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "设置"
+flat = true
+
+[node name="TitleButton" type="Button" parent="PauseLayer/PauseMenu/Panel/Margin/Root/Buttons" unique_id=2100000211]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.75)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "标题画面"
+flat = true
+
+[node name="QuitButton" type="Button" parent="PauseLayer/PauseMenu/Panel/Margin/Root/Buttons" unique_id=2100000212]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.75)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "退出游戏"
+flat = true
+
+[node name="SettingsPanelUI" parent="PauseLayer/PauseMenu" unique_id=1381178993 instance=ExtResource("36_settings")]
+layout_mode = 1

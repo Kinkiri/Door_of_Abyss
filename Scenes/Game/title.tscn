@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://b8lyfx8k5628i" path="res://Scripts/View/MainMenu.cs" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://b6qnolos2hokg" path="res://Resource/Art/标题白.png" id="2_title"]
 [ext_resource type="Texture2D" uid="uid://f6nnnkcrgmak" path="res://Resource/Art/A53DF446FF0F2906C7869E2FA8D9D9D2.jpg" id="3_night"]
+[ext_resource type="PackedScene" path="res://Scenes/Prefabs/SettingsPanel.tscn" id="4_settings"]
 
 [sub_resource type="Gradient" id="Gradient_vignette"]
 colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.82)
@@ -54,7 +55,7 @@ corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
-[node name="Control" type="Control" unique_id=757809722 node_paths=PackedStringArray("_title", "_background", "_dust", "_menu", "_fadeOut", "_version", "_toast", "_creditsBackdrop", "_creditsPanel", "_levelSelectBackdrop", "_levelSelectPanel")]
+[node name="Control" type="Control" unique_id=757809722 node_paths=PackedStringArray("_title", "_background", "_dust", "_menu", "_fadeOut", "_version", "_toast", "_creditsBackdrop", "_creditsPanel", "_levelSelectBackdrop", "_levelSelectPanel", "_settingsPanelUI")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -73,6 +74,7 @@ _creditsBackdrop = NodePath("CreditsBackdrop")
 _creditsPanel = NodePath("CreditsPanel")
 _levelSelectBackdrop = NodePath("LevelSelectBackdrop")
 _levelSelectPanel = NodePath("LevelSelectPanel")
+_settingsPanelUI = NodePath("SettingsPanelUI")
 _dustSpeed = 12000.0
 
 [node name="Background" type="TextureRect" parent="." unique_id=329584635]
@@ -232,7 +234,7 @@ offset_bottom = -24.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_font_sizes/font_size = 18
-text = "v0.1.4-a"
+text = "v0.1.5-a"
 horizontal_alignment = 2
 
 [node name="Toast" type="Label" parent="." unique_id=1809171299]
@@ -313,7 +315,6 @@ size_flags_vertical = 3
 theme_override_constants/separation = 12
 
 [node name="Label" type="Label" parent="CreditsPanel/Margin/Root/Scroll/Content" unique_id=1977942458]
-visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "《深秘之门》
@@ -335,9 +336,10 @@ text = "《深秘之门》
 剧情：轻舟
 
 特别感谢
-HACHIMAN、感冒灵：手稿提供者
+HACHIMAN、感冒灵：提供手稿
 域外星使、梦泽
 使用了免版税音乐
+使用了免版税音效以及mc的音效（以后会删掉）
 
 联系方式
 qq：813571651
@@ -472,6 +474,9 @@ theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 28
 text = "  进入关卡  →"
 flat = true
+
+[node name="SettingsPanelUI" parent="." unique_id=1212723939 instance=ExtResource("4_settings")]
+layout_mode = 1
 
 [node name="FadeOut" type="ColorRect" parent="." unique_id=391542010]
 layout_mode = 1

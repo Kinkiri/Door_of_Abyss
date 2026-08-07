@@ -489,7 +489,7 @@ public partial class BattleManager : Node2D
     private void ScheduleAutoAdvance()
     {
         CancelAutoAdvance();
-        _autoAdvanceTimer = GetTree().CreateTimer(AutoAdvanceDelay);
+        _autoAdvanceTimer = GetTree().CreateTimer(AutoAdvanceDelay, processAlways: false);
         _autoAdvanceTimer.Timeout += OnAutoAdvanceTimeout;
     }
 

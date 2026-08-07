@@ -16,6 +16,7 @@ public partial class MainMenu : Control
     [Export] private PanelContainer _creditsPanel;
     [Export] private ColorRect _levelSelectBackdrop;
     [Export] private PanelContainer _levelSelectPanel;
+    [Export] private SettingsPanel _settingsPanelUI;
 
     [Export] private float _dustSpeed = 120f;
     [Export] private float _dustMinX = 120f;
@@ -200,6 +201,7 @@ public partial class MainMenu : Control
     {
         AudioManager.Instance?.PlayUiSfx("ui_click");
         if (button.Text == "开始游戏") ShowLevelSelect();
+        else if (button.Text == "设置") _settingsPanelUI?.Show();
         else if (button.Text == "关于") ShowCredits();
         else if (button.Text == "退出游戏") StartExit();
         else ShowToast("功能开发中，敬请期待");
@@ -270,6 +272,10 @@ public partial class MainMenu : Control
         AnimatePanelOut(_levelSelectPanel, _levelSelectBackdrop, _levelSelectBasePos,
             () => _levelSelectAnimating = false);
     }
+
+    // ======================================================================
+    // 通用面板动画
+    // ======================================================================
 
     private void AnimatePanelIn(Control panel, ColorRect backdrop, Vector2 basePos, Action onDone)
     {

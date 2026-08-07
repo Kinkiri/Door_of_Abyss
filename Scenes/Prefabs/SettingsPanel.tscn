@@ -1,0 +1,222 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/View/SettingsPanel.cs" id="1_settings"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_settings"]
+content_margin_left = 36.0
+content_margin_top = 26.0
+content_margin_right = 36.0
+content_margin_bottom = 26.0
+bg_color = Color(0.05, 0.05, 0.08, 0.92)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="SettingsPanelUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_settings")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.2784314)
+
+[node name="Panel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -360.0
+offset_top = -175.0
+offset_right = 360.0
+offset_bottom = 175.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_settings")
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="Root" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Header" type="HBoxContainer" parent="Panel/Margin/Root"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Panel/Margin/Root/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 39
+text = " 设置"
+
+[node name="CloseButton" type="Button" parent="Panel/Margin/Root/Header"]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.6)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 30
+text = "✕"
+flat = true
+
+[node name="Sep" type="HSeparator" parent="Panel/Margin/Root"]
+layout_mode = 2
+
+[node name="Body" type="HBoxContainer" parent="Panel/Margin/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="Tabs" type="VBoxContainer" parent="Panel/Margin/Root/Body"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TabVolume" type="Button" parent="Panel/Margin/Root/Body/Tabs"]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 26
+text = "音量"
+flat = true
+
+[node name="TabVideo" type="Button" parent="Panel/Margin/Root/Body/Tabs"]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.7)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 26
+text = "画面"
+flat = true
+
+[node name="Content" type="VBoxContainer" parent="Panel/Margin/Root/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="AudioPage" type="VBoxContainer" parent="Panel/Margin/Root/Body/Content"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="MusicRow" type="HBoxContainer" parent="Panel/Margin/Root/Body/Content/AudioPage"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="NameLabel" type="Label" parent="Panel/Margin/Root/Body/Content/AudioPage/MusicRow"]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "音乐音量"
+
+[node name="Slider" type="HSlider" parent="Panel/Margin/Root/Body/Content/AudioPage/MusicRow"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="ValueLabel" type="Label" parent="Panel/Margin/Root/Body/Content/AudioPage/MusicRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "70%"
+horizontal_alignment = 2
+
+[node name="SfxRow" type="HBoxContainer" parent="Panel/Margin/Root/Body/Content/AudioPage"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="NameLabel" type="Label" parent="Panel/Margin/Root/Body/Content/AudioPage/SfxRow"]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "音效音量"
+
+[node name="Slider" type="HSlider" parent="Panel/Margin/Root/Body/Content/AudioPage/SfxRow"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="ValueLabel" type="Label" parent="Panel/Margin/Root/Body/Content/AudioPage/SfxRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "80%"
+horizontal_alignment = 2
+
+[node name="UiRow" type="HBoxContainer" parent="Panel/Margin/Root/Body/Content/AudioPage"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="NameLabel" type="Label" parent="Panel/Margin/Root/Body/Content/AudioPage/UiRow"]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "UI音量"
+
+[node name="Slider" type="HSlider" parent="Panel/Margin/Root/Body/Content/AudioPage/UiRow"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="ValueLabel" type="Label" parent="Panel/Margin/Root/Body/Content/AudioPage/UiRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "80%"
+horizontal_alignment = 2
+
+[node name="VideoPage" type="VBoxContainer" parent="Panel/Margin/Root/Body/Content"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ResolutionRow" type="HBoxContainer" parent="Panel/Margin/Root/Body/Content/VideoPage"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="NameLabel" type="Label" parent="Panel/Margin/Root/Body/Content/VideoPage/ResolutionRow"]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "分辨率"
+
+[node name="Option" type="OptionButton" parent="Panel/Margin/Root/Body/Content/VideoPage/ResolutionRow"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+
+[node name="ModeRow" type="HBoxContainer" parent="Panel/Margin/Root/Body/Content/VideoPage"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="NameLabel" type="Label" parent="Panel/Margin/Root/Body/Content/VideoPage/ModeRow"]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "窗口模式"
+
+[node name="Option" type="OptionButton" parent="Panel/Margin/Root/Body/Content/VideoPage/ModeRow"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22

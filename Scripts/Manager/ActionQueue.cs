@@ -65,7 +65,17 @@ public partial class ActionQueue : Node
         {
             // 同 Enqueue：委托封装（Callable.From）的 Method 为 null，需同时检查 Delegate
             if (item.OnComplete.Method != null || item.OnComplete.Delegate != null)
-                item.OnComplete.CallDeferred();
+            {
+                // 暂停加固：CallDeferred 不受 GetTree().Paused 影响，若回调恰在暂停帧执行
+                // 会推进核心逻辑（如 CheckVictory/选中单位）；包装一层暂停检查跳过，
+                // 队列本身已冻结，继续游戏后由阶段流程自然衔接
+                Callable guarded = Callable.From(() =>
+                {
+                    if (GetTree().Paused) return;
+                    item.OnComplete.Call();
+                });
+                guarded.CallDeferred();
+            }
             ProcessNext();
             return;
         }
@@ -79,7 +89,8 @@ public partial class ActionQueue : Node
         OnActionExecuted?.Invoke(item.Action, item.Context);
 
         // 等待动画时长后执行下一个
-        var timer = GetTree().CreateTimer(item.Action.AnimationDuration);
+        // processAlways:false —— 树暂停（Esc 暂停）时动作节奏停止，队列冻结
+        var timer = GetTree().CreateTimer(item.Action.AnimationDuration, processAlways: false);
         timer.Timeout += ProcessNext;
     }
 

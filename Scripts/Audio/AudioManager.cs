@@ -45,6 +45,13 @@ public partial class AudioManager : Node
     /// <summary>调试试听键（F9 循环播放全部已配置音效）</summary>
     private const Key DebugPreviewKey = Key.F9;
 
+    /// <summary>音量设置存档路径（user://）</summary>
+    private const string SettingsPath = "user://settings.cfg";
+
+    private const float DefaultMusicVolume = 0.7f;
+    private const float DefaultSfxVolume = 0.8f;
+    private const float DefaultUiVolume = 0.8f;
+
     private AudioStreamPlayer _bgmPlayer;
     private readonly List<AudioStreamPlayer> _sfxPool = new();
     private readonly List<AudioStreamPlayer> _uiPool = new();
@@ -56,6 +63,7 @@ public partial class AudioManager : Node
     private int _debugSfxIndex;
     private string _currentBgm;
     private bool _battleBgmStarted;
+    private float _savedBgmVolume = -1f;
 
     // 订阅捕获引用：场景切换时旧场景 Manager 已释放，退订须走捕获的旧引用
     // （纯 C# 事件字段，不触引擎，对已释放包装对象 -= 安全）
@@ -76,6 +84,7 @@ public partial class AudioManager : Node
         Instance = this;
 
         EnsureBuses();
+        LoadVolumeSettings();
         CreateBgmPlayer();
         CreateSfxPool();
         CreateUiPool();
@@ -140,6 +149,8 @@ public partial class AudioManager : Node
     private void CreateBgmPlayer()
     {
         _bgmPlayer = new AudioStreamPlayer { Bus = BusMusic };
+        // Always：暂停时 BGM 继续播放（音量由 DuckBgm 压低），不随树暂停
+        _bgmPlayer.ProcessMode = ProcessModeEnum.Always;
         AddChild(_bgmPlayer);
     }
 
@@ -148,6 +159,8 @@ public partial class AudioManager : Node
         for (int i = 0; i < SfxPoolSize; i++)
         {
             var p = new AudioStreamPlayer { Bus = BusSfx };
+            // Always：暂停时 UI 反馈音效仍可播放（战斗音效暂停时无触发，无影响）
+            p.ProcessMode = ProcessModeEnum.Always;
             AddChild(p);
             _sfxPool.Add(p);
         }
@@ -159,6 +172,7 @@ public partial class AudioManager : Node
         for (int i = 0; i < UiPoolSize; i++)
         {
             var p = new AudioStreamPlayer { Bus = BusUi };
+            p.ProcessMode = ProcessModeEnum.Always;
             AddChild(p);
             _uiPool.Add(p);
         }
@@ -274,12 +288,87 @@ public partial class AudioManager : Node
     // 音量（0~1 线性 → dB）
     // ======================================================================
 
-    public void SetMusicVolume(float v) => SetBusLinearVolume(BusMusic, v);
-    public void SetSfxVolume(float v) => SetBusLinearVolume(BusSfx, v);
-    public void SetUiVolume(float v) => SetBusLinearVolume(BusUi, v);
+    public void SetMusicVolume(float v)
+    {
+        SetBusLinearVolume(BusMusic, v);
+        SaveVolumeSettings();
+    }
+
+    public void SetSfxVolume(float v)
+    {
+        SetBusLinearVolume(BusSfx, v);
+        SaveVolumeSettings();
+    }
+
+    public void SetUiVolume(float v)
+    {
+        SetBusLinearVolume(BusUi, v);
+        SaveVolumeSettings();
+    }
+
     public float GetMusicVolume() => GetBusLinearVolume(BusMusic);
     public float GetSfxVolume() => GetBusLinearVolume(BusSfx);
     public float GetUiVolume() => GetBusLinearVolume(BusUi);
+
+    /// <summary>
+    /// 暂停时压低 BGM（不写盘）：duck=true 记录当前音量并降为 30%，false 恢复。
+    /// 恢复时读 settings.cfg 的最新 music 值——暂停期间可能改过设置（SetMusicVolume 已写盘）。
+    /// </summary>
+    public void DuckBgm(bool duck)
+    {
+        if (duck)
+        {
+            if (_savedBgmVolume < 0f) _savedBgmVolume = GetBusLinearVolume(BusMusic);
+            SetBusLinearVolume(BusMusic, GetBusLinearVolume(BusMusic) * 0.3f);
+        }
+        else
+        {
+            if (_savedBgmVolume >= 0f)
+            {
+                var cfg = new ConfigFile();
+                cfg.Load(SettingsPath);
+                float v = (float)cfg.GetValue("audio", "music", _savedBgmVolume);
+                SetBusLinearVolume(BusMusic, v);
+            }
+            _savedBgmVolume = -1f;
+        }
+    }
+
+    /// <summary>加载音量设置（user://settings.cfg）；不存在时写入默认值</summary>
+    private void LoadVolumeSettings()
+    {
+        var cfg = new ConfigFile();
+        if (cfg.Load(SettingsPath) == Error.Ok)
+        {
+            SetBusLinearVolume(BusMusic, (float)cfg.GetValue("audio", "music", DefaultMusicVolume));
+            SetBusLinearVolume(BusSfx, (float)cfg.GetValue("audio", "sfx", DefaultSfxVolume));
+            SetBusLinearVolume(BusUi, (float)cfg.GetValue("audio", "ui", DefaultUiVolume));
+            GD.Print($"[Audio] 音量设置已加载: music={GetBusLinearVolume(BusMusic):0.00} " +
+                     $"sfx={GetBusLinearVolume(BusSfx):0.00} ui={GetBusLinearVolume(BusUi):0.00}");
+        }
+        else
+        {
+            SetBusLinearVolume(BusMusic, DefaultMusicVolume);
+            SetBusLinearVolume(BusSfx, DefaultSfxVolume);
+            SetBusLinearVolume(BusUi, DefaultUiVolume);
+            SaveVolumeSettings();
+        }
+    }
+
+    /// <summary>
+    /// 保存音量设置到 user://settings.cfg。
+    /// 先 Load 再改再 Save：settings.cfg 由多个模块共享（audio 段 + video 段），
+    /// 直接 new ConfigFile 会丢其他段。
+    /// </summary>
+    private void SaveVolumeSettings()
+    {
+        var cfg = new ConfigFile();
+        cfg.Load(SettingsPath);   // 文件不存在时忽略错误，保留已有段
+        cfg.SetValue("audio", "music", GetBusLinearVolume(BusMusic));
+        cfg.SetValue("audio", "sfx", GetBusLinearVolume(BusSfx));
+        cfg.SetValue("audio", "ui", GetBusLinearVolume(BusUi));
+        cfg.Save(SettingsPath);
+    }
 
     private static void SetBusLinearVolume(string bus, float v)
     {
