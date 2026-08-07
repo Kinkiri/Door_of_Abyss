@@ -63,7 +63,6 @@ public partial class AudioManager : Node
     private readonly List<string> _debugSfxKeys = new();
     private int _debugSfxIndex;
     private string _currentBgm;
-    private bool _battleBgmStarted;
     private float _savedBgmVolume = -1f;
 
     // 订阅捕获引用：场景切换时旧场景 Manager 已释放，退订须走捕获的旧引用
@@ -540,20 +539,18 @@ public partial class AudioManager : Node
     private void OnCardDrawn(Card card) => PlaySfx("draw");
     private void OnCardPlayRequest(Card card, Context ctx) => PlaySfx("card_play");
 
-    /// <summary>阶段切换：进入玩家行动阶段（round 1）时切换战斗 BGM（一次性守卫）</summary>
+    /// <summary>阶段切换：进入 GameStart（战斗场景初始化）即播放战斗 BGM</summary>
     private void OnPhaseChanged(BattlePhase phase, Team team, int round)
     {
+        // 一进战斗场景（BattleManager 初始进入 GameStart 阶段）即播放战斗 BGM
         if (phase == BattlePhase.GameStart)
-            _battleBgmStarted = false;
-        else if (phase == BattlePhase.PlayerAction && !_battleBgmStarted)
-        {
-            _battleBgmStarted = true;
             PlayBgm("battle");
-        }
     }
 
     private void OnGameEnded(Team winner, int round)
     {
+        // 胜负已分立即停 BGM——播完胜利/失败音效即安静（返回主界面时 MainMenu 再播 title）
+        StopBgm();
         PlaySfx(winner == Team.Player ? "victory" : "defeat");
     }
 }

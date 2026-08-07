@@ -15,6 +15,7 @@
 
 [sub_resource type="Resource" id="Resource_ubivf"]
 script = ExtResource("19_474bt")
+Round = 2
 SpawnAreaMin = Vector2i(6, 0)
 SpawnAreaMax = Vector2i(12, 4)
 UnitDatas = Array[Object]([ExtResource("20_sa6jp"), ExtResource("20_sa6jp"), ExtResource("20_sa6jp"), ExtResource("20_sa6jp"), ExtResource("22_gie45")])
@@ -22,7 +23,7 @@ metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_x5pfv"]
 script = ExtResource("19_474bt")
-Round = 3
+Round = 4
 SpawnAreaMin = Vector2i(5, 3)
 SpawnAreaMax = Vector2i(7, 5)
 UnitDatas = Array[Object]([ExtResource("21_cfnkq"), ExtResource("25_wp2b0"), ExtResource("21_cfnkq")])
@@ -30,7 +31,7 @@ metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_v0q2j"]
 script = ExtResource("19_474bt")
-Round = 5
+Round = 6
 SpawnAreaMin = Vector2i(8, 4)
 SpawnAreaMax = Vector2i(12, 6)
 UnitDatas = Array[Object]([ExtResource("29_ycswt"), ExtResource("29_ycswt"), ExtResource("29_ycswt"), ExtResource("22_gie45")])
@@ -38,13 +39,13 @@ metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_d0f75"]
 script = ExtResource("19_474bt")
-Round = 6
+Round = 8
 UnitDatas = Array[Object]([ExtResource("25_wp2b0"), ExtResource("27_cfnkq"), ExtResource("27_cfnkq"), ExtResource("28_gie45"), ExtResource("22_gie45")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_gg0yl"]
 script = ExtResource("19_474bt")
-Round = 8
+Round = 10
 UnitDatas = Array[Object]([ExtResource("25_wp2b0"), ExtResource("23_ycswt"), ExtResource("21_cfnkq"), ExtResource("29_ycswt")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 

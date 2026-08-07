@@ -199,10 +199,6 @@ offset_right = 418.0
 offset_bottom = -10.0
 grow_vertical = 0
 
-[node name="Node" type="Node" parent="." unique_id=1273218073]
-script = ExtResource("27_73o0s")
-RunTestsOnReady = true
-
 [node name="FadeInLayer" type="CanvasLayer" parent="." unique_id=1250427062 node_paths=PackedStringArray("_black")]
 layer = 10
 visible = false
@@ -324,3 +320,6 @@ flat = true
 
 [node name="SettingsPanelUI" parent="PauseLayer/PauseMenu" unique_id=1381178993 instance=ExtResource("36_settings")]
 layout_mode = 1
+
+[node name="Test" type="Node" parent="." unique_id=1273218073]
+script = ExtResource("27_73o0s")

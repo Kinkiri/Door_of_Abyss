@@ -7,12 +7,12 @@
 [ext_resource type="Resource" uid="uid://bmlrjar80lfyq" path="res://Resource/Data/Cards/门客/先锋.tres" id="5_gt157"]
 [ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="5_hj5ga"]
 [ext_resource type="Resource" path="res://Resource/Data/Maps/横向1.tres" id="6_8nmfo"]
-[ext_resource type="Resource" uid="uid://c88fw4ryw05k3" path="res://Resource/Data/Units/自由军团/新兵.tres" id="6_dqv5v"]
+[ext_resource type="Resource" uid="uid://c88fw4ryw05k3" path="res://Resource/Data/Units/门客/新兵.tres" id="6_dqv5v"]
 [ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="7_d7fbq"]
-[ext_resource type="Resource" uid="uid://4y4yqupug01b" path="res://Resource/Data/Units/自由军团/步枪兵.tres" id="8_53l5h"]
-[ext_resource type="Resource" uid="uid://vyqut7nte65d" path="res://Resource/Data/Units/自由军团/老兵.tres" id="9_1wfvg"]
+[ext_resource type="Resource" uid="uid://4y4yqupug01b" path="res://Resource/Data/Units/门客/步枪兵.tres" id="8_53l5h"]
+[ext_resource type="Resource" uid="uid://vyqut7nte65d" path="res://Resource/Data/Units/门客/老兵.tres" id="9_1wfvg"]
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="10_ijv8q"]
-[ext_resource type="Resource" uid="uid://g00voouo7lc2" path="res://Resource/Data/Units/自由军团/炮兵.tres" id="12_hj5ga"]
+[ext_resource type="Resource" uid="uid://g00voouo7lc2" path="res://Resource/Data/Units/门客/炮兵.tres" id="12_hj5ga"]
 
 [sub_resource type="Resource" id="Resource_skj4i"]
 script = ExtResource("5_hj5ga")

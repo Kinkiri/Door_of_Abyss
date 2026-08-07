@@ -1643,7 +1643,8 @@ AudioManager（Autoload 常驻）
 ### 16.4 BGM 切换
 
 - **主界面**：`MainMenu._Ready` → `PlayBgm("title")`（战斗结束返回主界面自动恢复）
-- **战斗**：`BattleManager.PhaseChanged` 首次进入 PlayerAction（回合 1）→ `PlayBgm("battle")`
+- **战斗**：`BattleManager.PhaseChanged` 进入 GameStart（战斗场景初始化）→ 立即 `PlayBgm("battle")`
+- **战斗结束**：`GameEnded` → `StopBgm()`（胜负音效播完即安静，返回主界面再播 title）
 - **Boss**：`PlayBgm("boss")` API 已就绪，Boss 关卡接入时调用即可
 
 ### 16.5 对外 API

@@ -1,17 +1,17 @@
 [gd_resource type="Resource" script_class="UnitCardData" format=3 uid="uid://cthq2iqnjrc0c"]
 
-[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="1_gi7jv"]
-[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_twv30"]
-[ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_gpocd"]
-[ext_resource type="Resource" uid="uid://c88fw4ryw05k3" path="res://Resource/Data/Units/自由军团/新兵.tres" id="3_ihsf5"]
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_5do6u"]
+[ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_3r0ll"]
+[ext_resource type="Resource" uid="uid://c88fw4ryw05k3" path="res://Resource/Data/Units/门客/新兵.tres" id="3_towqx"]
+[ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="4_fw3gc"]
 
 [sub_resource type="Resource" id="Resource_4w5cr"]
-script = ExtResource("1_twv30")
+script = ExtResource("1_5do6u")
 metadata/_custom_type_script = "uid://d30a56l3sh3q0"
 
 [resource]
-script = ExtResource("1_gi7jv")
-UnitData = ExtResource("3_ihsf5")
+script = ExtResource("4_fw3gc")
+UnitData = ExtResource("3_towqx")
 CardID = "新兵"
 CardName = "新兵"
 Description = "初入战场"
@@ -19,7 +19,7 @@ Type = 0
 World = 3
 Faction = 4
 Tags = null
-TargetFilters = Array[Object]([ExtResource("2_gpocd")])
+TargetFilters = Array[Object]([ExtResource("2_3r0ll")])
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_4w5cr")])
 PassiveEffects = null
