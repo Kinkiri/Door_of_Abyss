@@ -65,7 +65,7 @@ public partial class UnitView : Node2D
         summon.TweenProperty(this, "scale", Vector2.One, SummonScaleDuration);
 
         // 订阅 ActionQueue 事件（攻击闪白、Buff 弹跳）
-        ActionQueue.OnActionExecuted += OnActionExecuted;
+        GameAction.OnAnyExecuted += OnActionExecuted;
 
         Unit.OnUnitUpdate += UpdateView;
         UpdateView();
@@ -74,7 +74,7 @@ public partial class UnitView : Node2D
 
     public override void _ExitTree()
     {
-        ActionQueue.OnActionExecuted -= OnActionExecuted;
+        GameAction.OnAnyExecuted -= OnActionExecuted;
         if (Unit != null) Unit.OnUnitUpdate -= UpdateView;
     }
 

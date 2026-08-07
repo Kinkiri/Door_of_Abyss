@@ -80,17 +80,41 @@ public partial class ActionQueue : Node
             return;
         }
 
+        // RepeatAction 展开：内层子动作逐个入队，使每次迭代按 AnimationDuration 节奏执行
+        // （RepeatAction.AnimationDuration = 整个循环的总展示时长，展开后每次迭代均分间隔）
+        if (item.Action is RepeatAction repeat)
+        {
+            int count = Math.Min(repeat.Times?.GetValue(item.Context) ?? 0, repeat.MaxIterations);
+            var inner = repeat.Actions;
+            if (count > 0 && inner != null && inner.Length > 0)
+            {
+                float perIteration = repeat.AnimationDuration / count;
+                var expanded = new List<QueuedAction>(count * inner.Length + _queue.Count);
+                for (int i = 0; i < count; i++)
+                    foreach (var a in inner)
+                        if (a != null)
+                            expanded.Add(new QueuedAction { Action = a, Context = CloneContext(item.Context), WaitDuration = perIteration });
+                expanded.AddRange(_queue);
+                _queue.Clear();
+                foreach (var q in expanded) _queue.Enqueue(q);
+
+                ProcessNext();   // 立即处理队首（第一个子动作）
+                return;
+            }
+            // 空循环（次数<=0 或没有子动作）：无操作，继续队列
+            ProcessNext();
+            return;
+        }
+
         GD.Print($"[ActionQueue] 执行: {item.Action.GetType().Name} (动画 {item.Action.AnimationDuration}s)");
 
-        // 执行动作逻辑
+        // 执行动作逻辑（动作完成通知由 GameAction.OnAnyExecuted 统一发布，含复合动作内层）
         item.Action.Execute(item.Context);
 
-        // 通知 ViewAnimator 等订阅者播放视觉效果（C# 事件，无类型限制）
-        OnActionExecuted?.Invoke(item.Action, item.Context);
-
-        // 等待动画时长后执行下一个
+        // 等待动画时长后执行下一个（RepeatAction 展开的子动作用 WaitDuration 覆盖）
         // processAlways:false —— 树暂停（Esc 暂停）时动作节奏停止，队列冻结
-        var timer = GetTree().CreateTimer(item.Action.AnimationDuration, processAlways: false);
+        float wait = item.WaitDuration >= 0 ? item.WaitDuration : item.Action.AnimationDuration;
+        var timer = GetTree().CreateTimer(wait, processAlways: false);
         timer.Timeout += ProcessNext;
     }
 
@@ -128,17 +152,14 @@ public partial class ActionQueue : Node
         };
     }
 
-    // ========================================================================
-    // 事件（C# 事件，非 Godot 信号 — 无参数类型限制）
-    // ViewAnimator 订阅此事件播放视觉效果
-    // ========================================================================
-    /// <summary>每个动作执行完毕后触发，参数为 (已执行的动作, 上下文)</summary>
-    public static event Action<GameAction, Context> OnActionExecuted;
-
     private struct QueuedAction
     {
         public GameAction Action;
         public Context Context;
         public Callable OnComplete;
+
+        /// <summary>条目级等待时长覆盖（秒）；-1 = 使用 Action.AnimationDuration。
+        /// RepeatAction 展开的子动作用它均分循环总时长</summary>
+        public float WaitDuration;
     }
 }

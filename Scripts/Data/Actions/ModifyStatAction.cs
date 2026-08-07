@@ -62,7 +62,8 @@ public partial class ModifyStatAction : GameAction
                     break;
                 case ModifyStatType.MaxHP:
                     unit.MaxHP += val;
-                    unit.CurrentHP += val;  // 施加时当前生命随上限增加
+                    // 当前生命随上限增减走统一 HP 入口（clamp/浮动数字/致死；val 负扣到 0 正常死亡）
+                    UnitManager.Instance?.ApplyRawHPChange(unit, val, lethal: true);
                     break;
                 case ModifyStatType.Stamina:
                     unit.Stamina += val;
@@ -117,8 +118,9 @@ public partial class ModifyStatAction : GameAction
                     break;
                 case ModifyStatType.MaxHP:
                     unit.MaxHP -= val;
-                    // 当前生命不随上限减少，仅超出新上限时截断
-                    unit.CurrentHP = Mathf.Min(unit.CurrentHP, unit.MaxHP);
+                    // 当前生命不随上限减少，仅超出新上限时截断；截断量走统一 HP 入口补伤害反馈（还原不致死）
+                    int hpDelta = Mathf.Min(unit.CurrentHP, unit.MaxHP) - unit.CurrentHP;
+                    if (hpDelta < 0) UnitManager.Instance?.ApplyRawHPChange(unit, hpDelta, lethal: false);
                     break;
                 case ModifyStatType.Stamina:
                     unit.Stamina -= val;

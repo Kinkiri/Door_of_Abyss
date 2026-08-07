@@ -3,6 +3,11 @@ using Godot;
 /// <summary>
 /// 循环动作：重复执行子动作 N 次。
 /// 循环次数由 ValueSource 动态决定，MaxIterations 为硬上限防止死循环。
+/// 执行路径：
+/// - **ActionQueue 队列**：展开为逐条队列（每次迭代均分 AnimationDuration 节奏，见 ActionQueue 展开分支）
+/// - **被动/环境直发**：同步循环执行（不走队列节奏）
+/// AnimationDuration 语义 = 整个循环的总展示时长（队列路径每次迭代间隔 = AnimationDuration / 次数）；
+/// 内层子动作自身的 AnimationDuration 在队列路径被忽略。
 /// </summary>
 [GlobalClass]
 public partial class RepeatAction : GameAction

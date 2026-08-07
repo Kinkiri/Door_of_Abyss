@@ -1,4 +1,5 @@
 using Godot;
+using System;
 
 /// <summary>
 /// 通用效果基类。所有具体动作继承此类，通过多态分发。
@@ -11,13 +12,21 @@ public abstract partial class GameAction : Resource
     [Export] public float AnimationDuration { get; set; } = 0.02f;
 
     /// <summary>
+    /// 每次动作执行后的统一通知（队列动作/复合动作内层/被动直发全部触发）。
+    /// 定义在 Data 层（零依赖），View 层（UnitView 动画 / AudioManager 音效）订阅。
+    /// </summary>
+    public static event Action<GameAction, Context> OnAnyExecuted;
+
+    /// <summary>
     /// 执行动作。基类模板方法——先解析目标，再委托给子类的 Apply()。
+    /// 执行完成统一触发 OnAnyExecuted（供动画/音效响应）。
     /// </summary>
     public void Execute(Context ctx)
     {
         GD.Print($"[Action] {GetType().Name} 目标={ctx.TargetUnit?.UnitData?.UnitName} 格子={ctx.TargetCell?.GridPos}");
         ResolveTargets(ctx);
         Apply(ctx);
+        OnAnyExecuted?.Invoke(this, ctx);
     }
 
     /// <summary>

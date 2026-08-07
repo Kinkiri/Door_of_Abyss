@@ -274,7 +274,8 @@ BattleManager.OnCardPlay
 ```
 
 逐个执行，空队列回调通知调用方。发射 `ActionStarted` 信号供 View 层播动画。
-> 注意：**被动/连锁动作（EventBus 触发、Buff/环境的 OnApply/OnExpire/OnRoundEnd）直接 `action.Execute()`，不走 ActionQueue**（无节奏排队，仅卡牌/攻击/回合回复类经队列）。
+> **RepeatAction 展开**：队列遇到 RepeatAction 时展开为逐条子动作（`ActionQueue.ProcessNext` 展开分支）——每次迭代间隔 = `RepeatAction.AnimationDuration / 次数`（AnimationDuration 语义=整个循环总展示时长，如加特林 9 段伤害配 1.0 → 每段约 0.11s 逐段打出）；内层子动作自身的 AnimationDuration 在队列路径被忽略；被动/环境直发 RepeatAction 仍同步循环。
+> 注意：**动作执行通知由 `GameAction.OnAnyExecuted`（基类静态事件）统一发布**——队列动作、复合动作（RepeatAction/BranchAction）内层、被动/连锁直发动作全部触发（View 层 UnitView 动画 / AudioManager 音效订阅）；ActionQueue 不再发事件，仅控制节奏。**被动/连锁动作直接 `action.Execute()`，不走 ActionQueue**（无节奏排队，仅卡牌/攻击/回合回复类经队列）。
 
 ### Buff 生命周期
 
@@ -1382,9 +1383,10 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 | 治疗闪绿 | `UpdateView` 检测 HP 上升 | `modulate` 闪绿 0.12s → 恢复白 |
 | 死亡消散 | `UpdateView` 检测 `IsDead` | 缩放 0 + 淡出 0.35s → `QueueFree` |
 | 移动着陆 | `UpdateView` 检测 GridPos 变化 | `Back.Out` 缩放弹跳 1.15→1 |
-| Buff 弹跳 | `ActionQueue.OnActionExecuted` | `PlayBuffBounce()` 缩放 1.25→1 |
-| 攻击闪白 | `ActionQueue.OnActionExecuted` | `modulate` 亮白 0.05s + 恢复 0.08s |
+| Buff 弹跳 | `GameAction.OnAnyExecuted` | `PlayBuffBounce()` 缩放 1.25→1 |
+| 攻击闪白 | `GameAction.OnAnyExecuted` | `modulate` 亮白 0.05s + 恢复 0.08s |
 | 浮动数字 | `UnitManager.OnUnitDamaged/OnUnitHealed` 事件 | `FloatingNumberLayer` 实例化预制体，随机方向/速度抛物线爆出 + 淡出后自毁 |
+| 浮动数字（属性修改） | `UnitManager.ApplyRawHPChange` | 统一 HP 变化入口：DamageUnit/HealUnit/ModifyStatAction 全走此入口（clamp/事件/致死/刷新收敛）；ModifyStatAction 改 MaxHP 附带的血增减、Revert 截断均由此补发反馈 |
 
 ### 13.2 死亡动画流程
 
@@ -1408,7 +1410,7 @@ OnUnitAttack / AIDoAttack
   → AP--（即时扣减）
   → ActionQueue.Enqueue([DamageAction])
 	→ Execute → DamageUnit（伤害即时生效）
-	→ OnActionExecuted → UnitView 攻击者闪白 + 目标闪红
+	→ GameAction.OnAnyExecuted → UnitView 攻击者闪白 + 目标闪红
 	→ 等待 AnimationDuration
 	→ 回调: CheckVictory, OnUnitAct
 ```
@@ -1426,16 +1428,16 @@ UnitManager.DamageUnit/HealUnit（实际量 > 0）
 	 致死伤害同样显示，此时 UnitView 引用未清理，数字仍锚定在死亡单位上）
   → FloatingNumberLayer（View 层，Level.tscn 的 Map 下，订阅事件）
 	  → UnitViewManager.GetUnitView(unit) 取锚点（null / 未配置预制体跳过）
-	  → 实例化 Scenes/Prefabs/浮动数字.tscn，按单位活跃数字数分配错开序号
+	  → 实例化 Scenes/Prefabs/浮动数字.tscn（起点单位周围随机散布）
 	  → 挂载到本层
   → FloatingNumber 自管动画：从单位身上以**随机方向/初速度**爆出，受**重力**形成抛物线，后段淡出（Lifetime 1s）
-  → 完成发 Finished 释放错开槽位 + QueueFree
+  → 完成 QueueFree 自毁
 ```
 
 - 与 `AudioManager` 同模式：Manager 只发事件，View 订阅；`UnitView` 与数字系统零耦合（闪红/闪绿动画仍由 `UpdateView` 检测 HP 变化触发）
 - **爆出轨迹**：发射角 `MinAngleDeg~MaxAngleDeg`（默认 60°~120° 上方扇形）与初速度 `MinSpeed~MaxSpeed` 每次随机；数字从单位身上飞出后独立飞行（不再跟随单位移动/镜头），重力 `Gravity` 拉出抛物线
 - **字号随数值**：`fontSize = BaseFontSize + 数值 × FontSizePerAmount`（上限 `MaxFontSize`）——伤害/治疗量越大数字越大
-- **错开**：同一单位同时多个数字（连击多段）起始位置按 `offsetIndex × StepHeight` 分层，配合随机方向自然分散
+- **起始散布**：起点 = 单位头顶基准（`AnchorOffsetY`）+ `ScatterRadius` 范围内随机——多段数字在单位周围散开，**不随段数累积位置**（连击再多也不会飘上天）
 - 暂停时 `_Process` 停止 → 数字停留，恢复后继续（行为同旧方案）
 - 可调参数在预制体 Inspector（爆出/字号两组）；`FloatingNumberLayer` 节点上可调伤害/治疗颜色
 
@@ -1606,8 +1608,8 @@ EnvironmentData：EnvironmentID=沼泽, Duration=-1, MoveCostDelta=2, CanStandOv
 AudioManager（Autoload 常驻）
   ├─ 总线：运行时确保 Master / Music / SFX / UI 四条总线（AudioServer）
   ├─ BGM：单个 AudioStreamPlayer（Music 总线），PlayBgm(key) 切换，播放器层循环
-  ├─ SFX：12 个 AudioStreamPlayer 池（SFX 总线，轮转复用，支持重叠播放）+ UI 音效 4 个池（UI 总线）
-  ├─ 事件订阅（场景切换时自动重建）：ActionQueue.OnActionExecuted + 各 Manager 事件/信号
+  ├─ SFX：16 个 AudioStreamPlayer 池（SFX 总线，支持重叠播放；**全忙跳过不掐音**）+ UI 音效 8 个池（UI 总线）；**同帧同 key 去重**（复合动作同帧多段伤害合并为一声，防堆叠爆音）
+  ├─ 事件订阅（场景切换时自动重建）：GameAction.OnAnyExecuted + 各 Manager 事件/信号
   └─ 调试：F9 循环试听全部已配置音效 key
 ```
 
@@ -1620,8 +1622,9 @@ AudioManager（Autoload 常驻）
 
 | 触发 | 音效 key | 说明 |
 |---|---|---|
-| DamageAction 执行 | `hit` | 玩家/AI/法术/自动攻击统一走 ActionQueue（被动直发伤害 v1 静音） |
+| DamageAction 执行 | `hit` | 玩家/AI/法术/自动攻击/被动直发全部触发（`GameAction.OnAnyExecuted` 统一发布；同帧多段合并一声） |
 | HealAction 执行 | `heal` | |
+| ModifyStatAction 执行 | `heal` / `hit` / `buff` / `debuff` | **MaxHP 修改**（Apply 附带当前血增减）的反馈：上限提升=heal、降低=hit；其他属性修改按增减=buff/debuff。**行为注**：MaxHP 降低把当前血扣到 0 会正常死亡（统一走 `ApplyRawHPChange`，消除负血残留）；Revert 截断不致死、MaxHP 保底 0 |
 | UnitManager.OnUnitMoved（新增事件） | `move` | **玩家/AI 普通移动**（共用 MoveUnit 入口；移动失败不触发） |
 | MoveUnitAction 执行 | `move` / `teleport` | **强制位移**（击退/拉拽=move，传送=teleport；走 TeleportUnit，与普通移动不重复） |
 | OnUnitSpawned | `summon` | 含波次刷怪、放门 |
@@ -1635,7 +1638,7 @@ AudioManager（Autoload 常驻）
 | BattleManager.GameEnded（信号） | `victory` / `defeat` | |
 | UI 直调（View/输入层） | `ui_click` / `ui_hover` / `card_select` / `end_turn` / `deny` | MainMenu 按钮/选卡/结束回合/无效操作 |
 
-**防双响约定**：召唤/Buff/变身/抽牌等既有 Manager 事件、又有对应动作类型的场景，只挂 Manager 事件一侧；ActionQueue 分支只保留队列独有声音（伤害/治疗/位移）。
+**防双响约定**：召唤/Buff/变身/抽牌等既有 Manager 事件、又有对应动作类型的场景，只挂 Manager 事件一侧；`GameAction.OnAnyExecuted` 分支只保留动作独有声音（伤害/治疗/位移）。**同帧同 key 去重**：RepeatAction/BranchAction 复合动作同帧多段同音效合并为一声，跨帧连击每帧一声。
 
 ### 16.4 BGM 切换
 

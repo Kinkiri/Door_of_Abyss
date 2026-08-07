@@ -37,10 +37,10 @@ public partial class AudioManager : Node
     };
 
     /// <summary>SFX 池大小（重叠播放上限）</summary>
-    private const int SfxPoolSize = 12;
+    private const int SfxPoolSize = 16;
 
     /// <summary>UI 音效池大小</summary>
-    private const int UiPoolSize = 4;
+    private const int UiPoolSize = 8;
 
     /// <summary>调试试听键（F9 循环播放全部已配置音效）</summary>
     private const Key DebugPreviewKey = Key.F9;
@@ -59,6 +59,7 @@ public partial class AudioManager : Node
     private int _uiRoundRobin;
     private readonly Dictionary<string, AudioStream> _sfxCache = new();
     private readonly HashSet<string> _warnedSfx = new();
+    private readonly Dictionary<string, int> _lastSfxFrame = new();   // 同帧同 key 去重（防复合动作同帧堆叠爆音）
     private readonly List<string> _debugSfxKeys = new();
     private int _debugSfxIndex;
     private string _currentBgm;
@@ -213,32 +214,46 @@ public partial class AudioManager : Node
         _bgmPlayer.Stop();
     }
 
-    /// <summary>播放音效（key 见 AllSfxKeys；文件缺失仅告警一次）</summary>
+    /// <summary>播放音效（key 见 AllSfxKeys；文件缺失仅告警一次；同帧同 key 去重）</summary>
     public void PlaySfx(string key, float volumeDb = 0f)
     {
-        if (string.IsNullOrEmpty(key)) return;
+        if (string.IsNullOrEmpty(key) || IsDuplicatedThisFrame(key)) return;
 
         var stream = GetOrLoadSfx(key);
         if (stream == null) return;
 
         var player = NextPlayer(_sfxPool, ref _sfxRoundRobin);
+        if (player == null) return;   // 池全忙：跳过本次，保住已播声音不被掐
+
         player.VolumeDb = volumeDb;
         player.Stream = stream;
         player.Play();
     }
 
-    /// <summary>播放 UI 音效（走 UI 总线，与战斗音效分轨调音量）</summary>
+    /// <summary>播放 UI 音效（走 UI 总线，与战斗音效分轨调音量；同帧同 key 去重）</summary>
     public void PlayUiSfx(string key, float volumeDb = 0f)
     {
-        if (string.IsNullOrEmpty(key)) return;
+        if (string.IsNullOrEmpty(key) || IsDuplicatedThisFrame(key)) return;
 
         var stream = GetOrLoadSfx(key);
         if (stream == null) return;
 
         var player = NextPlayer(_uiPool, ref _uiRoundRobin);
+        if (player == null) return;
+
         player.VolumeDb = volumeDb;
         player.Stream = stream;
         player.Play();
+    }
+
+    /// <summary>同帧同 key 只播一次：复合动作（RepeatAction 多段伤害/BranchAction 分支）同帧内
+    /// 连续触发多个相同音效时合并为一声，避免堆叠爆音；跨帧连击每帧一声保持节奏</summary>
+    private bool IsDuplicatedThisFrame(string key)
+    {
+        int frame = (int)Engine.GetProcessFrames();
+        if (_lastSfxFrame.TryGetValue(key, out int last) && last == frame) return true;
+        _lastSfxFrame[key] = frame;
+        return false;
     }
 
     private AudioStream GetOrLoadSfx(string key)
@@ -267,6 +282,7 @@ public partial class AudioManager : Node
         return stream;
     }
 
+    /// <summary>取一个空闲播放器；全忙返回 null（调用方跳过本次播放，不掐正在播的音）</summary>
     private AudioStreamPlayer NextPlayer(List<AudioStreamPlayer> pool, ref int roundRobin)
     {
         for (int i = 0; i < pool.Count; i++)
@@ -278,10 +294,7 @@ public partial class AudioManager : Node
                 return p;
             }
         }
-        // 全忙：轮转复用（最新请求优先发声）
-        var victim = pool[roundRobin];
-        roundRobin = (roundRobin + 1) % pool.Count;
-        return victim;
+        return null;
     }
 
     // ======================================================================
@@ -393,7 +406,7 @@ public partial class AudioManager : Node
     private void SubscribeEvents()
     {
         // 静态事件（跨场景残留，UnsubscribeEvents 必须对称退订）
-        ActionQueue.OnActionExecuted += OnActionExecuted;
+        GameAction.OnAnyExecuted += OnActionExecuted;
 
         _unitManager = UnitManager.Instance;
         if (_unitManager != null)
@@ -443,7 +456,7 @@ public partial class AudioManager : Node
 
     private void UnsubscribeEvents()
     {
-        ActionQueue.OnActionExecuted -= OnActionExecuted;
+        GameAction.OnAnyExecuted -= OnActionExecuted;
 
         if (_unitManager != null)
         {
@@ -499,6 +512,18 @@ public partial class AudioManager : Node
             case DamageAction: PlaySfx("hit"); break;
             case HealAction: PlaySfx("heal"); break;
             case MoveUnitAction m: PlaySfx(m.Mode == MoveUnitAction.MoveMode.Teleport ? "teleport" : "move"); break;
+            case ModifyStatAction ms:
+            {
+                // MaxHP 修改附带的当前血变化（Apply 里 CurrentHP += val）不是 Damage/Heal 动作，
+                // 这里补上治疗/扣血反馈；其他属性修改按增减补 buff/debuff 反馈
+                int v = ms.ValueSource?.GetValue(ctx) ?? ms.Value;
+                if (v == 0) break;
+                if (ms.TargetStat == ModifyStatType.MaxHP)
+                    PlaySfx(v > 0 ? "heal" : "hit");
+                else
+                    PlaySfx(v > 0 ? "buff" : "debuff");
+                break;
+            }
         }
     }
 

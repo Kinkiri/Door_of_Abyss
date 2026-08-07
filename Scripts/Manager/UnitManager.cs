@@ -206,20 +206,39 @@ public partial class UnitManager : Node
             instigator: unit);
     }
 
-    /// <summary>对单位造成伤害，HP 归零则自动移除</summary>
+    /// <summary>对单位造成伤害，HP 归零则自动移除；返回实际伤害量</summary>
     public int DamageUnit(Unit unit, int damage)
     {
         if (!unit.CanBeAttacked || unit.IsDead) return 0;
+        // 统一走 ApplyRawHPChange（clamp/事件/致死/刷新 全收敛于此）
+        return -ApplyRawHPChange(unit, -Mathf.Max(damage, 0), lethal: true);
+    }
 
-        int actual = Mathf.Max(damage, 0);
-        unit.CurrentHP -= actual;
-        GD.Print($"UnitManager: {unit.UnitData?.UnitName} 受到 {actual} 点伤害，HP: {unit.CurrentHP}/{unit.MaxHP}");
+    /// <summary>治疗单位，不超过最大生命值；返回实际治疗量</summary>
+    public int HealUnit(Unit unit, int amount)
+    {
+        if (unit.IsDead) return 0;
+        return ApplyRawHPChange(unit, Mathf.Max(amount, 0), lethal: false);
+    }
 
-        // 实际伤害 > 0 时发事件（View 层订阅：浮动数字）。
-        // 在 DestroyUnit 前发出：致死伤害同样显示数字——此时 IsDead 未置位、UnitView 引用未清理，锚点仍有效
-        if (actual > 0) OnUnitDamaged?.Invoke(unit, actual);
+    /// <summary>
+    /// 统一 HP 变化入口（所有扣血/回血都收敛于此，避免"直接改 CurrentHP + 各处补丁反馈"）。
+    /// 负责：钳制到 [0, MaxHP]（MaxHP 保底 0）、按正负触发 OnUnitDamaged/OnUnitHealed
+    /// （浮动数字反馈；致死时在 DestroyUnit 前发出，UnitView 锚点仍有效）、可选致死销毁、UpdateUnit。
+    /// 返回实际变化量（正=回血，负=扣血，0=无变化）。
+    /// </summary>
+    public int ApplyRawHPChange(Unit unit, int delta, bool lethal)
+    {
+        if (unit == null || unit.IsDead) return 0;
 
-        if (unit.CurrentHP <= 0)
+        int oldHP = unit.CurrentHP;
+        unit.CurrentHP = Mathf.Clamp(oldHP + delta, 0, Mathf.Max(unit.MaxHP, 0));
+        int actual = unit.CurrentHP - oldHP;
+
+        if (actual > 0) OnUnitHealed?.Invoke(unit, actual);
+        else if (actual < 0) OnUnitDamaged?.Invoke(unit, -actual);
+
+        if (lethal && unit.CurrentHP <= 0)
         {
             unit.CurrentHP = 0;
             DestroyUnit(unit);
@@ -228,22 +247,6 @@ public partial class UnitManager : Node
         {
             unit.UpdateUnit();
         }
-
-        return actual;
-    }
-
-    /// <summary>治疗单位，不超过最大生命值；返回实际治疗量</summary>
-    public int HealUnit(Unit unit, int amount)
-    {
-        if (unit.IsDead) return 0;
-
-        int oldHP = unit.CurrentHP;
-        unit.CurrentHP = Mathf.Min(unit.CurrentHP + amount, unit.MaxHP);
-        int actual = unit.CurrentHP - oldHP;
-        unit.UpdateUnit();
-        GD.Print($"UnitManager: 治疗 {unit.UnitData?.UnitName}，HP: {unit.CurrentHP}/{unit.MaxHP}");
-
-        if (actual > 0) OnUnitHealed?.Invoke(unit, actual);
         return actual;
     }
 
