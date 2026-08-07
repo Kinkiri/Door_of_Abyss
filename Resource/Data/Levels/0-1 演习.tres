@@ -46,7 +46,7 @@ metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 [resource]
 script = ExtResource("10_ijv8q")
 LevelName = "0-1 演习"
-Description = "熟悉流程与操作"
+Description = "入《门》，熟悉流程与操作"
 Waves = Array[Object]([SubResource("Resource_jnwx2"), SubResource("Resource_hfokx"), SubResource("Resource_udl6o")])
 MapData = ExtResource("6_8nmfo")
 DoorPlaceZoneMin = Vector2i(-5, 0)

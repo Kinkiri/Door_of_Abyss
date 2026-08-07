@@ -317,7 +317,8 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="CreditsPanel/Margin/Root/Scroll/Content" unique_id=1977942458]
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
-text = "《深秘之门》
+text = "各位门客，欢迎进入《深秘之门》
+……
 
 卡牌战棋策略游戏
 使用Godot4.7 + C# 开发

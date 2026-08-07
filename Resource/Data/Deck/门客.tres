@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="DeckData" format=3 uid="uid://bj2geonyyapfc"]
+
+[ext_resource type="Resource" uid="uid://bmlrjar80lfyq" path="res://Resource/Data/Cards/自由军团/先锋.tres" id="1_4luok"]
+[ext_resource type="Resource" uid="uid://1vxdaslartpn" path="res://Resource/Data/Cards/自由军团/军医.tres" id="2_8nqaj"]
+[ext_resource type="Resource" uid="uid://bp5vm31nllexs" path="res://Resource/Data/Cards/自由军团/军粮.tres" id="3_4o3al"]
+[ext_resource type="Resource" uid="uid://0gvxwt7xeawg" path="res://Resource/Data/Cards/自由军团/增援.tres" id="4_e1mhx"]
+[ext_resource type="Resource" uid="uid://cuq0hjqnixkf2" path="res://Resource/Data/Cards/自由军团/指挥官.tres" id="5_vhh43"]
+[ext_resource type="Resource" uid="uid://batuwt1akfm5r" path="res://Resource/Data/Cards/自由军团/振奋.tres" id="6_n4n3v"]
+[ext_resource type="Resource" uid="uid://cthq2iqnjrc0c" path="res://Resource/Data/Cards/自由军团/新兵.tres" id="7_fsh00"]
+[ext_resource type="Resource" uid="uid://xw50uw116iss" path="res://Resource/Data/Cards/自由军团/步枪兵.tres" id="8_bttxj"]
+[ext_resource type="Resource" uid="uid://ckdf28q1oi48h" path="res://Resource/Data/Cards/自由军团/炮兵.tres" id="9_7nlje"]
+[ext_resource type="Resource" uid="uid://b1c22fwu3g480" path="res://Resource/Data/Cards/自由军团/燃烧弹.tres" id="10_nvjl2"]
+[ext_resource type="Resource" uid="uid://b3ro8ae005jdc" path="res://Resource/Data/Cards/自由军团/狙击手.tres" id="11_65gqv"]
+[ext_resource type="Resource" uid="uid://caxsku5uakdiv" path="res://Resource/Data/Cards/自由军团/维护.tres" id="12_1i6ok"]
+[ext_resource type="Resource" uid="uid://cm6g0cv0gra0i" path="res://Resource/Data/Cards/自由军团/老兵.tres" id="13_rn4ng"]
+[ext_resource type="Resource" uid="uid://b7q4hi5df4l72" path="res://Resource/Data/Cards/自由军团/防御工事.tres" id="14_tg8o7"]
+[ext_resource type="Resource" uid="uid://ce6bu28qumhkv" path="res://Resource/Data/Cards/擢升之手/腾跃.tres" id="15_y2h3f"]
+[ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="16_nj3jq"]
+
+[resource]
+script = ExtResource("16_nj3jq")
+DeckName = "门客"
+Cards = Array[Object]([ExtResource("1_4luok"), ExtResource("2_8nqaj"), ExtResource("3_4o3al"), ExtResource("4_e1mhx"), ExtResource("5_vhh43"), ExtResource("6_n4n3v"), ExtResource("7_fsh00"), ExtResource("8_bttxj"), ExtResource("9_7nlje"), ExtResource("10_nvjl2"), ExtResource("11_65gqv"), ExtResource("12_1i6ok"), ExtResource("13_rn4ng"), ExtResource("14_tg8o7"), ExtResource("1_4luok"), ExtResource("2_8nqaj"), ExtResource("3_4o3al"), ExtResource("4_e1mhx"), ExtResource("5_vhh43"), ExtResource("6_n4n3v"), ExtResource("7_fsh00"), ExtResource("8_bttxj"), ExtResource("9_7nlje"), ExtResource("10_nvjl2"), ExtResource("11_65gqv"), ExtResource("12_1i6ok"), ExtResource("13_rn4ng"), ExtResource("14_tg8o7"), ExtResource("15_y2h3f"), ExtResource("15_y2h3f")])
+metadata/_custom_type_script = "uid://b1eamjx1y7exn"
