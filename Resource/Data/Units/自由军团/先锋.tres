@@ -18,6 +18,19 @@ Actions = Array[Object]([SubResource("Resource_yhmld")])
 Conditions = null
 metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
 
+[sub_resource type="Resource" id="Resource_652gp"]
+script = ExtResource("1_l7bn3")
+Value = 1
+metadata/_custom_type_script = "uid://dvi5cm6ic86ev"
+
+[sub_resource type="Resource" id="Resource_q443n"]
+script = ExtResource("2_sni5c")
+TriggerEvent = 10
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_652gp")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
 [resource]
 script = ExtResource("4_jaq0i")
 UnitID = "先锋"
@@ -29,7 +42,7 @@ AttackPower = 2
 HealthPoints = 3
 Stamina = 2
 ActionPoints = 2
-Description = "跑得快，击杀敌人加1费"
+Description = "跑得快，击杀敌人加1费，去世回1费"
 UnitPrefab = ExtResource("3_otou6")
-PassiveEffects = Array[Object]([SubResource("Resource_orq3q")])
+PassiveEffects = Array[Object]([SubResource("Resource_orq3q"), SubResource("Resource_q443n")])
 metadata/_custom_type_script = "uid://cthrvfilibvfl"

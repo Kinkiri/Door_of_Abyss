@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://ip812cl63enu"]
+
+[ext_resource type="Script" uid="uid://dj6u84lks0tan" path="res://Scripts/Data/Shapes/SquareShape.cs" id="1_pruv8"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_xolss"]
+[ext_resource type="Script" uid="uid://dnlsqjf0bupsk" path="res://Scripts/Data/Actions/DrawCardAction.cs" id="2_j6ugh"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_bjwhd"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="4_q63ld"]
+
+[sub_resource type="Resource" id="Resource_1hmkc"]
+script = ExtResource("1_pruv8")
+metadata/_custom_type_script = "uid://dj6u84lks0tan"
+
+[sub_resource type="Resource" id="Resource_eql3m"]
+script = ExtResource("2_j6ugh")
+Value = 1
+Filters = null
+metadata/_custom_type_script = "uid://dnlsqjf0bupsk"
+
+[sub_resource type="Resource" id="Resource_jobsq"]
+script = ExtResource("3_bjwhd")
+TriggerEvent = 5
+TargetFilters = null
+MaxTriggerCount = 1
+Actions = Array[Object]([SubResource("Resource_eql3m")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("1_xolss")
+UnitID = "侦察兵"
+UnitName = "侦察兵"
+World = 3
+Faction = 4
+Tags = null
+AttackPower = 2
+HealthPoints = 3
+AttackDistance = 2
+AttackShape = SubResource("Resource_1hmkc")
+ActionPoints = 2
+Description = "击杀敌人抽一张牌，每回合一次"
+UnitPrefab = ExtResource("4_q63ld")
+PassiveEffects = Array[Object]([SubResource("Resource_jobsq")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

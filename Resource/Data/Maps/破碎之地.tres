@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="MapData" format=3]
 
-[ext_resource type="Resource" path="res://Resource/Data/Blocks/测试用白块.tres" id="1_56j3s"]
-[ext_resource type="Resource" path="res://Resource/Data/Blocks/测试用灰块.tres" id="2_voi3l"]
-[ext_resource type="Script" path="res://Scripts/Data/Map/MapData.cs" id="3_5cip5"]
+[ext_resource type="Resource" uid="uid://b63yiwk0fnylq" path="res://Resource/Data/Blocks/测试用白块.tres" id="1_56j3s"]
+[ext_resource type="Resource" uid="uid://bnlkpwal7w4ii" path="res://Resource/Data/Blocks/测试用灰块.tres" id="2_voi3l"]
+[ext_resource type="Script" uid="uid://dkyg7whu37pkb" path="res://Scripts/Data/Map/MapData.cs" id="3_5cip5"]
 
 [resource]
 script = ExtResource("3_5cip5")

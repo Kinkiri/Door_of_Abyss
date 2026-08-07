@@ -1,16 +1,13 @@
 [gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://bhd5e0libau4i"]
 
+[ext_resource type="Resource" uid="uid://wlc31ehv3egi" path="res://Resource/Data/Cards/自由军团/侦察兵.tres" id="1_7lvs2"]
 [ext_resource type="Resource" uid="uid://b7q4hi5df4l72" path="res://Resource/Data/Cards/自由军团/防御工事.tres" id="1_71xim"]
 [ext_resource type="Resource" uid="uid://bmlrjar80lfyq" path="res://Resource/Data/Cards/自由军团/先锋.tres" id="1_m7kfh"]
 [ext_resource type="Resource" uid="uid://1vxdaslartpn" path="res://Resource/Data/Cards/自由军团/军医.tres" id="2_5ccsk"]
 [ext_resource type="Resource" uid="uid://b1c22fwu3g480" path="res://Resource/Data/Cards/自由军团/燃烧弹.tres" id="2_w2pxd"]
-[ext_resource type="Resource" uid="uid://bp5vm31nllexs" path="res://Resource/Data/Cards/自由军团/军粮.tres" id="3_1pc3v"]
 [ext_resource type="Resource" uid="uid://b3ro8ae005jdc" path="res://Resource/Data/Cards/自由军团/狙击手.tres" id="3_bb6wm"]
-[ext_resource type="Resource" uid="uid://caxsku5uakdiv" path="res://Resource/Data/Cards/自由军团/维护.tres" id="4_i14yd"]
 [ext_resource type="Resource" uid="uid://0gvxwt7xeawg" path="res://Resource/Data/Cards/自由军团/增援.tres" id="4_t4xok"]
 [ext_resource type="Resource" uid="uid://cuq0hjqnixkf2" path="res://Resource/Data/Cards/自由军团/指挥官.tres" id="5_awf23"]
-[ext_resource type="Resource" uid="uid://ckdf28q1oi48h" path="res://Resource/Data/Cards/自由军团/炮兵.tres" id="5_nsk60"]
-[ext_resource type="Resource" uid="uid://batuwt1akfm5r" path="res://Resource/Data/Cards/自由军团/振奋.tres" id="6_dusuh"]
 [ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="6_qjgly"]
 [ext_resource type="Resource" path="res://Resource/Data/Maps/横向1.tres" id="7_7lvs2"]
 [ext_resource type="Resource" uid="uid://cthq2iqnjrc0c" path="res://Resource/Data/Cards/自由军团/新兵.tres" id="7_fwrvp"]
@@ -28,7 +25,7 @@
 [sub_resource type="Resource" id="Resource_4gouf"]
 script = ExtResource("6_qjgly")
 DeckName = "0-4 演习固定"
-Cards = Array[Object]([ExtResource("1_m7kfh"), ExtResource("2_5ccsk"), ExtResource("3_1pc3v"), ExtResource("4_t4xok"), ExtResource("5_awf23"), ExtResource("6_dusuh"), ExtResource("7_fwrvp"), ExtResource("8_j72kk"), ExtResource("5_nsk60"), ExtResource("2_w2pxd"), ExtResource("3_bb6wm"), ExtResource("4_i14yd"), ExtResource("13_4logq"), ExtResource("1_71xim"), ExtResource("5_awf23"), ExtResource("2_w2pxd"), ExtResource("1_71xim")])
+Cards = Array[Object]([ExtResource("1_7lvs2"), ExtResource("1_7lvs2"), ExtResource("1_m7kfh"), ExtResource("1_m7kfh"), ExtResource("5_awf23"), ExtResource("5_awf23"), ExtResource("3_bb6wm"), ExtResource("8_j72kk"), ExtResource("7_fwrvp"), ExtResource("13_4logq"), ExtResource("2_w2pxd"), ExtResource("1_71xim"), ExtResource("2_w2pxd"), ExtResource("4_t4xok"), ExtResource("2_5ccsk")])
 metadata/_custom_type_script = "uid://b1eamjx1y7exn"
 
 [sub_resource type="Resource" id="Resource_jnwx2"]
@@ -51,7 +48,7 @@ metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 [resource]
 script = ExtResource("15_dusuh")
 LevelName = "0-4 演习"
-Description = "以静制动"
+Description = "生产最重要"
 Waves = Array[Object]([SubResource("Resource_jnwx2"), SubResource("Resource_hfokx"), SubResource("Resource_udl6o")])
 MapData = ExtResource("7_7lvs2")
 DoorPlaceZoneMin = Vector2i(-5, 0)

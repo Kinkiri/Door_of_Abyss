@@ -1,10 +1,10 @@
 [gd_resource type="Resource" script_class="MapData" format=3]
 
-[ext_resource type="Resource" path="res://Resource/Data/Blocks/测试用白块.tres" id="1_5cip5"]
-[ext_resource type="Resource" path="res://Resource/Data/Blocks/测试用灰块.tres" id="2_bem6g"]
-[ext_resource type="Resource" path="res://Resource/Data/Environments/火焰之地.tres" id="3_h63ja"]
-[ext_resource type="Resource" path="res://Resource/Data/Environments/毒沼.tres" id="4_mrci3"]
-[ext_resource type="Script" path="res://Scripts/Data/Map/MapData.cs" id="5_asyai"]
+[ext_resource type="Resource" uid="uid://b63yiwk0fnylq" path="res://Resource/Data/Blocks/测试用白块.tres" id="1_5cip5"]
+[ext_resource type="Resource" uid="uid://bnlkpwal7w4ii" path="res://Resource/Data/Blocks/测试用灰块.tres" id="2_bem6g"]
+[ext_resource type="Resource" uid="uid://cjejmedpg47cy" path="res://Resource/Data/Environments/火焰之地.tres" id="3_h63ja"]
+[ext_resource type="Resource" uid="uid://cx7oatqe6k22a" path="res://Resource/Data/Environments/毒沼.tres" id="4_mrci3"]
+[ext_resource type="Script" uid="uid://dkyg7whu37pkb" path="res://Scripts/Data/Map/MapData.cs" id="5_asyai"]
 
 [resource]
 script = ExtResource("5_asyai")

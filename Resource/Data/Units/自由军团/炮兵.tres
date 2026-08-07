@@ -1,7 +1,12 @@
 [gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://g00voouo7lc2"]
 
+[ext_resource type="Script" uid="uid://dj6u84lks0tan" path="res://Scripts/Data/Shapes/SquareShape.cs" id="1_nfeog"]
 [ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_yvmq7"]
 [ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="2_nfeog"]
+
+[sub_resource type="Resource" id="Resource_awhni"]
+script = ExtResource("1_nfeog")
+metadata/_custom_type_script = "uid://dj6u84lks0tan"
 
 [resource]
 script = ExtResource("2_nfeog")
@@ -13,6 +18,7 @@ Tags = null
 AttackPower = 3
 HealthPoints = 1
 AttackDistance = 3
+AttackShape = SubResource("Resource_awhni")
 Description = "更大的打击范围"
 UnitPrefab = ExtResource("1_yvmq7")
 PassiveEffects = null
