@@ -234,7 +234,7 @@ offset_bottom = -24.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_font_sizes/font_size = 18
-text = "v0.1.5-a"
+text = "v0.1.6-a"
 horizontal_alignment = 2
 
 [node name="Toast" type="Label" parent="." unique_id=1809171299]

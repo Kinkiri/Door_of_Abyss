@@ -23,6 +23,12 @@ public partial class UnitManager : Node
     /// <summary>单位移动事件（玩家/AI 普通移动共用 MoveUnit 入口；强制位移走 TeleportUnit 不触发）</summary>
     public event System.Action<Unit> OnUnitMoved;
 
+    /// <summary>单位受到伤害事件（实际伤害 &gt; 0；View 层订阅——浮动数字）</summary>
+    public event System.Action<Unit, int> OnUnitDamaged;
+
+    /// <summary>单位受到治疗事件（实际治疗量 &gt; 0；View 层订阅——浮动数字）</summary>
+    public event System.Action<Unit, int> OnUnitHealed;
+
     /// <summary>获取指定阵营的所有存活门</summary>
     public static IEnumerable<Unit> GetDoors(Team team)
     {
@@ -209,6 +215,10 @@ public partial class UnitManager : Node
         unit.CurrentHP -= actual;
         GD.Print($"UnitManager: {unit.UnitData?.UnitName} 受到 {actual} 点伤害，HP: {unit.CurrentHP}/{unit.MaxHP}");
 
+        // 实际伤害 > 0 时发事件（View 层订阅：浮动数字）。
+        // 在 DestroyUnit 前发出：致死伤害同样显示数字——此时 IsDead 未置位、UnitView 引用未清理，锚点仍有效
+        if (actual > 0) OnUnitDamaged?.Invoke(unit, actual);
+
         if (unit.CurrentHP <= 0)
         {
             unit.CurrentHP = 0;
@@ -222,14 +232,19 @@ public partial class UnitManager : Node
         return actual;
     }
 
-    /// <summary>治疗单位，不超过最大生命值</summary>
-    public void HealUnit(Unit unit, int amount)
+    /// <summary>治疗单位，不超过最大生命值；返回实际治疗量</summary>
+    public int HealUnit(Unit unit, int amount)
     {
-        if (unit.IsDead) return;
+        if (unit.IsDead) return 0;
 
+        int oldHP = unit.CurrentHP;
         unit.CurrentHP = Mathf.Min(unit.CurrentHP + amount, unit.MaxHP);
+        int actual = unit.CurrentHP - oldHP;
         unit.UpdateUnit();
         GD.Print($"UnitManager: 治疗 {unit.UnitData?.UnitName}，HP: {unit.CurrentHP}/{unit.MaxHP}");
+
+        if (actual > 0) OnUnitHealed?.Invoke(unit, actual);
+        return actual;
     }
 
     /// <summary>销毁单位（HP归零时调用），清理格子和引用</summary>

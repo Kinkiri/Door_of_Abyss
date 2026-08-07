@@ -358,7 +358,7 @@ public class Context {
 `Scripts/View/PauseMenu.cs` + `Level.tscn` 的 `PauseLayer`（CanvasLayer layer=20，`process_mode=Always`）：
 
 - **触发**：Esc 切换暂停（`PauseMenu._UnhandledInput`）；暂停时 `GetTree().Paused = true` **真实暂停**——EnemyAI 计时器、ActionQueue、Tween 动画全部停止
-  > **约定**：`GetTree().CreateTimer(time)` 默认 `processAlways=true`（暂停时照常计时），核心逻辑计时器必须显式 `processAlways: false`（EnemyAI 行动间隔/推进、ActionQueue 动作节奏、BattleManager 自动推进、浮动数字隐藏均已按此约定），否则暂停形同虚设
+  > **约定**：`GetTree().CreateTimer(time)` 默认 `processAlways=true`（暂停时照常计时），核心逻辑计时器必须显式 `processAlways: false`（EnemyAI 行动间隔/推进、ActionQueue 动作节奏、BattleManager 自动推进均已按此约定），否则暂停形同虚设；Tween 默认受暂停影响（浮动数字上飘淡出即依赖此行为——暂停时数字停留）
 - **BGM**：暂停时**不暂停但降音量**（`AudioManager.DuckBgm`：录原音量 → 30%，恢复时读 settings.cfg 最新值——暂停中可能改过设置）；AudioManager 所有播放器 `ProcessMode.Always`（UI 按钮音效暂停时可用）
 - **面板**：「继续游戏 / 设置 / 标题画面 / 退出游戏」竖排按钮（仿主菜单样式）；「设置」打开同款 SettingsPanel 组件（盖在暂停面板上，关闭后回到暂停面板）；「标题画面」先解除暂停再切场景（否则新场景继承暂停状态）
 - **安卓**：触摸点击场景原生模拟鼠标可直接操作暂停面板；Esc 键待真机映射（安卓返回键）验证
@@ -1384,7 +1384,7 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 | 移动着陆 | `UpdateView` 检测 GridPos 变化 | `Back.Out` 缩放弹跳 1.15→1 |
 | Buff 弹跳 | `ActionQueue.OnActionExecuted` | `PlayBuffBounce()` 缩放 1.25→1 |
 | 攻击闪白 | `ActionQueue.OnActionExecuted` | `modulate` 亮白 0.05s + 恢复 0.08s |
-| 浮动数字 | `UpdateView` 检测 HP 变化 | 预制体 `FloatLabel` 显示 1s 后隐藏 |
+| 浮动数字 | `UnitManager.OnUnitDamaged/OnUnitHealed` 事件 | `FloatingNumberLayer` 实例化预制体，随机方向/速度抛物线爆出 + 淡出后自毁 |
 
 ### 13.2 死亡动画流程
 
@@ -1416,12 +1416,28 @@ OnUnitAttack / AIDoAttack
 BattleManager 的 `OnUnitAttack`/`AIDoAttack`（攻击）通过 DamageAction + ActionQueue 执行，确保动画时序一致。
 **移动不排队**：`OnUnitMove`/`AIDoMove` 直接调 `UnitManager.MoveUnit`（同步更新格子占用 + 发 OnUnitEnterCell 事件 + `UnitMoved` 事件），视图移动动画由 UnitView 订阅事件驱动——移动没有封装成动作对象（见 §16.3 音效挂接依赖该事件）。
 
-### 13.4 浮动数字配置
+### 13.4 浮动数字（事件驱动 + 独立预制体）
 
-在单位预制体 `Scenes/Prefabs/Units/单位视图.tscn` 中：
-1. 在 `UnitView` 节点下添加 `Label`，默认 `Visible=false`
-2. 拖入 Inspector 的 `FloatLabel` 字段
-3. `FloatLifetime`（显示秒数，默认 1s）和 `FloatRise`（上飘像素，默认 28px）可在 Inspector 调节
+受伤/治疗数字是**独立实例**，可同时显示多个（自动错开），不再定死在单位视图内：
+
+```
+UnitManager.DamageUnit/HealUnit（实际量 > 0）
+  → 发 OnUnitDamaged(unit, actual) / OnUnitHealed(unit, actual) 事件（DamageUnit 在 DestroyUnit 前发出——
+	 致死伤害同样显示，此时 UnitView 引用未清理，数字仍锚定在死亡单位上）
+  → FloatingNumberLayer（View 层，Level.tscn 的 Map 下，订阅事件）
+	  → UnitViewManager.GetUnitView(unit) 取锚点（null / 未配置预制体跳过）
+	  → 实例化 Scenes/Prefabs/浮动数字.tscn，按单位活跃数字数分配错开序号
+	  → 挂载到本层
+  → FloatingNumber 自管动画：从单位身上以**随机方向/初速度**爆出，受**重力**形成抛物线，后段淡出（Lifetime 1s）
+  → 完成发 Finished 释放错开槽位 + QueueFree
+```
+
+- 与 `AudioManager` 同模式：Manager 只发事件，View 订阅；`UnitView` 与数字系统零耦合（闪红/闪绿动画仍由 `UpdateView` 检测 HP 变化触发）
+- **爆出轨迹**：发射角 `MinAngleDeg~MaxAngleDeg`（默认 60°~120° 上方扇形）与初速度 `MinSpeed~MaxSpeed` 每次随机；数字从单位身上飞出后独立飞行（不再跟随单位移动/镜头），重力 `Gravity` 拉出抛物线
+- **字号随数值**：`fontSize = BaseFontSize + 数值 × FontSizePerAmount`（上限 `MaxFontSize`）——伤害/治疗量越大数字越大
+- **错开**：同一单位同时多个数字（连击多段）起始位置按 `offsetIndex × StepHeight` 分层，配合随机方向自然分散
+- 暂停时 `_Process` 停止 → 数字停留，恢复后继续（行为同旧方案）
+- 可调参数在预制体 Inspector（爆出/字号两组）；`FloatingNumberLayer` 节点上可调伤害/治疗颜色
 
 ### 13.5 摄像机（DragCamera2D）
 

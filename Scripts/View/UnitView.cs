@@ -20,12 +20,10 @@ public partial class UnitView : Node2D
     [ExportGroup("受伤")]
     [Export] public Color DamageColor = new Color(1, 0.2f, 0.2f);
     [Export] public float DamageFlashDuration = 0.12f;
-    [Export] public bool ShowDamageNumbers = true;
 
     [ExportGroup("治疗")]
     [Export] public Color HealColor = new Color(0.2f, 1, 0.2f);
     [Export] public float HealFlashDuration = 0.12f;
-    [Export] public bool ShowHealNumbers = true;
 
     [ExportGroup("Buff")]
     [Export] public float BuffBounceScale = 1.25f;
@@ -44,11 +42,6 @@ public partial class UnitView : Node2D
     [Export] public Color AttackFlashColor = new Color(1.5f, 1.5f, 1.5f);
     [Export] public float AttackFlashIn = 0.05f;
     [Export] public float AttackFlashOut = 0.08f;
-
-    [ExportGroup("浮动数字")]
-    [Export] public Label FloatLabel { get; set; }
-    [Export] public float FloatLifetime = 1f;
-    [Export] public float FloatRise = 28f;
 
     // ── 追踪状态 ──────────────────────────────────────────────────────────
     private int _prevHP;
@@ -214,9 +207,6 @@ public partial class UnitView : Node2D
         var tween = CreateTween();
         tween.TweenProperty(this, "modulate", DamageColor, DamageFlashDuration);
         tween.TweenProperty(this, "modulate", Colors.White, DamageFlashDuration * 0.5f);
-
-        if (ShowDamageNumbers && amount > 0)
-            ShowFloatingNumber($"-{amount}", DamageColor);
     }
 
     private void PlayHealFlash(int amount)
@@ -224,9 +214,6 @@ public partial class UnitView : Node2D
         var tween = CreateTween();
         tween.TweenProperty(this, "modulate", HealColor, HealFlashDuration);
         tween.TweenProperty(this, "modulate", Colors.White, HealFlashDuration * 0.5f);
-
-        if (ShowHealNumbers && amount > 0)
-            ShowFloatingNumber($"+{amount}", HealColor);
     }
 
     /// <summary>外部调用（ViewAnimator）：Buff 施加时弹跳</summary>
@@ -254,24 +241,5 @@ public partial class UnitView : Node2D
         bounce.SetEase(Tween.EaseType.Out);
         bounce.TweenProperty(this, "scale", Vector2.One * 1.15f, MoveBounceDuration * 0.4f);
         bounce.TweenProperty(this, "scale", Vector2.One, MoveBounceDuration * 0.6f);
-    }
-
-    // ========================================================================
-    // 浮动数字
-    // ========================================================================
-
-    private void ShowFloatingNumber(string text, Color color)
-    {
-        if (FloatLabel == null) return;
-
-        FloatLabel.Text = text;
-        FloatLabel.Modulate = color;
-        FloatLabel.Visible = true;
-
-        // processAlways:false —— 暂停时浮动数字停留，恢复后再隐藏
-        GetTree().CreateTimer(FloatLifetime, processAlways: false).Timeout += () =>
-        {
-            FloatLabel.Visible = false;
-        };
     }
 }

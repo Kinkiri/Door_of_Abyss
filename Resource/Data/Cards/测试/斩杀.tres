@@ -1,13 +1,13 @@
 [gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://dvml5fmfagard"]
 
 [ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="1_77k5y"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="1_tf_shape"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="1_tf_team"]
 [ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_xov0g"]
 [ext_resource type="Script" uid="uid://s84ks60onupf" path="res://Scripts/Data/ValueSource/UnitStatValue.cs" id="2_qxb7e"]
 [ext_resource type="Script" uid="uid://bn4m8splfe3lb" path="res://Scripts/Data/ValueSource/ConstantValue.cs" id="3_43dk7"]
 [ext_resource type="Script" uid="uid://bgqnidmj5bjrn" path="res://Scripts/Data/ValueSource/FormulaValue.cs" id="4_dltph"]
 [ext_resource type="Script" uid="uid://brotjf8m2qpfx" path="res://Scripts/Data/Conditions/CompareCondition.cs" id="5_r1d0c"]
-[ext_resource type="Script" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="1_tf_shape"]
-[ext_resource type="Script" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="1_tf_team"]
 
 [sub_resource type="Resource" id="Resource_33pkt"]
 script = ExtResource("1_77k5y")
@@ -55,12 +55,14 @@ Team = 2
 
 [resource]
 script = ExtResource("1_xov0g")
-TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_attr_team")])
 CardID = "斩杀"
 CardName = "斩杀"
 Description = "血低于75%直接秒杀"
 Type = 1
-Cost = 2
+Tags = null
+Cost = 5
+TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_attr_team")])
 Conditions = Array[Object]([SubResource("Resource_dltph")])
 Actions = Array[Object]([SubResource("Resource_33pkt")])
+PassiveEffects = null
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

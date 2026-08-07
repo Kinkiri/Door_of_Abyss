@@ -1,7 +1,6 @@
 [gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://dr5crh4jdw3kf"]
 
 [ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="1_4qidm"]
-[ext_resource type="Resource" uid="uid://b1tyd7186gfh1" path="res://Resource/Data/Deck/中东打法.tres" id="1_nvsh4"]
 [ext_resource type="Resource" path="res://Resource/Data/Maps/格调.tres" id="1_wp8c3"]
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="1_y0i6a"]
 [ext_resource type="Resource" uid="uid://bn23m0b6t8tvw" path="res://Resource/Data/Units/测试/弓手.tres" id="2_nvsh4"]
@@ -45,10 +44,10 @@ metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 [resource]
 script = ExtResource("1_y0i6a")
 LevelName = "格调"
+Description = "百万精兵"
 Waves = Array[Object]([SubResource("Resource_4qidm"), SubResource("Resource_n4hmb"), SubResource("Resource_dqlwa"), SubResource("Resource_glvj2"), SubResource("Resource_aj6n3")])
 MapData = ExtResource("1_wp8c3")
 DoorPlaceZoneMax = Vector2i(1, 1)
 DefaultSpawnAreaMin = Vector2i(-3, 7)
 DefaultSpawnAreaMax = Vector2i(4, 11)
-LevelDeck = ExtResource("1_nvsh4")
 metadata/_custom_type_script = "uid://wk0covoailum"

@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://q3x9kf2mb7wcd" path="res://Scripts/View/FloatingNumber.cs" id="1_fn"]
+
+[node name="FloatingNumber" type="Node2D" node_paths=PackedStringArray("Label")]
+script = ExtResource("1_fn")
+Label = NodePath("Label")
+Lifetime = 1.0
+AnchorOffsetY = -30.0
+StepHeight = 18.0
+MinSpeed = 80.0
+MaxSpeed = 160.0
+MinAngleDeg = 60.0
+MaxAngleDeg = 120.0
+Gravity = 220.0
+BaseFontSize = 40.0
+FontSizePerAmount = 2.5
+MaxFontSize = 90.0
+
+[node name="Label" type="Label" parent="."]
+offset_left = -60.0
+offset_top = -30.0
+offset_right = 60.0
+offset_bottom = 30.0
+theme_override_font_sizes/font_size = 48
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+text = "-1"
+horizontal_alignment = 1
+vertical_alignment = 1

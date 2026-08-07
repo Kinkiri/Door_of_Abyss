@@ -30,6 +30,7 @@ AttackPower = 3
 HealthPoints = 4
 Stamina = 2
 ActionPoints = 2
+Description = "击杀单位多动一下"
 UnitPrefab = ExtResource("3_jwh15")
 PassiveEffects = Array[Object]([SubResource("Resource_nw7r0")])
 metadata/_custom_type_script = "uid://cthrvfilibvfl"
