@@ -21,16 +21,13 @@
 [ext_resource type="Resource" uid="uid://c88fw4ryw05k3" path="res://Resource/Data/Units/自由军团/新兵.tres" id="18_y0qnh"]
 [ext_resource type="Resource" uid="uid://cqrsbb234uglr" path="res://Resource/Data/Units/自由军团/先锋.tres" id="19_ovbyf"]
 [ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="19_qn088"]
+[ext_resource type="Resource" uid="uid://b1e0a235rnowo" path="res://Resource/Data/Units/自由军团/防御工事.tres" id="20_js4l8"]
 [ext_resource type="Resource" uid="uid://4y4yqupug01b" path="res://Resource/Data/Units/自由军团/步枪兵.tres" id="20_u7ypm"]
 [ext_resource type="Resource" uid="uid://bwwcvxll4uiq3" path="res://Resource/Data/Units/自由军团/军医.tres" id="21_qnnp0"]
 [ext_resource type="Resource" uid="uid://g00voouo7lc2" path="res://Resource/Data/Units/自由军团/炮兵.tres" id="22_3xc2c"]
 [ext_resource type="Resource" uid="uid://c52vijing117o" path="res://Resource/Data/Units/自由军团/狙击手.tres" id="23_gdifb"]
 [ext_resource type="Resource" uid="uid://c25vffb06hqi2" path="res://Resource/Data/Units/自由军团/指挥官.tres" id="24_idt2s"]
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="24_whytc"]
-[ext_resource type="Resource" uid="uid://f8jwdartjjfi" path="res://Resource/Data/Units/擢升之手/门卫.tres" id="27_bt0kv"]
-[ext_resource type="Resource" uid="uid://ccuyks7y3yc4n" path="res://Resource/Data/Units/擢升之手/构造体工程师.tres" id="28_4liva"]
-[ext_resource type="Resource" uid="uid://berq0byplvsig" path="res://Resource/Data/Units/擢升之手/秒速尖兵.tres" id="29_0j6gw"]
-[ext_resource type="Resource" uid="uid://bbkq67n50v7xu" path="res://Resource/Data/Units/擢升之手/飞拳斗士.tres" id="30_vtcrs"]
 
 [sub_resource type="Resource" id="Resource_4gouf"]
 script = ExtResource("15_7hifu")
@@ -43,7 +40,7 @@ script = ExtResource("19_qn088")
 Round = 2
 SpawnAreaMin = Vector2i(3, 3)
 SpawnAreaMax = Vector2i(5, 5)
-UnitDatas = Array[Object]([ExtResource("18_y0qnh"), ExtResource("18_y0qnh"), ExtResource("19_ovbyf")])
+UnitDatas = Array[Object]([ExtResource("18_y0qnh"), ExtResource("19_ovbyf"), ExtResource("20_js4l8"), ExtResource("20_js4l8")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_sv6jl"]
@@ -51,7 +48,7 @@ script = ExtResource("19_qn088")
 Round = 3
 SpawnAreaMin = Vector2i(6, 1)
 SpawnAreaMax = Vector2i(7, 6)
-UnitDatas = Array[Object]([ExtResource("20_u7ypm"), ExtResource("20_u7ypm"), ExtResource("17_t6xo4"), ExtResource("21_qnnp0")])
+UnitDatas = Array[Object]([ExtResource("20_u7ypm"), ExtResource("20_u7ypm"), ExtResource("17_t6xo4"), ExtResource("21_qnnp0"), ExtResource("20_js4l8")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_2ef0t"]
@@ -69,19 +66,19 @@ metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 [sub_resource type="Resource" id="Resource_t7weq"]
 script = ExtResource("19_qn088")
 Round = 8
-UnitDatas = Array[Object]([ExtResource("27_bt0kv"), ExtResource("27_bt0kv"), ExtResource("28_4liva")])
+UnitDatas = Array[Object]([ExtResource("19_ovbyf"), ExtResource("19_ovbyf"), ExtResource("19_ovbyf"), ExtResource("22_3xc2c"), ExtResource("20_u7ypm")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_3p8hw"]
 script = ExtResource("19_qn088")
 Round = 10
-UnitDatas = Array[Object]([ExtResource("28_4liva"), ExtResource("29_0j6gw"), ExtResource("30_vtcrs"), ExtResource("27_bt0kv")])
+UnitDatas = Array[Object]([ExtResource("23_gdifb"), ExtResource("22_3xc2c"), ExtResource("20_js4l8"), ExtResource("20_u7ypm")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [resource]
 script = ExtResource("24_whytc")
 LevelName = "0-5 演习"
-Description = "较的大地图与长线作战，还有新敌人"
+Description = "较的大地图与长线作战"
 Waves = Array[Object]([SubResource("Resource_skqe5"), SubResource("Resource_sv6jl"), SubResource("Resource_2ef0t"), SubResource("Resource_5dyfj"), SubResource("Resource_t7weq"), SubResource("Resource_3p8hw")])
 MapData = ExtResource("17_jbw4p")
 DoorPlaceZoneMin = Vector2i(0, 1)
