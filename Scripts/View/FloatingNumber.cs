@@ -1,24 +1,19 @@
 using Godot;
-using System;
 
 /// <summary>
 /// 浮动数字（世界空间 Node2D）：受伤/治疗数字的独立实例。
 /// 从单位身上以随机方向/初速度"爆出"，受重力形成抛物线；字号随数值（伤害/治疗量）增大；
-/// 淡出后发 Finished 事件（管理器释放错开槽位）并自毁。
-/// _Process 受暂停影响 → 暂停时数字停留，恢复后继续（行为同旧方案）。
+/// 淡出后自毁。_Process 受暂停影响 → 暂停时数字停留，恢复后继续（行为同旧方案）。
 /// </summary>
 public partial class FloatingNumber : Node2D
 {
-    /// <summary>动画完成事件（FloatingNumberLayer 订阅，用于释放错开计数）</summary>
-    public event Action<FloatingNumber> Finished;
-
     [Export] public Label Label { get; set; }
 
     // ── 爆出动画参数（预制体 Inspector 可调）──────────────────────────────
     [ExportGroup("爆出")]
     [Export] public float Lifetime = 1f;
-    [Export] public float AnchorOffsetY = -30f;    // 起点：单位头顶偏移（负=向上）
-    [Export] public float StepHeight = 18f;        // 同单位多数字起始分层（避免完全重叠）
+    [Export] public float AnchorOffsetY = -30f;    // 起点基准：单位头顶偏移（负=向上）
+    [Export] public float ScatterRadius = 20f;     // 起始位置在单位周围随机散布范围（不随段数累积）
     [Export] public float MinSpeed = 80f;          // 初速度随机区间（世界 px/s）
     [Export] public float MaxSpeed = 160f;
     [Export] public float MinAngleDeg = 60f;       // 发射角随机区间（0=正右，90=正上）
@@ -36,13 +31,16 @@ public partial class FloatingNumber : Node2D
     private float _elapsed;
 
     /// <summary>
-    /// 初始化：锚点/文本/颜色/错开序号/数值（数值决定字号）。
-    /// 起点取单位当前头顶位置后**独立飞行**（不再跟随锚点——爆出后数字飞走，
-    /// 单位移动/销毁不影响轨迹）。
+    /// 初始化：锚点/文本/颜色/数值（数值决定字号）。
+    /// 起始点 = 单位头顶基准 + 周围小范围随机（多段数字各自散开，不会随段数越飘越高）；
+    /// 之后**独立飞行**（不再跟随锚点——爆出后数字飞走，单位移动/销毁不影响轨迹）。
     /// </summary>
-    public void Setup(UnitView anchor, string text, Color color, int offsetIndex, int amount)
+    public void Setup(UnitView anchor, string text, Color color, int amount)
     {
-        _position = anchor.GlobalPosition + new Vector2(0, AnchorOffsetY - offsetIndex * StepHeight);
+        var scatter = new Vector2(
+            (float)GD.RandRange(-ScatterRadius, ScatterRadius),
+            (float)GD.RandRange(-ScatterRadius, ScatterRadius));
+        _position = anchor.GlobalPosition + new Vector2(0, AnchorOffsetY) + scatter;
 
         float speed = (float)GD.RandRange(MinSpeed, MaxSpeed);
         float angle = Mathf.DegToRad((float)GD.RandRange(MinAngleDeg, MaxAngleDeg));
@@ -80,7 +78,6 @@ public partial class FloatingNumber : Node2D
 
         if (_elapsed >= Lifetime)
         {
-            Finished?.Invoke(this);
             QueueFree();
         }
     }

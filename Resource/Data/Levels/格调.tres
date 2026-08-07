@@ -3,10 +3,8 @@
 [ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="1_4qidm"]
 [ext_resource type="Resource" path="res://Resource/Data/Maps/格调.tres" id="1_wp8c3"]
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="1_y0i6a"]
+[ext_resource type="Resource" uid="uid://c8ovrqlhxc5qr" path="res://Resource/Data/Units/测试/移动沙包.tres" id="2_3tljh"]
 [ext_resource type="Resource" uid="uid://bn23m0b6t8tvw" path="res://Resource/Data/Units/测试/弓手.tres" id="2_nvsh4"]
-[ext_resource type="Resource" uid="uid://cl8dt7np6l2rg" path="res://Resource/Data/Units/测试/战墙.tres" id="2_wp8c3"]
-[ext_resource type="Resource" uid="uid://besew5ondee15" path="res://Resource/Data/Units/测试/小兵.tres" id="3_cs3pf"]
-[ext_resource type="Resource" uid="uid://cqrsbb234uglr" path="res://Resource/Data/Units/自由军团/先锋.tres" id="3_nvsh4"]
 [ext_resource type="Resource" uid="uid://bqf677fitv6wi" path="res://Resource/Data/Units/测试/炸弹手.tres" id="7_gcxre"]
 [ext_resource type="Resource" uid="uid://brpvxdujqqh5b" path="res://Resource/Data/Units/测试/吸血鬼.tres" id="8_pt52y"]
 [ext_resource type="Resource" uid="uid://casbp4wx7562d" path="res://Resource/Data/Units/测试/巨型战士.tres" id="9_gk8k7"]
@@ -14,7 +12,7 @@
 
 [sub_resource type="Resource" id="Resource_4qidm"]
 script = ExtResource("1_4qidm")
-UnitDatas = Array[Object]([ExtResource("2_wp8c3"), ExtResource("3_nvsh4"), ExtResource("3_cs3pf")])
+UnitDatas = Array[Object]([ExtResource("2_3tljh"), ExtResource("2_3tljh"), ExtResource("2_3tljh")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_n4hmb"]

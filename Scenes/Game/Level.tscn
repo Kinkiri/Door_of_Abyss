@@ -201,6 +201,7 @@ grow_vertical = 0
 
 [node name="Node" type="Node" parent="." unique_id=1273218073]
 script = ExtResource("27_73o0s")
+RunTestsOnReady = true
 
 [node name="FadeInLayer" type="CanvasLayer" parent="." unique_id=1250427062 node_paths=PackedStringArray("_black")]
 layer = 10

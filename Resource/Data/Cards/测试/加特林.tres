@@ -13,14 +13,14 @@ metadata/_custom_type_script = "uid://bcjncmte44un1"
 
 [sub_resource type="Resource" id="Resource_8l45j"]
 script = ExtResource("2_8l45j")
-Value = 9
+Value = 25
 metadata/_custom_type_script = "uid://bn4m8splfe3lb"
 
 [sub_resource type="Resource" id="Resource_y7tnt"]
 script = ExtResource("3_lphhi")
 Times = SubResource("Resource_8l45j")
 Actions = Array[Object]([SubResource("Resource_lphhi")])
-AnimationDuration = 0.1
+AnimationDuration = 2.0
 metadata/_custom_type_script = "uid://chygwwtl82g7i"
 
 [sub_resource type="Resource" id="Resource_7pdki"]

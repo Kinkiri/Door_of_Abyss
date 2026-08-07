@@ -1,5 +1,4 @@
 using Godot;
-using System.Collections.Generic;
 
 /// <summary>
 /// 浮动数字层（View 层管理器，世界空间挂载层）。
@@ -16,9 +15,6 @@ public partial class FloatingNumberLayer : Node2D
 
     [Export] public Color DamageColor = new Color(1, 0.2f, 0.2f);
     [Export] public Color HealColor = new Color(0.2f, 1, 0.2f);
-
-    /// <summary>锚点 → 当前活跃数字数（错开序号分配用），Finished 时释放</summary>
-    private readonly Dictionary<UnitView, int> _activeCounts = new();
 
     public override void _Ready()
     {
@@ -62,20 +58,8 @@ public partial class FloatingNumberLayer : Node2D
         var anchor = UnitViewManager.Instance?.GetUnitView(unit);
         if (anchor == null) return;
 
-        _activeCounts.TryGetValue(anchor, out int count);
-        _activeCounts[anchor] = count + 1;
-
         var node = FloatingNumberPrefab.Instantiate<FloatingNumber>();
-        node.Setup(anchor, text, color, count, amount);
-        node.Finished += n => ReleaseSlot(anchor);
+        node.Setup(anchor, text, color, amount);
         AddChild(node);
-    }
-
-    private void ReleaseSlot(UnitView anchor)
-    {
-        if (!_activeCounts.TryGetValue(anchor, out int count)) return;
-        count--;
-        if (count <= 0) _activeCounts.Remove(anchor);
-        else _activeCounts[anchor] = count;
     }
 }
