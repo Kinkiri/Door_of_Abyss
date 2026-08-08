@@ -12,9 +12,9 @@ public static class AiTactics
     private const int OneShotScore = 300;
     private const int ThreatPerAttack = 2;
 
-    // 移动评分惩罚：进入玩家攻击范围（可攻击时轻罚=值得冒险，无攻击价值重罚=白送）、站下回合刷怪格
-    private const int MoveIntoThreatPenalty = 200;
-    private const int StandInThreatPenalty = 500;
+    // 移动评分惩罚：进入玩家攻击范围（能攻击轻罚=值得冒险，无攻击价值重罚=别白送）、站下回合刷怪格
+    private const int MoveIntoThreatPenalty = 150;
+    private const int StandInThreatPenalty = 250;
     private const int SpawnCellPenalty = 150;
 
     /// <summary>

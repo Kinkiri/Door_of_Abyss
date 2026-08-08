@@ -277,22 +277,12 @@ public partial class EnemyAI : Node
             return PlanMoveAway(enemy, map, threatCells, spawnCells);
         }
 
-        // 1. 攻击：打分选目标；送死攻击（打不死且会被反杀）放弃转走位
+        // 1. 攻击：打分选目标（攻击优先——能打到就打，不做送死预判，避免过度规避）
         var bestTarget = AiTactics.PickAttackTarget(attackableNow, enemy);
         if (bestTarget != null)
         {
-            var playerUnits = UnitManager.Instance.ActiveUnits
-                .Where(u => u.Team == Team.Player && u.IsAlive && !u.IsDead);
-            if (AiTactics.IsSuicidalAttack(enemy, bestTarget, playerUnits, map))
-            {
-                GD.Print($"[EnemyAI]   攻击 {bestTarget.UnitData?.UnitName} 会被反杀，放弃攻击转走位");
-                bestTarget = null;
-            }
-            else
-            {
-                GD.Print($"[EnemyAI]   攻击目标: {bestTarget.UnitData?.UnitName}");
-                return new AiPlan { Enemy = enemy, AttackTarget = bestTarget, IsAttack = true };
-            }
+            GD.Print($"[EnemyAI]   攻击目标: {bestTarget.UnitData?.UnitName}");
+            return new AiPlan { Enemy = enemy, AttackTarget = bestTarget, IsAttack = true };
         }
 
         // 2. 移动：搜索"移动后可攻击"的位置，无则逼近最优进攻目标
