@@ -40,6 +40,9 @@ public partial class MapView : Node2D
             MapManager.Instance.MapUpdated += OnMapUpdated;
 
         SelectionManager.Instance.SelectionUpdated += OnSelectionUpdated;
+
+        // BattleManager 单例 _Ready 顺序不可控，延迟到帧尾订阅（参照 DragCamera2D 模式）
+        CallDeferred(nameof(SubscribeBattle));
     }
 
     public override void _ExitTree()
@@ -48,7 +51,24 @@ public partial class MapView : Node2D
             MapManager.Instance.MapUpdated -= OnMapUpdated;
 
         SelectionManager.Instance.SelectionUpdated -= OnSelectionUpdated;
+
+        if (BattleManager.Instance != null)
+        {
+            BattleManager.Instance.WavePreviewUpdated -= OnWavePreviewUpdated;
+            BattleManager.Instance.WavePreviewCleared -= OnWavePreviewCleared;
+        }
     }
+
+    /// <summary>帧尾订阅 BattleManager 波次预告事件（渲染红色警示格）</summary>
+    private void SubscribeBattle()
+    {
+        if (BattleManager.Instance == null) return;
+        BattleManager.Instance.WavePreviewUpdated += OnWavePreviewUpdated;
+        BattleManager.Instance.WavePreviewCleared += OnWavePreviewCleared;
+    }
+
+    private void OnWavePreviewUpdated(List<(Vector2I pos, UnitData data)> plan) => RenderWavePreview(plan);
+    private void OnWavePreviewCleared() => ClearWavePreview();
 
     // ======================================================================
     // 基础地形

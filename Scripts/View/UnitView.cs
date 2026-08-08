@@ -44,9 +44,6 @@ public partial class UnitView : Node2D
     [Export] public float AttackFlashOut = 0.08f;
 
     // ── 追踪状态 ──────────────────────────────────────────────────────────
-    private int _prevHP;
-    private Vector2I _prevGridPos;
-    private bool _firstUpdate = true;
     private bool _isDying = false;
 
     public override void _Ready()
@@ -67,15 +64,60 @@ public partial class UnitView : Node2D
         // 订阅 ActionQueue 事件（攻击闪白、Buff 弹跳）
         GameAction.OnAnyExecuted += OnActionExecuted;
 
+        // 动画纯事件驱动：受伤闪红 / 治疗闪绿 / 移动着陆 / 死亡消散（过滤自己）
+        var um = UnitManager.Instance;
+        if (um != null)
+        {
+            um.OnUnitDamaged += OnUnitDamaged;
+            um.OnUnitHealed += OnUnitHealed;
+            um.OnUnitMoved += OnUnitMoved;
+            um.OnUnitRemoved += OnUnitRemoved;
+        }
+
         Unit.OnUnitUpdate += UpdateView;
         UpdateView();
-        _firstUpdate = false;
     }
 
     public override void _ExitTree()
     {
         GameAction.OnAnyExecuted -= OnActionExecuted;
+
+        var um = UnitManager.Instance;
+        if (um != null)
+        {
+            um.OnUnitDamaged -= OnUnitDamaged;
+            um.OnUnitHealed -= OnUnitHealed;
+            um.OnUnitMoved -= OnUnitMoved;
+            um.OnUnitRemoved -= OnUnitRemoved;
+        }
+
         if (Unit != null) Unit.OnUnitUpdate -= UpdateView;
+    }
+
+    // ========================================================================
+    // 动画事件（纯事件驱动，过滤自身单位）
+    // ========================================================================
+
+    private void OnUnitDamaged(Unit unit, int amount)
+    {
+        if (unit == Unit && !_isDying) PlayDamageFlash(amount);
+    }
+
+    private void OnUnitHealed(Unit unit, int amount)
+    {
+        if (unit == Unit && !_isDying) PlayHealFlash(amount);
+    }
+
+    private void OnUnitMoved(Unit unit)
+    {
+        if (unit == Unit && !_isDying) PlayMoveLanding();
+    }
+
+    private void OnUnitRemoved(Unit unit)
+    {
+        if (unit != Unit || _isDying) return;
+        _isDying = true;
+        PlayDeathAnimation();
     }
 
     /// <summary>响应 ActionQueue：自己是攻击者时闪白，自己被施加/移除 Buff 或装备时弹跳</summary>
@@ -158,21 +200,12 @@ public partial class UnitView : Node2D
     }
 
     /// <summary>
-    /// Unit 数据变化时调用：更新标签 + 检测 HP/位置变化触发动画。
-    /// 死亡检测也在此完成（UnitManager.RemoveUnit 设置 IsDead 后调用 UpdateUnit），
-    /// 替代原先 _Process 的每帧轮询。
+    /// Unit 数据变化时调用：更新标签与位置。
+    /// 动画不再在此检测（纯事件驱动：受伤/治疗/移动/死亡分别订阅 UnitManager 事件触发）。
     /// </summary>
     public void UpdateView()
     {
         if (UnitData == null) return;
-
-        // 死亡检测：触发一次死亡动画，之后不再更新
-        if (!_isDying && (Unit.IsDead || !Unit.IsAlive))
-        {
-            _isDying = true;
-            PlayDeathAnimation();
-            return;
-        }
 
         // 标签更新
         if (NameLabel != null) NameLabel.Text = UnitData.UnitName;
@@ -180,21 +213,6 @@ public partial class UnitView : Node2D
         if (ATKLabel != null) ATKLabel.Text = $" {Unit.AttackPower}";
         if (APLabel != null) APLabel.Text = $" {Unit.ActionPoints}";
 
-        // ── HP 变化检测 ─────────────────────────────────────────────
-        if (!_firstUpdate && !_isDying)
-        {
-            int hpDiff = Unit.CurrentHP - _prevHP;
-            if (hpDiff < 0)
-                PlayDamageFlash(-hpDiff);
-            else if (hpDiff > 0)
-                PlayHealFlash(hpDiff);
-        }
-        _prevHP = Unit.CurrentHP;
-
-        // ── 位置变化检测（死亡时不做）─────────────────────────────
-        if (!_firstUpdate && !_isDying && Unit.GridPos != _prevGridPos)
-            PlayMoveLanding();
-        _prevGridPos = Unit.GridPos;
         Position = MapManager.Instance.GridToWorld(Unit.GridPos);
     }
 
