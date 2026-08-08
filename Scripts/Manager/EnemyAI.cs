@@ -12,6 +12,24 @@ public partial class EnemyAI : Node
     /// <summary>AI 单位之间行动间隔（秒）</summary>
     [Export] public float ActionDelay { get; set; } = 0.4f;
 
+    /// <summary>行动前镜头预告停顿（秒）：先让摄像机飞向行动位置，再执行行动（保证远距离行动可见）</summary>
+    [Export] public float CameraPanDelay { get; set; } = 0.4f;
+
+    /// <summary>AI 攻击行动预告（行动前发出，View 层订阅，如摄像机跟随）；参数：攻击者 + 攻击目标</summary>
+    public event System.Action<Unit, Unit> AiAttackPreviewed;
+
+    /// <summary>AI 移动行动预告（行动前发出，View 层订阅）；参数：移动单位 + 目标格</summary>
+    public event System.Action<Unit, Vector2I> AiMovePreviewed;
+
+    /// <summary>AI 单次行动计划（决策与执行分离：决策后预告镜头，停顿后再执行）</summary>
+    private class AiPlan
+    {
+        public Unit Enemy;
+        public Unit AttackTarget;   // Kind=Attack
+        public Vector2I MovePos;    // Kind=Move
+        public bool IsAttack;
+    }
+
     private Queue<Unit> _actionQueue;
 
     public override void _Ready()
@@ -77,26 +95,58 @@ public partial class EnemyAI : Node
 
         var enemy = _actionQueue.Dequeue();
 
-        // 只处理一个动作，如果还有剩余 AP 则重新入队
-        bool continueAction = DoOneAction(enemy);
-        if (continueAction && enemy.ActionPoints > 0)
-            _actionQueue.Enqueue(enemy);
+        // 决策（纯读）→ 预告镜头 → 停顿让摄像机跑过去 → 再执行行动（保证远距离行动全程可见）
+        var plan = DecideAction(enemy);
+        if (plan == null)
+        {
+            // 无可行动作（找不到玩家等）：直接下一个
+            var next = GetTree().CreateTimer(ActionDelay, processAlways: false);
+            next.Timeout += ProcessNext;
+            return;
+        }
 
-        var next = GetTree().CreateTimer(ActionDelay, processAlways: false);
-        next.Timeout += ProcessNext;
+        PreviewCamera(plan);
+        var pan = GetTree().CreateTimer(CameraPanDelay, processAlways: false);
+        pan.Timeout += () =>
+        {
+            ExecutePlan(plan);
+            // 只处理一个动作，如果还有剩余 AP 则重新入队
+            if (enemy.ActionPoints > 0)
+                _actionQueue.Enqueue(enemy);
+            var next = GetTree().CreateTimer(ActionDelay, processAlways: false);
+            next.Timeout += ProcessNext;
+        };
+    }
+
+    /// <summary>预告摄像机（发事件，View 层订阅驱动镜头）：攻击 → 行动单位+目标单位中点；移动 → 行动单位+目标格中点</summary>
+    private void PreviewCamera(AiPlan plan)
+    {
+        if (plan.IsAttack)
+            AiAttackPreviewed?.Invoke(plan.Enemy, plan.AttackTarget);
+        else
+            AiMovePreviewed?.Invoke(plan.Enemy, plan.MovePos);
+    }
+
+    /// <summary>执行已决策的行动（停顿结束后调用）</summary>
+    private void ExecutePlan(AiPlan plan)
+    {
+        var bm = BattleManager.Instance;
+        if (plan.IsAttack)
+            bm?.AIDoAttack(plan.Enemy, plan.AttackTarget);
+        else
+            bm?.AIDoMove(plan.Enemy, plan.MovePos);
     }
 
     /// <summary>
-    /// 执行单个动作（一次攻击或一次移动），返回 true 表示执行了动作。
+    /// 决策单个动作（一次攻击或一次移动），返回行动计划；不执行。
     /// 贪心策略：优先攻击范围内最近的玩家，否则朝玩家走一步。
     /// </summary>
-    private bool DoOneAction(Unit enemy)
+    private AiPlan DecideAction(Unit enemy)
     {
         if (!enemy.IsAlive || enemy.IsDead || enemy.ActionPoints <= 0)
-            return false;
+            return null;
 
         var map = MapManager.Instance.Map;
-        var bm = BattleManager.Instance;
 
         GD.Print($"[EnemyAI] 处理 {enemy.UnitData?.UnitName} 位置={enemy.GridPos} AP={enemy.ActionPoints}");
 
@@ -126,8 +176,7 @@ public partial class EnemyAI : Node
         if (nearestTarget != null)
         {
             GD.Print($"[EnemyAI]   攻击目标: {nearestTarget.UnitData?.UnitName}");
-            bm.AIDoAttack(enemy, nearestTarget);
-            return true;
+            return new AiPlan { Enemy = enemy, AttackTarget = nearestTarget, IsAttack = true };
         }
 
         // 2. 无法攻击 → 沿最短路径朝最近玩家走一步
@@ -135,7 +184,7 @@ public partial class EnemyAI : Node
         if (nearestPlayer == null)
         {
             GD.Print($"[EnemyAI]   未找到玩家单位");
-            return false;
+            return null;
         }
 
         GD.Print($"[EnemyAI]   最近玩家: {nearestPlayer.UnitData?.UnitName} 在 {nearestPlayer.GridPos}");
@@ -161,12 +210,11 @@ public partial class EnemyAI : Node
         if (!bestMove.HasValue)
         {
             GD.Print($"[EnemyAI]   无可达格子（体力={enemy.Stamina}）");
-            return false;
+            return null;
         }
 
         GD.Print($"[EnemyAI]   移动到 ({bestMove.Value.X},{bestMove.Value.Y}) 距离玩家 {bestDist}");
-        bm.AIDoMove(enemy, bestMove.Value);
-        return true;
+        return new AiPlan { Enemy = enemy, MovePos = bestMove.Value, IsAttack = false };
     }
 
     private Unit FindNearestPlayer(Vector2I from)

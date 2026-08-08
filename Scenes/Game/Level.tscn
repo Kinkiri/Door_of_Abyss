@@ -65,6 +65,16 @@ corner_radius_bottom_left = 10
 
 [node name="Game" type="Node2D" unique_id=1802915340]
 
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1606070645]
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+scale = Vector2(641.1716, 641.1716)
+pivot_offset = Vector2(20, 20)
+mouse_filter = 2
+color = Color(0.38170326, 0.38170323, 0.38170323, 1)
+
 [node name="Camera2D" type="Camera2D" parent="." unique_id=477498845]
 zoom = Vector2(0.985, 0.985)
 script = ExtResource("1_edprt")
@@ -72,7 +82,7 @@ ZoomStep = 0.08
 MinZoom = 0.5
 MaxZoom = 5.0
 ZoomAnimationDuration = 0.6
-FollowSpeed = 2.0
+FollowSpeed = 3.0
 
 [node name="TouchInputAdapter" type="Node2D" parent="." unique_id=692687025]
 script = ExtResource("32_touch")
@@ -98,7 +108,8 @@ script = ExtResource("8_s72d7")
 
 [node name="EnemyAI" type="Node" parent="Manager" unique_id=1060750510]
 script = ExtResource("9_avor6")
-ActionDelay = 1.0
+ActionDelay = 0.3
+CameraPanDelay = 0.7
 
 [node name="MapExporter" type="Node" parent="Manager" unique_id=1709305838 node_paths=PackedStringArray("SourceLayer", "EnvironmentSourceLayer")]
 script = ExtResource("10_g78sk")
@@ -201,7 +212,6 @@ grow_vertical = 0
 
 [node name="FadeInLayer" type="CanvasLayer" parent="." unique_id=1250427062 node_paths=PackedStringArray("_black")]
 layer = 10
-visible = false
 script = ExtResource("33_fade")
 _black = NodePath("Control/Black")
 

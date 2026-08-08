@@ -163,7 +163,7 @@ public partial class BattleManager : Node2D
             TargetCell = targetCell,
             SourceCell = oldCell,
         }, instigator: unit);
-        UnitActed?.Invoke(unit);
+        UnitActed?.Invoke(unit, null);
 
         // AP 耗尽不取消选中（保留面板与范围显示供查看）——MoveUnit 已触发 UpdateUnit→RecalculateRanges，此处显式刷新双保险
         SelectionManager.Instance.RecalculateRanges();
@@ -219,7 +219,7 @@ public partial class BattleManager : Node2D
                 TargetCell = MapManager.Instance.TryGetCell(target.GridPos, out var tcc) ? tcc : null,
                 AttackDirection = TargetResolver.DirectionBetween(attacker.GridPos, target.GridPos),
             }, instigator: attacker);
-            UnitActed?.Invoke(attacker);
+            UnitActed?.Invoke(attacker, target);
 
             // AP 耗尽不取消选中（保留面板与范围显示供查看）
             SelectionManager.Instance.RecalculateRanges();
@@ -334,7 +334,7 @@ public partial class BattleManager : Node2D
             TargetCell = targetCell,
             SourceCell = oldCell,
         }, instigator: unit);
-        UnitActed?.Invoke(unit);
+        UnitActed?.Invoke(unit, null);
     }
 
     /// <summary>AI 攻击单位（跳过阵营检查）</summary>
@@ -375,7 +375,7 @@ public partial class BattleManager : Node2D
                 TargetCell = MapManager.Instance.TryGetCell(target.GridPos, out var tcc) ? tcc : null,
                 AttackDirection = TargetResolver.DirectionBetween(attacker.GridPos, target.GridPos),
             }, instigator: attacker);
-            UnitActed?.Invoke(attacker);
+            UnitActed?.Invoke(attacker, target);
         }));
     }
 
@@ -386,8 +386,15 @@ public partial class BattleManager : Node2D
     [Signal] public delegate void GameEndedEventHandler(Team winner, int round);
     [Signal] public delegate void CostChangedEventHandler(int currentCost, int maxCost);
 
-    /// <summary>任意单位（玩家/AI）完成一次移动或攻击行动时触发（View 层订阅，如摄像机跟随）</summary>
-    public event Action<Unit> UnitActed;
+    /// <summary>任意单位（玩家/AI）完成一次移动或攻击行动时触发（View 层订阅，如摄像机跟随）。
+    /// 参数：行动单位 + 行动目标（移动/无目标时为 null）。</summary>
+    public event Action<Unit, Unit> UnitActed;
+
+    /// <summary>波次刷怪位置预告更新（View 层订阅，MapView 渲染红色警示格）；参数为锁定位置计划</summary>
+    public event Action<List<(Vector2I pos, UnitData data)>> WavePreviewUpdated;
+
+    /// <summary>波次预告清除（刷怪生成后调用，View 层订阅）</summary>
+    public event Action WavePreviewCleared;
 
     // ======================================================================
 
@@ -738,7 +745,7 @@ public partial class BattleManager : Node2D
         if (_waveSpawnPlan.TryGetValue(round, out var plan))
         {
             _waveSpawnPlan.Remove(round);
-            MapView.Instance?.ClearWavePreview();
+            WavePreviewCleared?.Invoke();
             SpawnFromPlan(plan, round);
             return;
         }
@@ -812,7 +819,7 @@ public partial class BattleManager : Node2D
             plan.Add((cells[i], wave.UnitDatas[i]));
 
         _waveSpawnPlan[round] = plan;
-        MapView.Instance?.RenderWavePreview(plan);
+        WavePreviewUpdated?.Invoke(plan);
         GD.Print($"[Battle] 预告回合 {round} 波次：{count} 个单位");
     }
 
