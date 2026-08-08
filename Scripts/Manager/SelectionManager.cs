@@ -41,7 +41,28 @@ public partial class SelectionManager : Node2D
         Instance = this;
     }
 
-    public void Init() { }
+    public override void _ExitTree()
+    {
+        var um = UnitManager.Instance;
+        if (um == null) return;
+        um.OnUnitSpawned -= OnAnyUnitChanged;
+        um.OnUnitRemoved -= OnAnyUnitChanged;
+        um.OnUnitMoved -= OnAnyUnitChanged;
+    }
+
+    public void Init()
+    {
+        // 场上单位出现/消失/移动 → 重算选中单位的高亮范围：
+        // 攻击目标集合依赖场上单位分布，攻击范围依赖格子占据（排除友方），移动范围依赖可站立状态，
+        // 其他单位的变化都会改变这些结果（如敌方移入射程、友方死亡释放格子、新单位生成）
+        var um = UnitManager.Instance;
+        if (um == null) return;
+        um.OnUnitSpawned += OnAnyUnitChanged;
+        um.OnUnitRemoved += OnAnyUnitChanged;
+        um.OnUnitMoved += OnAnyUnitChanged;
+    }
+
+    private void OnAnyUnitChanged(Unit _) => RecalculateRanges();
 
     public override void _Input(InputEvent @event)
     {
@@ -64,12 +85,28 @@ public partial class SelectionManager : Node2D
     {
         if (card == null) return;
 
+        // 先取消单位/格子选中（清除移动攻击范围高亮），再进入卡牌瞄准模式，
+        // 避免单位范围与卡牌目标预览叠加显示
+        UnselectUnit();
+        LastCardPreviewCells = null; // 换卡时清掉上一张卡的预览，等待鼠标移动重算
+
         SelectedCard = card;
         IsAimingMode = true;
         AudioManager.Instance?.PlayUiSfx("card_select");
         GD.Print($"[Selection] 选中卡牌: [{card.CardID}] {card.CardName}，请选择目标");
         // 通知 View 层（信息面板等）卡牌选中状态变化
         EmitSignal(SignalName.SelectionUpdated);
+    }
+
+    /// <summary>仅取消单位/格子选中（清除范围高亮与状态订阅），保留卡牌选中状态，供出牌瞄准场景复用</summary>
+    private void UnselectUnit()
+    {
+        UnsubscribeSelectedUnit();
+        SelectedUnit = null;
+        SelectedCell = null;
+        _reachable = null;
+        _attackable = null;
+        _attackRange = null;
     }
 
     /// <summary>由 BattleManager / 选中单位状态更新触发：重算移动与攻击范围。
@@ -523,15 +560,10 @@ public partial class SelectionManager : Node2D
 
     public void ClearSelection()
     {
-        UnsubscribeSelectedUnit();
-        SelectedUnit = null;
-        SelectedCell = null;
+        UnselectUnit();
         SelectedCard = null;
         IsAimingMode = false;
         LastCardPreviewCells = null;
-        _reachable = null;
-        _attackable = null;
-        _attackRange = null;
         EmitSignal(SignalName.SelectionUpdated);
     }
 
