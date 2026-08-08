@@ -13,7 +13,7 @@ using System.Text;
 /// 调用方只需 Show() / Hide()。
 /// </summary>
 [GlobalClass]
-public partial class DeckBuilderPanel : Control
+public partial class DeckBuilderPanel : Control, IPanel
 {
     /// <summary>单卡数量上限</summary>
     private const int MaxPerCard = 3;
@@ -37,6 +37,13 @@ public partial class DeckBuilderPanel : Control
     private readonly Dictionary<string, int> _counts = new();
     /// <summary>行控件：CardID → (名称Label, 数量Label, [-]按钮, [+]按钮)</summary>
     private readonly Dictionary<string, (Label nameLabel, Label countLabel, Button minus, Button plus)> _rows = new();
+
+    public bool IsVisiblePanel => _panel?.Visible ?? false;
+
+    // IPanel（PanelStack 成员）
+    public bool IsOpen => IsVisiblePanel;
+    public void Open() => Show();
+    public void Close() => Hide();
 
     public override void _Ready()
     {
@@ -62,6 +69,7 @@ public partial class DeckBuilderPanel : Control
     public new void Show()
     {
         if (_animating || (_panel?.Visible ?? true)) return;
+        PanelStack.Push(this);
         AudioManager.Instance?.PlayUiSfx("ui_click");
         ApplyPanelClamp();
         if (!_listBuilt) BuildList();
@@ -81,6 +89,7 @@ public partial class DeckBuilderPanel : Control
     public new void Hide()
     {
         if (_animating || !(_panel?.Visible ?? false)) return;
+        PanelStack.Pop(this);
         AudioManager.Instance?.PlayUiSfx("ui_click");
         _animating = true;
         AnimatePanelOut(() => _animating = false);

@@ -38,6 +38,7 @@
 [ext_resource type="Script" uid="uid://tl5blxwveo7x" path="res://Scripts/View/FloatingNumberLayer.cs" id="38_fnlayer"]
 [ext_resource type="Script" uid="uid://c8mc7qbm57bc2" path="res://Scripts/View/HintView.cs" id="39_hintview"]
 [ext_resource type="PackedScene" uid="uid://bf404lw2x420m" path="res://Scenes/Prefabs/提示面板.tscn" id="40_hintpanel"]
+[ext_resource type="Script" uid="uid://djhdjwioujnve" path="res://Scripts/View/PauseButton.cs" id="41_pausebtn"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8od7v"]
 texture = ExtResource("19_pu45w")
@@ -53,6 +54,28 @@ tile_size = Vector2i(128, 128)
 custom_data_layer_0/name = "data"
 custom_data_layer_0/type = 24
 sources/2 = SubResource("TileSetAtlasSource_8od7v")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pause_btn"]
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+bg_color = Color(0.05, 0.05, 0.08, 0.6)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pause_btn_hover"]
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+bg_color = Color(0.1, 0.1, 0.14, 0.8)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pause"]
 content_margin_left = 36.0
@@ -255,6 +278,24 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 1)
 
+[node name="PauseButtonLayer" type="CanvasLayer" parent="." unique_id=136172041]
+layer = 15
+
+[node name="PauseButton" type="Button" parent="PauseButtonLayer" unique_id=120902517]
+offset_left = 24.0
+offset_top = 16.0
+offset_right = 136.0
+offset_bottom = 68.0
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.8)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("StyleBoxFlat_pause_btn")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pause_btn_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_pause_btn_hover")
+text = "⏸ 暂停"
+script = ExtResource("41_pausebtn")
+
 [node name="PauseLayer" type="CanvasLayer" parent="." unique_id=2100000200]
 layer = 20
 visible = false
@@ -321,6 +362,15 @@ theme_override_colors/font_color = Color(1, 1, 1, 0.75)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 28
 text = "继续游戏"
+flat = true
+
+[node name="RestartButton" type="Button" parent="PauseLayer/PauseMenu/Panel/Margin/Root/Buttons" unique_id=1262863769]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.75)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "重新开始"
 flat = true
 
 [node name="SettingsButton" type="Button" parent="PauseLayer/PauseMenu/Panel/Margin/Root/Buttons" unique_id=2100000210]

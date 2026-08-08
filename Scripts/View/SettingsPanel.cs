@@ -8,7 +8,7 @@ using System;
 /// 调用方只需 Show() / Hide()。
 /// </summary>
 [GlobalClass]
-public partial class SettingsPanel : Control
+public partial class SettingsPanel : Control, IPanel
 {
     /// <summary>设置存档路径（与 AudioManager 共用同一文件，video 段归本组件管）</summary>
     private const string SettingsCfgPath = "user://settings.cfg";
@@ -27,6 +27,11 @@ public partial class SettingsPanel : Control
     private bool _animating;
 
     public bool IsVisiblePanel => _panel?.Visible ?? false;
+
+    // IPanel（PanelStack 成员）
+    public bool IsOpen => IsVisiblePanel;
+    public void Open() => Show();
+    public void Close() => Hide();
 
     public override void _Ready()
     {
@@ -50,6 +55,7 @@ public partial class SettingsPanel : Control
     public new void Show()
     {
         if (_animating || (_panel?.Visible ?? true)) return;
+        PanelStack.Push(this);
         AudioManager.Instance?.PlayUiSfx("ui_click");
         _animating = true;
         AnimatePanelIn(() => _animating = false);
@@ -59,6 +65,7 @@ public partial class SettingsPanel : Control
     public new void Hide()
     {
         if (_animating || !(_panel?.Visible ?? false)) return;
+        PanelStack.Pop(this);
         AudioManager.Instance?.PlayUiSfx("ui_click");
         _animating = true;
         AnimatePanelOut(() => _animating = false);

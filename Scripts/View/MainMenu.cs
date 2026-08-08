@@ -35,9 +35,12 @@ public partial class MainMenu : Control
     private Label _detailName;
     private Label _detailDesc;
     private Label _detailInfo;
+    private PanelAdapter _creditsAdapter;
+    private PanelAdapter _levelSelectAdapter;
 
     public override void _Ready()
     {
+        PanelStack.Clear();   // 场景入口：丢弃上一场景残留的面板（避免 Esc 访问已释放节点）
         _fadeOut.MouseFilter = MouseFilterEnum.Ignore;
         _toast.Modulate = Colors.Transparent;
         _title.PivotOffset = _title.Texture.GetSize() / 2f;
@@ -46,6 +49,8 @@ public partial class MainMenu : Control
         SetupMenu();
         SetupCredits();
         SetupLevelSelect();
+        _creditsAdapter = new PanelAdapter(() => _creditsPanel.Visible, ShowCredits, HideCredits);
+        _levelSelectAdapter = new PanelAdapter(() => _levelSelectPanel.Visible, ShowLevelSelect, HideLevelSelect);
         PlayEntrance();
         StartBreathAnimation();
         StartBackgroundBreath();
@@ -70,6 +75,14 @@ public partial class MainMenu : Control
             _dustDir = 1;
         }
         _dust.Position = pos;
+    }
+
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (@event is not InputEventKey key || !key.Pressed || key.Echo || key.Keycode != Key.Escape) return;
+        GetViewport().SetInputAsHandled();
+        // 面板栈统一处理：Esc 关闭栈顶（设置/配置卡组/关于/选关按打开逆序）
+        PanelStack.HandleEscape();
     }
 
     private void SetupMenu()
@@ -238,6 +251,7 @@ public partial class MainMenu : Control
     private void ShowCredits()
     {
         if (_creditsAnimating || _creditsPanel.Visible) return;
+        PanelStack.Push(_creditsAdapter);
         AudioManager.Instance?.PlayUiSfx("ui_click");
         _creditsAnimating = true;
         AnimatePanelIn(_creditsPanel, _creditsBackdrop, _creditsBasePos,
@@ -247,6 +261,7 @@ public partial class MainMenu : Control
     private void HideCredits()
     {
         if (_creditsAnimating || !_creditsPanel.Visible) return;
+        PanelStack.Pop(_creditsAdapter);
         AudioManager.Instance?.PlayUiSfx("ui_click");
         _creditsAnimating = true;
         AnimatePanelOut(_creditsPanel, _creditsBackdrop, _creditsBasePos,
@@ -256,6 +271,7 @@ public partial class MainMenu : Control
     private void ShowLevelSelect()
     {
         if (_levelSelectAnimating || _levelSelectPanel.Visible) return;
+        PanelStack.Push(_levelSelectAdapter);
         AudioManager.Instance?.PlayUiSfx("ui_click");
         _levelSelectAnimating = true;
         // 关卡库懒加载：首次打开选关面板时才加载全部关卡数据（避免拖慢标题场景进入）
@@ -269,6 +285,7 @@ public partial class MainMenu : Control
     private void HideLevelSelect()
     {
         if (_levelSelectAnimating || !_levelSelectPanel.Visible) return;
+        PanelStack.Pop(_levelSelectAdapter);
         AudioManager.Instance?.PlayUiSfx("ui_click");
         _levelSelectAnimating = true;
         AnimatePanelOut(_levelSelectPanel, _levelSelectBackdrop, _levelSelectBasePos,
