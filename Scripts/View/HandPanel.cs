@@ -15,7 +15,7 @@ public partial class HandPanel : Container
     /// <summary>缩放渐变动画时长（秒）</summary>
     [Export] public float HoverDuration { get; set; } = 0.3f;
     /// <summary>卡牌之间的间距</summary>
-    [Export] public float CardSpacing { get; set; } = 20f;
+    [Export] public float CardSpacing { get; set; } = 5f;
 
     /// <summary>排布/飞入的移动平滑时长（秒）</summary>
     [Export] public float LayoutMoveDuration { get; set; } = 0.3f;

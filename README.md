@@ -1400,8 +1400,8 @@ DamageUnit → DestroyUnit → RemoveUnit
   ├─ IsDead=true
   ├─ UpdateUnit()（刷新标签）
   └─ 发 OnUnitRemoved 事件
-       ├─ UnitView 订阅（过滤自己）→ PlayDeathAnimation()（事件驱动，不再每帧轮询）
-       └─ UnitViewManager 清理视图引用（不 QueueFree）
+	   ├─ UnitView 订阅（过滤自己）→ PlayDeathAnimation()（事件驱动，不再每帧轮询）
+	   └─ UnitViewManager 清理视图引用（不 QueueFree）
 
 UnitView.PlayDeathAnimation()
   → Tween: scale 0 + modulate 淡出

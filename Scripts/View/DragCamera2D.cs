@@ -72,7 +72,6 @@ public partial class DragCamera2D : Camera2D
 
     /// <summary>次关注单位视图（攻击目标，null = 单点跟随）</summary>
     private Node2D _followTarget2;
-    private Unit _followUnit2;
 
     /// <summary>行动前预告的镜头目标点（优先级最高；行动后由 UnitActed 建立的真实跟随接管时清除）</summary>
     private Vector2? _previewPoint;
@@ -169,18 +168,12 @@ public partial class DragCamera2D : Camera2D
             SetFollowTarget(unit, target);
     }
 
-    /// <summary>跟随单位被移除：主关注单位移除 → 停止跟随；次关注单位移除 → 退化为单点跟随</summary>
+    /// <summary>跟随单位被移除：主关注单位移除 → 停止跟随；
+    /// 次关注单位（目标）移除不动作——由 _Process 检测其视图销毁后停在中点静止（不再退化为跟随主单位）</summary>
     private void OnUnitRemoved(Unit unit)
     {
         if (unit == _followUnit)
             ClearFollow();
-        else if (unit == _followUnit2)
-        {
-            GD.Print($"[Camera] 次关注单位移除，退化单点: {unit?.UnitData?.UnitName}");
-            _followUnit2 = null;
-            _followTarget2 = null;
-            _autoTargetZoom = null;   // 停止继续缩小（保持当前缩放，用户可手动放大）
-        }
     }
 
     /// <summary>敌人行动前预告镜头：先飞向攻击双方（单位+目标单位）中点并自适应缩放，
@@ -221,7 +214,6 @@ public partial class DragCamera2D : Camera2D
         var um = UnitViewManager.Instance;
         _followUnit = unit;
         _followTarget = um?.GetUnitView(unit);   // 无视图（测试环境等）时为 null，不跟随
-        _followUnit2 = secondary;
         _followTarget2 = secondary != null ? um?.GetUnitView(secondary) : null;
         _previewPoint = null;   // 真实跟随接管，清除行动前预告
 
@@ -251,7 +243,6 @@ public partial class DragCamera2D : Camera2D
     {
         _followUnit = null;
         _followTarget = null;
-        _followUnit2 = null;
         _followTarget2 = null;
         _lastSelectedUnit = null;
         _previewPoint = null;
@@ -273,7 +264,8 @@ public partial class DragCamera2D : Camera2D
             return;
         }
 
-        // 跟随点优先级：行动前预告点 > 双点（攻击者+目标）中点 > 单点；次视图已销毁（目标死亡）→ 退化为单点
+        // 跟随点优先级：行动前预告点 > 双点（攻击者+目标）中点 > 单点；
+        // 副视图已销毁（目标死亡动画结束）→ 停在中点静止，不再退化为跟随主单位
         Vector2 targetPos;
         if (_previewPoint.HasValue)
         {
@@ -282,6 +274,11 @@ public partial class DragCamera2D : Camera2D
         else if (_followTarget2 != null && GodotObject.IsInstanceValid(_followTarget2))
         {
             targetPos = (_followTarget.GlobalPosition + _followTarget2.GlobalPosition) / 2f;
+        }
+        else if (_followTarget2 != null)
+        {
+            _autoTargetZoom = null;   // 目标已消失：停止自动缩放，镜头静止在中点
+            targetPos = GlobalPosition;
         }
         else
         {

@@ -96,6 +96,11 @@ public partial class UnitViewManager : Node
 
         _unitViews[unit] = view;
 
+        // 视图销毁时清理引用（死亡动画播完 QueueFree / 场景卸载均触发）——
+        // 不在 OnUnitRemoved 立即清理：死亡动画期间引用保留，供镜头双点跟随（攻击致死后
+        // UnitActed 回调需 GetUnitView(target) 建立攻击者+目标中点）与浮动数字锚点使用
+        view.TreeExited += () => _unitViews.Remove(unit);
+
         // 敌方标志由 UnitView 的 EnemyIndicator 自己判断显示
 
         UnitLayer.AddChild(view);
@@ -104,9 +109,8 @@ public partial class UnitViewManager : Node
 
     private void OnUnitRemoved(Unit unit)
     {
-        // 清理视觉节点引用（不 QueueFree——UnitView 自己播完死亡动画后销毁）
-        if (_unitViews.TryGetValue(unit, out var view))
-            _unitViews.Remove(unit);
+        // 不清理 _unitViews——引用由 UnitView.TreeExited 统一清理（见 OnUnitSpawned 注释）
+        _ = unit;
     }
 
     private void OnUnitTransformed(Unit unit)
