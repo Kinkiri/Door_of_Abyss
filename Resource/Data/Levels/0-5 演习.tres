@@ -1,5 +1,6 @@
 [gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://ekxfalscq7fs"]
 
+[ext_resource type="Script" uid="uid://cov8agd25nia1" path="res://Scripts/Data/Levels/HintData.cs" id="1_icrfw"]
 [ext_resource type="Resource" uid="uid://bj2geonyyapfc" path="res://Resource/Data/Deck/门客.tres" id="1_qect8"]
 [ext_resource type="Resource" path="res://Resource/Data/Maps/初入战场.tres" id="17_jbw4p"]
 [ext_resource type="Resource" uid="uid://vyqut7nte65d" path="res://Resource/Data/Units/门客/老兵.tres" id="17_t6xo4"]
@@ -13,6 +14,23 @@
 [ext_resource type="Resource" uid="uid://c52vijing117o" path="res://Resource/Data/Units/门客/狙击手.tres" id="23_gdifb"]
 [ext_resource type="Resource" uid="uid://c25vffb06hqi2" path="res://Resource/Data/Units/门客/指挥官.tres" id="24_idt2s"]
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="24_whytc"]
+
+[sub_resource type="Resource" id="Resource_r0ci1"]
+script = ExtResource("1_icrfw")
+TriggerRound = 0
+Message = "这还没到正常地图大小"
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
+[sub_resource type="Resource" id="Resource_l07ki"]
+script = ExtResource("1_icrfw")
+Message = "发现了吗，部署范围和攻击范围不会被障碍截断，利用起来"
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
+[sub_resource type="Resource" id="Resource_wkrte"]
+script = ExtResource("1_icrfw")
+TriggerRound = 2
+Message = "两个门的职责可以不同"
+metadata/_custom_type_script = "uid://cov8agd25nia1"
 
 [sub_resource type="Resource" id="Resource_skqe5"]
 script = ExtResource("19_qn088")
@@ -60,9 +78,10 @@ LevelName = "0-5 演习"
 Description = "较大的地图与长线作战"
 Waves = Array[Object]([SubResource("Resource_skqe5"), SubResource("Resource_sv6jl"), SubResource("Resource_2ef0t"), SubResource("Resource_5dyfj"), SubResource("Resource_t7weq"), SubResource("Resource_3p8hw")])
 MapData = ExtResource("17_jbw4p")
-DoorPlaceZoneMin = Vector2i(0, 1)
-DoorPlaceZoneMax = Vector2i(1, 2)
+DoorPlaceZoneMin = Vector2i(0, 2)
+DoorPlaceZoneMax = Vector2i(0, 4)
 DefaultSpawnAreaMin = Vector2i(8, 0)
 DefaultSpawnAreaMax = Vector2i(12, 7)
 LevelDeck = ExtResource("1_qect8")
+Hints = Array[Object]([SubResource("Resource_r0ci1"), SubResource("Resource_l07ki"), SubResource("Resource_wkrte")])
 metadata/_custom_type_script = "uid://wk0covoailum"

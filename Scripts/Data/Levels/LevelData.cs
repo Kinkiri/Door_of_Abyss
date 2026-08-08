@@ -31,4 +31,7 @@ public partial class LevelData : Resource
 
     /// <summary>关卡内提示（按触发回合自动显示，0=放门阶段）</summary>
     [Export] public HintData[] Hints { get; set; }
+
+    /// <summary>敌方 AI 等级（默认标准：目标打分 + 移动进射程；狡诈再加威胁规避/刷怪格回避）</summary>
+    [Export] public AiLevel AiLevel { get; set; } = AiLevel.标准;
 }

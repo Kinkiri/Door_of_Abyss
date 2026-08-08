@@ -279,9 +279,9 @@ public partial class TouchInputAdapter : Node2D
         };
 
         // 左上角常驻（RoundInfoPanel 在右上角，避免遮挡）
-        btn.OffsetLeft = 10f;
-        btn.OffsetTop = 10f;
-        btn.OffsetRight = 58f;
+        btn.OffsetLeft = 170f;
+        btn.OffsetTop = 15f;
+        btn.OffsetRight = 210f;
         btn.OffsetBottom = 58f;
 
         btn.Pressed += () => SelectionManager.Instance?.ClearSelection();

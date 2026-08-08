@@ -28,7 +28,7 @@ metadata/_custom_type_script = "uid://bqdiie4v7k7l7"
 
 [sub_resource type="Resource" id="Resource_etn6x"]
 script = ExtResource("3_28dxm")
-Value = 3
+Value = 5
 metadata/_custom_type_script = "uid://bn4m8splfe3lb"
 
 [sub_resource type="Resource" id="Resource_d7kfg"]
@@ -54,7 +54,7 @@ Faction = 2
 Tags = Array[int]([0, 3, 2])
 Rarity = 2
 AttackDistance = 2
-Description = "回合开始。若义肢>2，则+1血上限+1攻"
+Description = "回合开始。若义肢>4，则+1血上限+1攻"
 UnitPrefab = ExtResource("6_8qntm")
 PassiveEffects = Array[Object]([SubResource("Resource_v3nlb")])
 metadata/_custom_type_script = "uid://cthrvfilibvfl"

@@ -4,14 +4,15 @@ using System;
 /// <summary>
 /// 设置面板组件（主界面与战斗暂停菜单共用）。
 /// 根节点为全屏 Control（子节点：Backdrop 暗幕 + Panel 面板），自管显示动画与设置逻辑：
-/// 左侧选项卡（音量/画面）+ 右侧内容页；audio 段持久化由 AudioManager 负责，video 段归本组件。
+/// 左侧选项卡（音量/画面/游戏）+ 右侧内容页；audio 段持久化由 AudioManager 负责，
+/// video 段与 game 段（AI 难度）归本组件（路径常量见 GameSettings）。
 /// 调用方只需 Show() / Hide()。
 /// </summary>
 [GlobalClass]
 public partial class SettingsPanel : Control, IPanel
 {
-    /// <summary>设置存档路径（与 AudioManager 共用同一文件，video 段归本组件管）</summary>
-    private const string SettingsCfgPath = "user://settings.cfg";
+    /// <summary>AI 难度变更（游戏页下拉选择时触发；战斗中 PauseMenu 订阅后重启关卡）</summary>
+    public event Action AiDifficultyChanged;
 
     private static readonly (string text, Vector2I size)[] Resolutions =
     {
@@ -48,6 +49,7 @@ public partial class SettingsPanel : Control, IPanel
 
         SetupAudioPage();
         SetupVideoPage();
+        SetupGamePage();
         SetupSettingsTabs();
     }
 
@@ -159,7 +161,7 @@ public partial class SettingsPanel : Control, IPanel
 
         // 读取已存设置（video 段）
         var cfg = new ConfigFile();
-        cfg.Load(SettingsCfgPath);
+        cfg.Load(GameSettings.SettingsCfgPath);
         bool fullscreen = (bool)cfg.GetValue("video", "fullscreen", false);
         string resolutionText = (string)cfg.GetValue("video", "resolution", "1920×1080");
 
@@ -191,10 +193,10 @@ public partial class SettingsPanel : Control, IPanel
     private static void SaveVideoSettings(OptionButton resOption, OptionButton modeOption)
     {
         var cfg = new ConfigFile();
-        cfg.Load(SettingsCfgPath);
+        cfg.Load(GameSettings.SettingsCfgPath);
         cfg.SetValue("video", "fullscreen", modeOption.Selected == 1);
         cfg.SetValue("video", "resolution", Resolutions[resOption.Selected].text);
-        cfg.Save(SettingsCfgPath);
+        cfg.Save(GameSettings.SettingsCfgPath);
     }
 
     private static void ApplyResolution(Vector2I size)
@@ -212,6 +214,33 @@ public partial class SettingsPanel : Control, IPanel
     }
 
     // ======================================================================
+    // 游戏页
+    // ======================================================================
+
+    /// <summary>配置游戏页：敌方 AI 难度下拉（跟随关卡/简单/标准/狡诈），变更即存盘并触发 AiDifficultyChanged</summary>
+    private void SetupGamePage()
+    {
+        var aiOption = _panel.GetNode<OptionButton>("Margin/Root/Body/Content/GamePage/AiRow/Option");
+        aiOption.AddItem(GameSettings.AiFollowLevel);
+        aiOption.AddItem("简单");
+        aiOption.AddItem("标准");
+        aiOption.AddItem("狡诈");
+
+        // 读取已存覆盖值：null=跟随关卡（第 0 项），否则 简单/标准/狡诈 对应 1/2/3
+        AiLevel? current = GameSettings.GetAiLevelOverride();
+        aiOption.Select(current.HasValue ? (int)current.Value + 1 : 0);
+
+        aiOption.ItemSelected += (long idx) =>
+        {
+            AiLevel? level = idx == 0 ? null : (AiLevel?)(int)(idx - 1);
+            if (level == current) return;   // 重选当前项不触发（防误重启关卡）
+            current = level;
+            GameSettings.SaveAiLevelOverride(level);
+            AiDifficultyChanged?.Invoke();
+        };
+    }
+
+    // ======================================================================
     // 左侧选项卡
     // ======================================================================
 
@@ -219,8 +248,10 @@ public partial class SettingsPanel : Control, IPanel
     {
         var tabVolume = _panel.GetNode<Button>("Margin/Root/Body/Tabs/TabVolume");
         var tabVideo = _panel.GetNode<Button>("Margin/Root/Body/Tabs/TabVideo");
+        var tabGame = _panel.GetNode<Button>("Margin/Root/Body/Tabs/TabGame");
         tabVolume.Pressed += () => ShowSettingsTab("AudioPage", tabVolume);
         tabVideo.Pressed += () => ShowSettingsTab("VideoPage", tabVideo);
+        tabGame.Pressed += () => ShowSettingsTab("GamePage", tabGame);
         ShowSettingsTab("AudioPage", tabVolume);   // 默认音量页
     }
 
@@ -229,11 +260,14 @@ public partial class SettingsPanel : Control, IPanel
         var pages = _panel.GetNode<VBoxContainer>("Margin/Root/Body/Content");
         pages.GetNode<VBoxContainer>("AudioPage").Visible = pageName == "AudioPage";
         pages.GetNode<VBoxContainer>("VideoPage").Visible = pageName == "VideoPage";
+        pages.GetNode<VBoxContainer>("GamePage").Visible = pageName == "GamePage";
 
         var tabVolume = _panel.GetNode<Button>("Margin/Root/Body/Tabs/TabVolume");
         var tabVideo = _panel.GetNode<Button>("Margin/Root/Body/Tabs/TabVideo");
+        var tabGame = _panel.GetNode<Button>("Margin/Root/Body/Tabs/TabGame");
         SetTabHighlight(tabVolume, activeTab == tabVolume);
         SetTabHighlight(tabVideo, activeTab == tabVideo);
+        SetTabHighlight(tabGame, activeTab == tabGame);
     }
 
     private static void SetTabHighlight(Button tab, bool active)

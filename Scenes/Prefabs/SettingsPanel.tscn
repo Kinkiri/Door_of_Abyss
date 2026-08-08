@@ -105,6 +105,15 @@ theme_override_font_sizes/font_size = 26
 text = "画面"
 flat = true
 
+[node name="TabGame" type="Button" parent="Panel/Margin/Root/Body/Tabs"]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.7)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 26
+text = "游戏"
+flat = true
+
 [node name="Content" type="VBoxContainer" parent="Panel/Margin/Root/Body"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -216,6 +225,27 @@ theme_override_font_sizes/font_size = 26
 text = "窗口模式"
 
 [node name="Option" type="OptionButton" parent="Panel/Margin/Root/Body/Content/VideoPage/ModeRow"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+
+[node name="GamePage" type="VBoxContainer" parent="Panel/Margin/Root/Body/Content"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="AiRow" type="HBoxContainer" parent="Panel/Margin/Root/Body/Content/GamePage"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="NameLabel" type="Label" parent="Panel/Margin/Root/Body/Content/GamePage/AiRow"]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "敌方AI难度"
+
+[node name="Option" type="OptionButton" parent="Panel/Margin/Root/Body/Content/GamePage/AiRow"]
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 size_flags_horizontal = 3

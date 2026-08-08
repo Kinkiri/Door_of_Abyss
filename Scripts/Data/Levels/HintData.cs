@@ -17,5 +17,5 @@ public partial class HintData : Resource
     [Export] public bool AutoRetract { get; set; } = true;
 
     /// <summary>停留时长（秒），AutoRetract=true 时到点自动缩回</summary>
-    [Export] public float HoverDuration { get; set; } = 3f;
+    [Export] public float HoverDuration { get; set; } = 15f;
 }

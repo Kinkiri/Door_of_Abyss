@@ -2,6 +2,7 @@
 
 [ext_resource type="Resource" uid="uid://wlc31ehv3egi" path="res://Resource/Data/Cards/门客/侦察兵.tres" id="1_7lvs2"]
 [ext_resource type="Resource" uid="uid://b7q4hi5df4l72" path="res://Resource/Data/Cards/门客/防御工事.tres" id="1_71xim"]
+[ext_resource type="Script" uid="uid://cov8agd25nia1" path="res://Scripts/Data/Levels/HintData.cs" id="1_ip4hd"]
 [ext_resource type="Resource" uid="uid://bmlrjar80lfyq" path="res://Resource/Data/Cards/门客/先锋.tres" id="1_m7kfh"]
 [ext_resource type="Resource" uid="uid://1vxdaslartpn" path="res://Resource/Data/Cards/门客/军医.tres" id="2_5ccsk"]
 [ext_resource type="Resource" uid="uid://b1c22fwu3g480" path="res://Resource/Data/Cards/门客/燃烧弹.tres" id="2_w2pxd"]
@@ -21,6 +22,19 @@
 [ext_resource type="Resource" uid="uid://g00voouo7lc2" path="res://Resource/Data/Units/门客/炮兵.tres" id="13_t4xok"]
 [ext_resource type="Resource" uid="uid://c52vijing117o" path="res://Resource/Data/Units/门客/狙击手.tres" id="14_awf23"]
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="15_dusuh"]
+
+[sub_resource type="Resource" id="Resource_vi4o1"]
+script = ExtResource("1_ip4hd")
+TriggerRound = 0
+Message = "不止有门可以回费抽牌"
+HoverDuration = 15.0
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
+[sub_resource type="Resource" id="Resource_owwdw"]
+script = ExtResource("1_ip4hd")
+Message = "思考一下为什么给你俩门"
+HoverDuration = 15.0
+metadata/_custom_type_script = "uid://cov8agd25nia1"
 
 [sub_resource type="Resource" id="Resource_4gouf"]
 script = ExtResource("6_qjgly")
@@ -56,4 +70,5 @@ DoorPlaceZoneMax = Vector2i(-5, 1)
 DefaultSpawnAreaMin = Vector2i(0, -2)
 DefaultSpawnAreaMax = Vector2i(4, 1)
 LevelDeck = SubResource("Resource_4gouf")
+Hints = Array[Object]([SubResource("Resource_vi4o1"), SubResource("Resource_owwdw")])
 metadata/_custom_type_script = "uid://wk0covoailum"

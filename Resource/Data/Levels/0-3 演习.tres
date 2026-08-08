@@ -1,5 +1,6 @@
 [gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://buj844f4hvouu"]
 
+[ext_resource type="Script" uid="uid://cov8agd25nia1" path="res://Scripts/Data/Levels/HintData.cs" id="1_x5pfv"]
 [ext_resource type="Resource" uid="uid://caxsku5uakdiv" path="res://Resource/Data/Cards/门客/维护.tres" id="6_v0q2j"]
 [ext_resource type="Resource" uid="uid://b3ro8ae005jdc" path="res://Resource/Data/Cards/门客/狙击手.tres" id="7_m37hh"]
 [ext_resource type="Resource" uid="uid://ckdf28q1oi48h" path="res://Resource/Data/Cards/门客/炮兵.tres" id="7_wxum1"]
@@ -15,6 +16,19 @@
 [ext_resource type="Resource" uid="uid://bwwcvxll4uiq3" path="res://Resource/Data/Units/门客/军医.tres" id="16_wxum1"]
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="17_qew63"]
 [ext_resource type="Resource" uid="uid://c52vijing117o" path="res://Resource/Data/Units/门客/狙击手.tres" id="18_ertcf"]
+
+[sub_resource type="Resource" id="Resource_bfpla"]
+script = ExtResource("1_x5pfv")
+TriggerRound = 0
+Message = "有时防守也是进攻"
+HoverDuration = 15.0
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
+[sub_resource type="Resource" id="Resource_etn6x"]
+script = ExtResource("1_x5pfv")
+Message = "对面敌人太多了，需要范围伤害"
+HoverDuration = 15.0
+metadata/_custom_type_script = "uid://cov8agd25nia1"
 
 [sub_resource type="Resource" id="Resource_4gouf"]
 script = ExtResource("10_k18qg")
@@ -50,4 +64,5 @@ DoorPlaceZoneMax = Vector2i(-5, 1)
 DefaultSpawnAreaMin = Vector2i(0, -2)
 DefaultSpawnAreaMax = Vector2i(4, 1)
 LevelDeck = SubResource("Resource_4gouf")
+Hints = Array[Object]([SubResource("Resource_bfpla"), SubResource("Resource_etn6x")])
 metadata/_custom_type_script = "uid://wk0covoailum"

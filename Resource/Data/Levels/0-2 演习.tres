@@ -1,5 +1,6 @@
 [gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://c273wo0pve7sf"]
 
+[ext_resource type="Script" uid="uid://cov8agd25nia1" path="res://Scripts/Data/Levels/HintData.cs" id="1_0bsr8"]
 [ext_resource type="Resource" uid="uid://batuwt1akfm5r" path="res://Resource/Data/Cards/门客/振奋.tres" id="1_cgkju"]
 [ext_resource type="Resource" uid="uid://cthq2iqnjrc0c" path="res://Resource/Data/Cards/门客/新兵.tres" id="1_snw31"]
 [ext_resource type="Resource" uid="uid://xw50uw116iss" path="res://Resource/Data/Cards/门客/步枪兵.tres" id="2_yg52s"]
@@ -17,6 +18,18 @@
 [ext_resource type="Resource" uid="uid://vyqut7nte65d" path="res://Resource/Data/Units/门客/老兵.tres" id="11_tbwe1"]
 [ext_resource type="Resource" uid="uid://g00voouo7lc2" path="res://Resource/Data/Units/门客/炮兵.tres" id="12_7vx37"]
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="13_33kc0"]
+
+[sub_resource type="Resource" id="Resource_v3nlb"]
+script = ExtResource("1_0bsr8")
+TriggerRound = 0
+Message = "法术卡能瞬间产生效果"
+HoverDuration = 15.0
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
+[sub_resource type="Resource" id="Resource_jbou7"]
+script = ExtResource("1_0bsr8")
+Message = "门也可以移动攻击，不过凡事皆有代价，它在此回合将不会为你生产！"
+metadata/_custom_type_script = "uid://cov8agd25nia1"
 
 [sub_resource type="Resource" id="Resource_1f0gd"]
 script = ExtResource("6_0bsr8")
@@ -50,7 +63,7 @@ metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 [resource]
 script = ExtResource("13_33kc0")
 LevelName = "0-2 演习"
-Description = "使用魔法卡出其不意"
+Description = "使用法术卡出其不意"
 Waves = Array[Object]([SubResource("Resource_jnwx2"), SubResource("Resource_hfokx"), SubResource("Resource_udl6o")])
 MapData = ExtResource("7_rs8oh")
 DoorPlaceZoneMin = Vector2i(-5, 0)
@@ -58,5 +71,5 @@ DoorPlaceZoneMax = Vector2i(-5, 1)
 DefaultSpawnAreaMin = Vector2i(1, -2)
 DefaultSpawnAreaMax = Vector2i(4, 1)
 LevelDeck = SubResource("Resource_1f0gd")
-Hints = null
+Hints = Array[Object]([SubResource("Resource_v3nlb"), SubResource("Resource_jbou7")])
 metadata/_custom_type_script = "uid://wk0covoailum"

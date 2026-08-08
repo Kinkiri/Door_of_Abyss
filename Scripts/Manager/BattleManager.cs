@@ -837,6 +837,27 @@ public partial class BattleManager : Node2D
         GD.Print($"[Battle] 预告回合 {round} 波次：{count} 个单位");
     }
 
+    /// <summary>下回合刷怪计划坐标（AI 狡诈级回避红格用）；无计划返回空</summary>
+    public IEnumerable<Vector2I> NextWaveSpawnPositions()
+    {
+        if (_waveSpawnPlan.TryGetValue(RoundCount + 1, out var plan))
+        {
+            foreach (var (pos, _) in plan)
+                yield return pos;
+        }
+    }
+
+    /// <summary>判断坐标是否为下回合刷怪格</summary>
+    public bool IsNextWaveSpawnCell(Vector2I pos)
+    {
+        if (_waveSpawnPlan.TryGetValue(RoundCount + 1, out var plan))
+        {
+            foreach (var (p, _) in plan)
+                if (p == pos) return true;
+        }
+        return false;
+    }
+
     /// <summary>收集波次生成区域内可站立且未被占据的格子（WaveData 有自定义区域则用之，否则用 LevelData 默认）</summary>
     private List<Vector2I> CollectSpawnableCells(WaveData wave)
     {

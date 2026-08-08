@@ -3967,6 +3967,250 @@ public partial class TestRunner : Node
             }
         });
 
+        RunGroup("AI 决策", () =>
+        {
+            // ── ScoreTarget 目标打分 ──
+            var atk = MakeUnit("攻击者", 3, 10);       // ATK=3
+            atk.Team = Team.Enemy;
+            atk.GridPos = new Vector2I(0, 0);
+
+            var door = MakeUnit("门", 0, 20);
+            door.Type = UnitType.门;
+            door.GridPos = new Vector2I(3, 0);         // 距离 3
+
+            var oneShot = MakeUnit("残血兵", 1, 2);    // HP 2 ≤ ATK 3 → 一击可杀
+            oneShot.GridPos = new Vector2I(1, 0);      // 距离 1
+
+            var healthy = MakeUnit("满血兵", 2, 10);
+            healthy.GridPos = new Vector2I(1, 0);
+
+            VAssert("门 打分高于一击可杀目标",
+                () => AiTactics.ScoreTarget(atk, door) > AiTactics.ScoreTarget(atk, oneShot));
+            VAssert("一击可杀 打分高于普通满血目标",
+                () => AiTactics.ScoreTarget(atk, oneShot) > AiTactics.ScoreTarget(atk, healthy));
+            VAssert("距离惩罚：同价值目标越近分越高",
+                () =>
+                {
+                    var far = MakeUnit("远兵", 1, 10);
+                    far.GridPos = new Vector2I(4, 0);
+                    var near = MakeUnit("近兵", 1, 10);
+                    near.GridPos = new Vector2I(1, 0);
+                    return AiTactics.ScoreTarget(atk, near) > AiTactics.ScoreTarget(atk, far);
+                });
+
+            // ── PickAttackTarget 选目标 ──
+            VAssert("有门时优先选门（哪怕距离更远）",
+                () => AiTactics.PickAttackTarget(new[] { oneShot, healthy, door }, atk) == door);
+            VAssert("无门时优先一击可杀目标",
+                () => AiTactics.PickAttackTarget(new[] { healthy, oneShot }, atk) == oneShot);
+            VAssert("无敌方目标时返回 null",
+                () => AiTactics.PickAttackTarget(new Unit[0], atk) == null);
+
+            // ── IsSuicidalAttack 攻击送死判断 ──
+            {
+                // 3x1 地图：attacker(0,0) 敌方，tgt(1,0) 玩家，door(2,0) 玩家门
+                var aiMap = new System.Collections.Generic.Dictionary<Vector2I, Cell>();
+                for (int x = 0; x <= 2; x++)
+                    aiMap[new Vector2I(x, 0)] = MakeCell(new Vector2I(x, 0), new BlockData());
+
+                var attacker = MakeUnit("攻击者", 2, 3);
+                attacker.Team = Team.Enemy;
+                attacker.GridPos = new Vector2I(0, 0);
+                aiMap[new Vector2I(0, 0)].OccupyingUnit = attacker;
+                aiMap[new Vector2I(0, 0)].CanPass = false;
+
+                var tgt = MakeUnit("玩家兵", 3, 5);   // ATK3 ≥ attacker HP3 → 一击反杀
+                tgt.AttackDistance = 1;
+                tgt.GridPos = new Vector2I(1, 0);
+                aiMap[new Vector2I(1, 0)].OccupyingUnit = tgt;
+                aiMap[new Vector2I(1, 0)].CanPass = false;
+
+                var doorUnit = MakeUnit("玩家门", 3, 20);
+                doorUnit.Type = UnitType.门;
+                doorUnit.AttackDistance = 1;
+                doorUnit.GridPos = new Vector2I(2, 0);
+                aiMap[new Vector2I(2, 0)].OccupyingUnit = doorUnit;
+                aiMap[new Vector2I(2, 0)].CanPass = false;
+
+                var playerList = new[] { tgt, doorUnit };
+
+                VAssert("送死攻击：打不死目标且会被一击反杀",
+                    () => AiTactics.IsSuicidalAttack(attacker, tgt, playerList, aiMap));
+
+                // 一击击杀目标 → 不送死（收割）
+                attacker.AttackPower = 5;
+                VAssert("一击击杀目标不算送死（收割）",
+                    () => !AiTactics.IsSuicidalAttack(attacker, tgt, playerList, aiMap));
+                attacker.AttackPower = 2;
+
+                // 目标打不死自己 → 不送死
+                tgt.AttackPower = 2;
+                VAssert("不会被反杀不算送死",
+                    () => !AiTactics.IsSuicidalAttack(attacker, tgt, playerList, aiMap));
+                tgt.AttackPower = 3;
+
+                // 目标是门 → 不送死（胜负关键）
+                VAssert("打门不算送死（胜负关键）",
+                    () => !AiTactics.IsSuicidalAttack(attacker, doorUnit, playerList, aiMap));
+
+                // 目标攻击范围覆盖不到 attacker → 不送死
+                var farTgt = MakeUnit("远兵", 3, 5);
+                farTgt.AttackDistance = 1;
+                farTgt.GridPos = new Vector2I(1, 1);   // 距离 attacker 2 > 攻击范围 1
+                VAssert("目标够不到 attacker 不算送死",
+                    () => !AiTactics.IsSuicidalAttack(attacker, farTgt, new[] { farTgt }, aiMap));
+            }
+
+            // ── PickBestMoveCell 移动格排序（distToGoal=绕障距离，不可达格不在字典）──
+            VAssert("可攻击格 胜过 更近但不可攻击格",
+                () =>
+                {
+                    var reachable = new HashSet<Vector2I> { new Vector2I(0, 0), new Vector2I(1, 0), new Vector2I(0, 1) };
+                    var atkScores = new System.Collections.Generic.Dictionary<Vector2I, int> { [new Vector2I(1, 0)] = 298 };
+                    var dist = new System.Collections.Generic.Dictionary<Vector2I, int>
+                        { [new Vector2I(0, 0)] = 3, [new Vector2I(1, 0)] = 2, [new Vector2I(0, 1)] = 4 };
+                    var pick = AiTactics.PickBestMoveCell(
+                        new Vector2I(0, 0), reachable, atkScores, dist, null, null);
+                    return pick.HasValue && pick.Value == new Vector2I(1, 0);
+                });
+
+            VAssert("卡位：威胁区无攻击价值 → 重罚（站火力范围外）",
+                () =>
+                {
+                    // (1,0) 在威胁区且无攻击价值 → -500 重罚；(0,1) 绕远但安全 → 被选
+                    var reachable = new HashSet<Vector2I> { new Vector2I(0, 0), new Vector2I(1, 0), new Vector2I(0, 1) };
+                    var dist = new System.Collections.Generic.Dictionary<Vector2I, int>
+                        { [new Vector2I(0, 0)] = 5, [new Vector2I(1, 0)] = 4, [new Vector2I(0, 1)] = 6 };
+                    var threatened = new HashSet<Vector2I> { new Vector2I(1, 0) };
+                    var pick = AiTactics.PickBestMoveCell(
+                        new Vector2I(0, 0), reachable, null, dist, threatened, null);
+                    return pick.HasValue && pick.Value == new Vector2I(0, 1);
+                });
+
+            VAssert("可攻击的威胁格仍优先（值得冒险）",
+                () =>
+                {
+                    var reachable = new HashSet<Vector2I> { new Vector2I(0, 0), new Vector2I(1, 0), new Vector2I(0, 1) };
+                    var atkScores = new System.Collections.Generic.Dictionary<Vector2I, int> { [new Vector2I(1, 0)] = 998 };
+                    var dist = new System.Collections.Generic.Dictionary<Vector2I, int>
+                        { [new Vector2I(0, 0)] = 3, [new Vector2I(1, 0)] = 2, [new Vector2I(0, 1)] = 4 };
+                    var threatened = new HashSet<Vector2I> { new Vector2I(1, 0) };
+                    var pick = AiTactics.PickBestMoveCell(
+                        new Vector2I(0, 0), reachable, atkScores, dist, threatened, null);
+                    return pick.HasValue && pick.Value == new Vector2I(1, 0);
+                });
+
+            VAssert("刷怪格被惩罚（不主动站红格）",
+                () =>
+                {
+                    var reachable = new HashSet<Vector2I> { new Vector2I(0, 0), new Vector2I(1, 0), new Vector2I(0, 1) };
+                    var dist = new System.Collections.Generic.Dictionary<Vector2I, int>
+                        { [new Vector2I(0, 0)] = 3, [new Vector2I(1, 0)] = 2, [new Vector2I(0, 1)] = 4 };
+                    var spawn = new HashSet<Vector2I> { new Vector2I(1, 0) };
+                    var pick = AiTactics.PickBestMoveCell(
+                        new Vector2I(0, 0), reachable, null, dist, null, spawn);
+                    return pick.HasValue && pick.Value == new Vector2I(0, 1);
+                });
+
+            VAssert("让位：excludeSpawnCells 完全排除刷怪格（全被排除→null）",
+                () =>
+                {
+                    var reachable = new HashSet<Vector2I> { new Vector2I(0, 0), new Vector2I(1, 0), new Vector2I(0, 1) };
+                    var dist = new System.Collections.Generic.Dictionary<Vector2I, int>
+                        { [new Vector2I(0, 0)] = 3, [new Vector2I(1, 0)] = 2, [new Vector2I(0, 1)] = 4 };
+                    var spawn = new HashSet<Vector2I> { new Vector2I(1, 0), new Vector2I(0, 1) };
+                    var pick = AiTactics.PickBestMoveCell(
+                        new Vector2I(0, 0), reachable, null, dist, null, spawn, excludeSpawnCells: true);
+                    return pick == null;
+                });
+
+            VAssert("防来回动：禁止移回上回合起点（previousPos）",
+                () =>
+                {
+                    // 单位上回合从 (0,0) 走到 (1,0)，本回合禁止移回 (0,0) → 无可选格 → null
+                    var reachable = new HashSet<Vector2I> { new Vector2I(0, 0), new Vector2I(1, 0) };
+                    var dist = new System.Collections.Generic.Dictionary<Vector2I, int>
+                        { [new Vector2I(0, 0)] = 3, [new Vector2I(1, 0)] = 3 };
+                    var pick = AiTactics.PickBestMoveCell(
+                        new Vector2I(1, 0), reachable, null, dist, null, null,
+                        previousPos: new Vector2I(0, 0));
+                    return pick == null;
+                });
+
+            VAssert("绕远过猛：超出 maxDetour 的候选跳过（防走丢）",
+                () =>
+                {
+                    // 候选 (0,1) 绕远 7 格 > 上限 3 → 无可选格 → null
+                    var reachable = new HashSet<Vector2I> { new Vector2I(0, 0), new Vector2I(0, 1) };
+                    var dist = new System.Collections.Generic.Dictionary<Vector2I, int>
+                        { [new Vector2I(0, 0)] = 3, [new Vector2I(0, 1)] = 10 };
+                    var pick = AiTactics.PickBestMoveCell(
+                        new Vector2I(0, 0), reachable, null, dist, null, null);
+                    return pick == null;
+                });
+
+            VAssert("目标绕障不可达 → 跳过行动（null）",
+                () =>
+                {
+                    var reachable = new HashSet<Vector2I> { new Vector2I(0, 0), new Vector2I(1, 0) };
+                    // 当前格不在 distToGoal（目标被墙隔开）→ 不移动
+                    var dist = new System.Collections.Generic.Dictionary<Vector2I, int> { [new Vector2I(1, 0)] = 2 };
+                    var pick = AiTactics.PickBestMoveCell(
+                        new Vector2I(0, 0), reachable, null, dist, null, null);
+                    return pick == null;
+                });
+
+            VAssert("无可选格返回 null",
+                () =>
+                {
+                    var reachable = new HashSet<Vector2I> { new Vector2I(0, 0) };
+                    var dist = new System.Collections.Generic.Dictionary<Vector2I, int> { [new Vector2I(0, 0)] = 3 };
+                    var pick = AiTactics.PickBestMoveCell(
+                        new Vector2I(0, 0), reachable, null, dist, null, null);
+                    return pick == null;
+                });
+        });
+
+        RunGroup("AI 绕障距离", () =>
+        {
+            // 5x1 空地 (0,0)~(4,0)
+            var map = new System.Collections.Generic.Dictionary<Vector2I, Cell>();
+            for (int x = 0; x <= 4; x++)
+                map[new Vector2I(x, 0)] = MakeCell(new Vector2I(x, 0), new BlockData());
+
+            VAssert("通畅：当前格到目标绕障成本正确",
+                () => PathFinder.GetDistanceFrom(new Vector2I(4, 0), map, new Vector2I(0, 0))[new Vector2I(0, 0)] == 4);
+            VAssert("通畅：邻格成本递减",
+                () => PathFinder.GetDistanceFrom(new Vector2I(4, 0), map, new Vector2I(0, 0))[new Vector2I(3, 0)] == 1);
+
+            // 无单位占据的墙：唯一通道被封 → 不可达
+            map[new Vector2I(2, 0)].CanPass = false;
+            VAssert("墙挡死：目标不可达（无绕路空间）",
+                () => !PathFinder.GetDistanceFrom(new Vector2I(4, 0), map, new Vector2I(0, 0)).ContainsKey(new Vector2I(0, 0)));
+            map[new Vector2I(2, 0)].CanPass = true;
+
+            // 队友占据格：默认挡路；passThroughTeam=Enemy 可穿越（AI 队友会动/让路）
+            var ally = MakeUnit("队友", 1, 5);
+            ally.Team = Team.Enemy;
+            var cell2 = map[new Vector2I(2, 0)];
+            cell2.OccupyingUnit = ally;
+            cell2.CanPass = false;
+            VAssert("队友挡路：默认不可达",
+                () => !PathFinder.GetDistanceFrom(new Vector2I(4, 0), map, new Vector2I(0, 0)).ContainsKey(new Vector2I(0, 0)));
+            VAssert("队友挡路：passThroughTeam=Enemy 可达",
+                () => PathFinder.GetDistanceFrom(new Vector2I(4, 0), map, new Vector2I(0, 0), Team.Enemy).ContainsKey(new Vector2I(0, 0)));
+            VAssert("队友挡路：距离按穿越队友格累计",
+                () => PathFinder.GetDistanceFrom(new Vector2I(4, 0), map, new Vector2I(0, 0), Team.Enemy)[new Vector2I(0, 0)] == 4);
+
+            // 玩家占据格：passThrough=Enemy 仍为障碍
+            var player = MakeUnit("玩家兵", 1, 5);
+            cell2.OccupyingUnit = player;
+            VAssert("玩家挡路：passThrough=Enemy 仍不可达",
+                () => !PathFinder.GetDistanceFrom(new Vector2I(4, 0), map, new Vector2I(0, 0), Team.Enemy).ContainsKey(new Vector2I(0, 0)));
+            cell2.OccupyingUnit = null;
+            cell2.CanPass = true;
+        });
+
         // ── 汇总输出 ────────────────────────────────────────────
         GD.PrintRaw($"\n==============================\n");
         GD.PrintRaw($"  完成: {_passed} 通过, {_failed} 失败 (共 {_total} 项)\n");

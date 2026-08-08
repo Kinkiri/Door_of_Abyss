@@ -143,6 +143,57 @@ public static class PathFinder
     }
 
     /// <summary>
+    /// 从目标点做 BFS，计算地图上各格到目标的绕障最短成本（累加 MoveCost）。
+    /// 返回 格 → 成本；不可达格不在字典中。用于 AI 移动评分（按实际路径绕路，而非直线距离）。
+    /// ignorePos：视为可穿越的格（如 AI 单位自身当前格——它将离开该格，不应挡住自己的路径）。
+    /// passThroughTeam：该阵营的**占据格**视为可穿越（如 AI 队友——它们会移动/让路，不应把己方援军挡成死路）；
+    /// 无单位占据的墙（CanPass=false）与其他阵营占据格仍为障碍。
+    /// </summary>
+    public static Dictionary<Vector2I, int> GetDistanceFrom(
+        Vector2I target,
+        Dictionary<Vector2I, Cell> map,
+        Vector2I? ignorePos = null,
+        Team? passThroughTeam = null)
+    {
+        var dist = new Dictionary<Vector2I, int>();
+        var queue = new Queue<(Vector2I pos, int cost)>();
+
+        queue.Enqueue((target, 0));
+        dist[target] = 0;
+
+        while (queue.Count > 0)
+        {
+            var (pos, cost) = queue.Dequeue();
+
+            foreach (Vector2I dir in _directions)
+            {
+                Vector2I next = pos + dir;
+
+                if (!map.TryGetValue(next, out Cell cell))
+                    continue;
+
+                bool canPass = cell.CanPass;
+                if (!canPass)
+                {
+                    if (ignorePos.HasValue && next == ignorePos.Value) canPass = true;
+                    else if (passThroughTeam.HasValue && cell.OccupyingUnit != null
+                             && cell.OccupyingUnit.Team == passThroughTeam.Value) canPass = true;
+                }
+                if (!canPass) continue;
+
+                int nextCost = cost + cell.MoveCost;
+                if (dist.TryGetValue(next, out int prevCost) && prevCost <= nextCost)
+                    continue;
+
+                dist[next] = nextCost;
+                queue.Enqueue((next, nextCost));
+            }
+        }
+
+        return dist;
+    }
+
+    /// <summary>
     /// 独立计算从指定位置可攻击到的敌方单位。
     /// shape=null 时用默认菱形（attackDistance 半径）；shape 非空时主尺寸联动 attackDistance（=单位射程）。
     /// </summary>

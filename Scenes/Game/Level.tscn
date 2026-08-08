@@ -55,6 +55,17 @@ custom_data_layer_0/name = "data"
 custom_data_layer_0/type = 24
 sources/2 = SubResource("TileSetAtlasSource_8od7v")
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pause"]
+content_margin_left = 36.0
+content_margin_top = 26.0
+content_margin_right = 36.0
+content_margin_bottom = 26.0
+bg_color = Color(0.05, 0.05, 0.08, 0.92)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pause_btn"]
 content_margin_left = 18.0
 content_margin_top = 10.0
@@ -76,17 +87,6 @@ corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pause"]
-content_margin_left = 36.0
-content_margin_top = 26.0
-content_margin_right = 36.0
-content_margin_bottom = 26.0
-bg_color = Color(0.05, 0.05, 0.08, 0.92)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
 
 [node name="Game" type="Node2D" unique_id=1802915340]
 
@@ -110,6 +110,7 @@ ZoomAnimationDuration = 0.6
 FollowSpeed = 3.0
 
 [node name="TouchInputAdapter" type="Node2D" parent="." unique_id=692687025]
+visible = false
 script = ExtResource("32_touch")
 
 [node name="Manager" type="Node" parent="." unique_id=385605123]
@@ -255,49 +256,8 @@ HintPanelPrefab = ExtResource("40_hintpanel")
 SlideInDuration = 1.2
 SlideOutDuration = 0.4
 
-[node name="FadeInLayer" type="CanvasLayer" parent="." unique_id=1250427062 node_paths=PackedStringArray("_black")]
-layer = 10
-script = ExtResource("33_fade")
-_black = NodePath("Control/Black")
-
-[node name="Control" type="Control" parent="FadeInLayer" unique_id=1261946846]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="Black" type="ColorRect" parent="FadeInLayer/Control" unique_id=1801980958]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 1)
-
-[node name="PauseButtonLayer" type="CanvasLayer" parent="." unique_id=136172041]
-layer = 15
-
-[node name="PauseButton" type="Button" parent="PauseButtonLayer" unique_id=120902517]
-offset_left = 24.0
-offset_top = 16.0
-offset_right = 136.0
-offset_bottom = 68.0
-focus_mode = 0
-theme_override_colors/font_color = Color(1, 1, 1, 0.8)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 26
-theme_override_styles/normal = SubResource("StyleBoxFlat_pause_btn")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_pause_btn_hover")
-theme_override_styles/hover = SubResource("StyleBoxFlat_pause_btn_hover")
-text = "⏸ 暂停"
-script = ExtResource("41_pausebtn")
-
 [node name="PauseLayer" type="CanvasLayer" parent="." unique_id=2100000200]
-layer = 20
+layer = 3
 visible = false
 
 [node name="PauseMenu" type="Control" parent="PauseLayer" unique_id=2100000201 node_paths=PackedStringArray("SettingsPanelUI")]
@@ -402,6 +362,48 @@ flat = true
 
 [node name="SettingsPanelUI" parent="PauseLayer/PauseMenu" unique_id=1381178993 instance=ExtResource("36_settings")]
 layout_mode = 1
+
+[node name="PauseButtonLayer" type="CanvasLayer" parent="." unique_id=136172041]
+layer = 2
+
+[node name="PauseButton" type="Button" parent="PauseButtonLayer" unique_id=120902517]
+offset_left = 24.0
+offset_top = 16.0
+offset_right = 136.0
+offset_bottom = 68.0
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.8)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("StyleBoxFlat_pause_btn")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pause_btn_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_pause_btn_hover")
+text = "⏸ 暂停"
+script = ExtResource("41_pausebtn")
+
+[node name="FadeInLayer" type="CanvasLayer" parent="." unique_id=1250427062 node_paths=PackedStringArray("_black")]
+layer = 10
+script = ExtResource("33_fade")
+_black = NodePath("Control/Black")
+
+[node name="Control" type="Control" parent="FadeInLayer" unique_id=1261946846]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Black" type="ColorRect" parent="FadeInLayer/Control" unique_id=1801980958]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
 
 [node name="Test" type="Node" parent="." unique_id=1273218073]
 script = ExtResource("27_73o0s")

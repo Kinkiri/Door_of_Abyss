@@ -48,7 +48,7 @@
 ## 项目结构（程序员）
 
 ```
-Scripts/                         ~7300 行 C#
+Scripts/                         ~1.7w 行 C#
 ├── Data/                        数据模板层（Resource，编辑期零依赖）
 │   ├── Actions/                 效果系统（多态子类，运行期经服务定位器访问 Manager）
 │   │   ├── GameAction.cs        抽象基类：Execute(模板) + Revert(虚) + AnimationDuration
@@ -200,7 +200,7 @@ Scripts/                         ~7300 行 C#
 │   ├── BattleManager.cs         战斗阶段 + 费用 + 胜利 + 行为执行 + 波次
 │   ├── BuffManager.cs           Buff 生命周期（发事件驱动视图）
 │   ├── CardManager.cs           牌库/手牌/弃牌（发事件驱动视图）
-│   ├── EnemyAI.cs               敌方 AI（按距玩家门排序 + 最短路径寻路 + 被堵留AP；行动前发镜头预告事件 + CameraPanDelay 停顿）
+│   ├── EnemyAI.cs               敌方 AI（关卡级难度 AiLevel：简单=最近目标直线逼近，标准=目标打分+移动进射程走位，狡诈=+威胁规避绕路+刷怪格回避/主动让位；评分/排序纯逻辑抽离 AiTactics；行动前发镜头预告事件 + CameraPanDelay 停顿）
 │   ├── EnvironmentManager.cs    环境管理器（施加/覆盖/移除/倒计时 + 格子属性统一重算）
 │   ├── EventBus.cs              事件总线（被动效果订阅/触发，Tag 支持）
 │   ├── InitManager.cs           初始化调度
@@ -225,10 +225,12 @@ Scripts/                         ~7300 行 C#
 ├── Audio/
 │   └── AudioManager.cs          音频管理器（Autoload：总线/BGM/SFX 池/事件驱动响应）
 ├── Tests/
-│   └── TestRunner.cs            全面系统性测试（485 项，场景内集成运行）
+│   └── TestRunner.cs            全面系统性测试（512 项，场景内集成运行）
 ├── Tools/
 │   └── TextToResourceImporter.cs  文本转 .tres 工具（EditorScript）
 └── Utils/
+	├── AiTactics.cs             敌人 AI 决策纯逻辑（目标打分/选目标/移动格评分排序，零 Manager 依赖，可单测）
+	├── GameSettings.cs          玩家全局设置读写（settings.cfg 的 game 段：AI 难度覆盖等，纯静态 IO）
 	├── LevelSelection.cs        选关结果传递（静态类：主界面 → BattleManager 关卡覆盖）
 	├── MapExporter.cs           地图导出工具（基础地形 + 环境层双导出）
 	├── PathFinder.cs            BFS 寻路（纯算法）
@@ -352,9 +354,10 @@ public class Context {
 - **标题**：白色标题图，呼吸动画（缩放 1.0↔1.05 + 亮度 0.86↔1.0，6.4s 循环）；`PivotOffset = 图片尺寸/2` 保证围绕图片中心缩放
 - **菜单**：竖排细字按钮（flat + 半透明白字 + hover 左侧指示条渐显），入场错峰淡入（每行 scale 0.94→1 + alpha，时长 1s）
 - **面板**：「关于」「选关」「设置」共用通用动画 `AnimatePanelIn/Out`（暗幕渐显 + 面板下滑 60px 弹出，0.35s Cubic；✕/暗幕点击关闭，`_creditsBasePos` 归位防偏移累积）
-- **设置面板**：菜单「设置」打开（独立预制体 `Scenes/Prefabs/SettingsPanel.tscn` + `Scripts/View/SettingsPanel.cs`，**主界面与战斗暂停菜单共用**），**左侧选项卡**（音量/画面，仿选关列表样式：选中白字高亮），右侧内容页切换：
+- **设置面板**：菜单「设置」打开（独立预制体 `Scenes/Prefabs/SettingsPanel.tscn` + `Scripts/View/SettingsPanel.cs`，**主界面与战斗暂停菜单共用**），**左侧选项卡**（音量/画面/游戏，仿选关列表样式：选中白字高亮），右侧内容页切换：
   - **音量页**：三轨滑块（音乐/音效/UI，0~100% 实时生效）→ `AudioManager.SetMusicVolume/SetSfxVolume/SetUiVolume`；持久化到 `user://settings.cfg` 的 `audio` 段（`AudioManager` `_Ready` 加载、改动自动保存；滑块初始化用 `SetValueNoSignal` 防重复写盘）
   - **画面页**：分辨率（1280×720 ~ 2560×1440，仅窗口模式生效）+ 窗口模式（窗口/全屏，`DisplayServer.WindowSetMode/WindowSetSize`）；持久化到 `settings.cfg` 的 `video` 段（`SettingsPanel` 管理；audio/video 两段共用文件，两边都先 Load 再 Save 防覆盖）
+  - **游戏页**：敌方 AI 难度下拉（跟随关卡/简单/标准/狡诈，默认跟随关卡）→ `GameSettings` 静态类读写 `settings.cfg` 的 `game` 段；**战斗中（暂停菜单里）修改难度立即重启当前关卡**（`PauseMenu` 订阅 `SettingsPanel.AiDifficultyChanged` → 解暂停 + 重载 `Level.tscn`），主界面修改则下次进关生效
 - **退出**：黑幕淡出 0.5s → `GetTree().Quit()`
 - **返回主界面**（战斗结束）：`RoundInfoPanel` 订阅 `BattleManager.GameEnded`，胜负已分时显示「返回主界面」按钮 → `ChangeSceneToFile(title.tscn)`
 
@@ -1038,7 +1041,7 @@ OnEnterGameStart
 
 `Scripts/Tests/TestRunner.cs` - 全面系统性单元测试，直接在场景中运行。
 
-**用法：** 在场景根节点加 Node，挂载 TestRunner.cs，**默认不运行**（`RunTestsOnReady=false`，防止测试副作用污染战斗全局状态，如修改全局费用）；需要回归时在 Inspector 勾选 `RunTestsOnReady` 后运行。**482 项用例**覆盖：
+**用法：** 在场景根节点加 Node，挂载 TestRunner.cs，**默认不运行**（`RunTestsOnReady=false`，防止测试副作用污染战斗全局状态，如修改全局费用）；需要回归时在 Inspector 勾选 `RunTestsOnReady` 后运行。**512 项用例**覆盖：
 - ValueSource 运算（6 种公式 + 嵌套）
 - Condition 复合（And/Or/Not + Compare/HasBuff/Random）
 - Buff 生命周期（叠层/倒计时/还原/驱散）
@@ -1048,6 +1051,7 @@ OnEnterGameStart
 - MaxStack/Duration 边界值
 - 事件系统（OnAnyUnitDeath 任意死亡 / ValueTarget.EventOther 事件另一方读取）
 - 变身机制（清 buff/装备、固定 buff 保留、buff 叠层触发变身）
+- AI 决策（目标打分门>一击击杀>威胁>距离、选目标优先门/收割、攻击送死判断：打不死+会被反杀→放弃/收割与打门豁免、移动格排序：可攻击格优先/绕障距离/威胁格惩罚/刷怪格惩罚与让位排除/禁止移回上回合起点防来回/绕远上限防走丢；绕障距离 GetDistanceFrom：通畅/墙挡/队友穿越/玩家挡路）
 
 测试完毕自动 `QueueFree()`，不影响游戏。
 
@@ -1747,3 +1751,19 @@ Hints = [HintData{TriggerRound=0, Message="在蓝色高亮区域内点击格子�
 ```
 
 策划流程：新建 HintData 资源 → 填字段 → 加入关卡 `LevelData.Hints` 数组（编辑器拖入）。
+
+---
+
+## 18. 敌人 AI 难度
+
+每关可配置敌方 AI 等级（`LevelData.AiLevel`，默认**标准**，存量关卡自动生效，需调弱可在关卡资源上改）。决策纯逻辑在 `Scripts/Utils/AiTactics.cs`（零 Manager 依赖，可单测）。
+
+| 等级 | 决策内容 |
+|---|---|
+| **简单** | 基础行为：攻击范围内最近玩家，否则朝最近玩家直线逼近（原逻辑） |
+| **标准**（默认） | 目标打分：**门 > 一击可杀 > 高攻击威胁 > 距离**；移动搜索"走到哪格能进入攻击范围"——AP≥2 时一轮内移动+攻击连招；**威胁规避卡位**（进玩家火力区的落点必须有攻击价值，否则站火力范围外等机会）；**攻击送死判断**（打不死目标且会被一击反杀 → 放弃攻击转走位，打门/收割除外） |
+| **狡诈** | 标准全部 + **刷怪格回避**（不主动站下回合预告刷怪红格；正站在红格上时**主动让位**移开，除非本回合能击杀玩家门——胜负优先） |
+
+> 目标打分权重：门 1000 / 一击击杀 300 / 每点攻击力威胁 +2 / 距离递减；移动格评分：可攻击目标得分 − **到进攻目标的绕障步数**（`PathFinder.GetDistanceFrom` BFS，绕墙/绕玩家占据格；**AI 队友占据格可穿越**——避免援军互相挡路卡死；忽略自身格）− 威胁格惩罚（**能攻击轻罚 200 / 不能攻击重罚 500**——卡位：白送不进）− 刷怪格 150。**防来回动**：禁止移回上回合起点（EnemyAI 记录 `_lastMoveFrom`）+ 绕远上限 3 格（防走丢）。
+
+**玩家覆盖**：设置面板「游戏」页可全局覆盖（跟随关卡/简单/标准/狡诈，`GameSettings` 读写 `settings.cfg` 的 `game` 段）——跟随关卡=用 `LevelData.AiLevel`，否则玩家选择优先；战斗中修改立即重启当前关卡生效。

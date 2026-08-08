@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://b6qnolos2hokg" path="res://Resource/Art/标题白.png" id="2_title"]
 [ext_resource type="Texture2D" uid="uid://f6nnnkcrgmak" path="res://Resource/Art/A53DF446FF0F2906C7869E2FA8D9D9D2.jpg" id="3_night"]
 [ext_resource type="PackedScene" path="res://Scenes/Prefabs/SettingsPanel.tscn" id="4_settings"]
-[ext_resource type="PackedScene" path="res://Scenes/Prefabs/DeckBuilderPanel.tscn" id="5_deckbuilder"]
+[ext_resource type="PackedScene" uid="uid://cxwuok7ur2s5t" path="res://Scenes/Prefabs/DeckBuilderPanel.tscn" id="5_deckbuilder"]
 
 [sub_resource type="Gradient" id="Gradient_vignette"]
 colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.82)
@@ -236,7 +236,7 @@ offset_bottom = -24.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_font_sizes/font_size = 18
-text = "v0.2.0-a"
+text = "v0.2.2-a"
 horizontal_alignment = 2
 
 [node name="Toast" type="Label" parent="." unique_id=1809171299]
@@ -480,7 +480,7 @@ theme_override_font_sizes/font_size = 28
 text = "  进入关卡  →"
 flat = true
 
-[node name="DeckButton" type="Button" parent="LevelSelectPanel/Margin/Root/Body/Right/BottomBar"]
+[node name="DeckButton" type="Button" parent="LevelSelectPanel/Margin/Root/Body/Right/BottomBar" unique_id=1373330389]
 layout_mode = 2
 size_flags_horizontal = 6
 focus_mode = 0
@@ -493,7 +493,7 @@ flat = true
 [node name="SettingsPanelUI" parent="." unique_id=1212723939 instance=ExtResource("4_settings")]
 layout_mode = 1
 
-[node name="DeckBuilderPanelUI" parent="." instance=ExtResource("5_deckbuilder")]
+[node name="DeckBuilderPanelUI" parent="." unique_id=535320402 instance=ExtResource("5_deckbuilder")]
 layout_mode = 1
 
 [node name="FadeOut" type="ColorRect" parent="." unique_id=391542010]

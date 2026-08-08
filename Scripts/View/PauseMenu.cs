@@ -45,6 +45,9 @@ public partial class PauseMenu : Control, IPanel
             AudioManager.Instance?.PlayUiSfx("ui_click");
             SettingsPanelUI?.Show();
         };
+        // 战斗中改 AI 难度（游戏页下拉）→ 解暂停并重载本关，让新难度立即生效
+        if (SettingsPanelUI != null)
+            SettingsPanelUI.AiDifficultyChanged += RestartLevel;
         GetNode<Button>("Panel/Margin/Root/Buttons/TitleButton").Pressed += BackToTitle;
         GetNode<Button>("Panel/Margin/Root/Buttons/QuitButton").Pressed += () =>
         {

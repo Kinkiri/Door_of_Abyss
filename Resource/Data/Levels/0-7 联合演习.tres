@@ -1,5 +1,6 @@
 [gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://cm7l4l3atgt0p"]
 
+[ext_resource type="Script" uid="uid://cov8agd25nia1" path="res://Scripts/Data/Levels/HintData.cs" id="1_k78tw"]
 [ext_resource type="Resource" uid="uid://bj2geonyyapfc" path="res://Resource/Data/Deck/门客.tres" id="1_vvybx"]
 [ext_resource type="Resource" uid="uid://lrgqm0h2wth5" path="res://Resource/Data/Units/擢升之手/重载章鱼.tres" id="13_tnok5"]
 [ext_resource type="Resource" uid="uid://bbkq67n50v7xu" path="res://Resource/Data/Units/擢升之手/飞拳斗士.tres" id="15_k78tw"]
@@ -17,6 +18,13 @@
 [ext_resource type="Resource" uid="uid://cns3plqukhny8" path="res://Resource/Data/Units/擢升之手/S-Catch.tres" id="28_d308d"]
 [ext_resource type="Resource" uid="uid://cgk4anboptubr" path="res://Resource/Data/Units/擢升之手/钢肢蝼蛄.tres" id="29_0da24"]
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="30_e663t"]
+
+[sub_resource type="Resource" id="Resource_o08rj"]
+script = ExtResource("1_k78tw")
+TriggerRound = 0
+Message = "不要轻敌"
+HoverDuration = 10.0
+metadata/_custom_type_script = "uid://cov8agd25nia1"
 
 [sub_resource type="Resource" id="Resource_x5pfv"]
 script = ExtResource("19_e5v74")
@@ -61,4 +69,5 @@ DoorPlaceZoneMax = Vector2i(0, 4)
 DefaultSpawnAreaMin = Vector2i(8, 0)
 DefaultSpawnAreaMax = Vector2i(12, 7)
 LevelDeck = ExtResource("1_vvybx")
+Hints = Array[Object]([SubResource("Resource_o08rj")])
 metadata/_custom_type_script = "uid://wk0covoailum"
