@@ -698,18 +698,32 @@ public partial class BattleManager : Node2D
         // 弃用（2026-08-06）：游戏开始不再抽 2 张牌，开局手牌为空
         if (CardManager.Instance != null)
         {
-            // 优先级：关卡固定卡组 > 玩家构筑卡组 > 默认随机
-            DeckData activeDeck = LevelData?.LevelDeck ?? PlayerData?.PlayerDeck;
+            // 优先级：关卡固定卡组 > 玩家配置卡组（user:// 存档）> 编辑器默认玩家卡组 > 默认随机
+            DeckData activeDeck = LevelData?.LevelDeck;
+            bool useSavedDeck = false;
+            if (activeDeck == null)
+            {
+                var savedCards = PlayerDeckSave.LoadCards();
+                if (savedCards.Count > 0)
+                {
+                    activeDeck = new DeckData { DeckName = "玩家配置", Cards = savedCards.ToArray() };
+                    useSavedDeck = true;
+                }
+                else
+                {
+                    activeDeck = PlayerData?.PlayerDeck;
+                }
+            }
 
             GD.Print($"[Battle] 卡组来源: LevelDeck={(LevelData?.LevelDeck != null ? LevelData.LevelDeck.GetType().Name : "null")}" +
-                     $" PlayerDeck={(PlayerData?.PlayerDeck != null ? PlayerData.PlayerDeck.GetType().Name : "null")}" +
+                     $" 存档={useSavedDeck} PlayerDeck={(PlayerData?.PlayerDeck != null ? PlayerData.PlayerDeck.GetType().Name : "null")}" +
                      $" active={(activeDeck != null ? activeDeck.GetType().Name : "null")}");
 
             if (activeDeck?.Cards != null && activeDeck.Cards.Length > 0)
             {
                 var deck = new System.Collections.Generic.List<CardData>(activeDeck.Cards);
                 CardManager.Instance.InitializeDrawPile(deck);
-                GD.Print($"[Battle] 使用{(LevelData?.LevelDeck != null ? "关卡固定" : "玩家")}卡组 ({deck.Count} 张)");
+                GD.Print($"[Battle] 使用{(LevelData?.LevelDeck != null ? "关卡固定" : useSavedDeck ? "玩家配置" : "玩家默认")}卡组 ({deck.Count} 张)");
             }
             else
             {

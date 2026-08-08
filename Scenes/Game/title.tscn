@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://b6qnolos2hokg" path="res://Resource/Art/标题白.png" id="2_title"]
 [ext_resource type="Texture2D" uid="uid://f6nnnkcrgmak" path="res://Resource/Art/A53DF446FF0F2906C7869E2FA8D9D9D2.jpg" id="3_night"]
 [ext_resource type="PackedScene" path="res://Scenes/Prefabs/SettingsPanel.tscn" id="4_settings"]
+[ext_resource type="PackedScene" path="res://Scenes/Prefabs/DeckBuilderPanel.tscn" id="5_deckbuilder"]
 
 [sub_resource type="Gradient" id="Gradient_vignette"]
 colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.82)
@@ -55,7 +56,7 @@ corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
-[node name="Control" type="Control" unique_id=757809722 node_paths=PackedStringArray("_title", "_background", "_dust", "_menu", "_fadeOut", "_version", "_toast", "_creditsBackdrop", "_creditsPanel", "_levelSelectBackdrop", "_levelSelectPanel", "_settingsPanelUI")]
+[node name="Control" type="Control" unique_id=757809722 node_paths=PackedStringArray("_title", "_background", "_dust", "_menu", "_fadeOut", "_version", "_toast", "_creditsBackdrop", "_creditsPanel", "_levelSelectBackdrop", "_levelSelectPanel", "_settingsPanelUI", "_deckBuilderPanelUI")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -75,6 +76,7 @@ _creditsPanel = NodePath("CreditsPanel")
 _levelSelectBackdrop = NodePath("LevelSelectBackdrop")
 _levelSelectPanel = NodePath("LevelSelectPanel")
 _settingsPanelUI = NodePath("SettingsPanelUI")
+_deckBuilderPanelUI = NodePath("DeckBuilderPanelUI")
 _dustSpeed = 12000.0
 
 [node name="Background" type="TextureRect" parent="." unique_id=329584635]
@@ -478,7 +480,20 @@ theme_override_font_sizes/font_size = 28
 text = "  进入关卡  →"
 flat = true
 
+[node name="DeckButton" type="Button" parent="LevelSelectPanel/Margin/Root/Body/Right/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 6
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.75)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "  配置卡组  "
+flat = true
+
 [node name="SettingsPanelUI" parent="." unique_id=1212723939 instance=ExtResource("4_settings")]
+layout_mode = 1
+
+[node name="DeckBuilderPanelUI" parent="." instance=ExtResource("5_deckbuilder")]
 layout_mode = 1
 
 [node name="FadeOut" type="ColorRect" parent="." unique_id=391542010]

@@ -1,0 +1,175 @@
+[gd_scene format=3 uid="uid://cxwuok7ur2s5t"]
+
+[ext_resource type="Script" uid="uid://ct2fn4mbhopfa" path="res://Scripts/View/DeckBuilderPanel.cs" id="1_deckbuilder"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_deck_panel"]
+content_margin_left = 36.0
+content_margin_top = 26.0
+content_margin_right = 36.0
+content_margin_bottom = 26.0
+bg_color = Color(0.05, 0.05, 0.08, 0.92)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_deck_list"]
+content_margin_left = 14.0
+content_margin_top = 12.0
+content_margin_right = 14.0
+content_margin_bottom = 12.0
+bg_color = Color(0.05, 0.05, 0.08, 0.5)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="DeckBuilderPanelUI" type="Control" unique_id=402438828]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_deckbuilder")
+
+[node name="Backdrop" type="ColorRect" parent="." unique_id=1444449067]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="Panel" type="PanelContainer" parent="." unique_id=1088868609]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -612.0
+offset_top = -360.0
+offset_right = 600.0
+offset_bottom = 394.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_deck_panel")
+
+[node name="Margin" type="MarginContainer" parent="Panel" unique_id=1125850110]
+layout_mode = 2
+
+[node name="Root" type="VBoxContainer" parent="Panel/Margin" unique_id=269294768]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Header" type="HBoxContainer" parent="Panel/Margin/Root" unique_id=997748935]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Panel/Margin/Root/Header" unique_id=1008991917]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 39
+text = " 配置卡组"
+
+[node name="CloseButton" type="Button" parent="Panel/Margin/Root/Header" unique_id=1846645084]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.6)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 30
+text = "✕"
+flat = true
+
+[node name="Sep" type="HSeparator" parent="Panel/Margin/Root" unique_id=706213033]
+layout_mode = 2
+
+[node name="Body" type="HBoxContainer" parent="Panel/Margin/Root" unique_id=995361211]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="ListPanel" type="PanelContainer" parent="Panel/Margin/Root/Body" unique_id=1882057998]
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_deck_list")
+
+[node name="Scroll" type="ScrollContainer" parent="Panel/Margin/Root/Body/ListPanel" unique_id=46500230]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="CardList" type="VBoxContainer" parent="Panel/Margin/Root/Body/ListPanel/Scroll" unique_id=239320762]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="DetailPanel" type="PanelContainer" parent="Panel/Margin/Root/Body" unique_id=2125526970]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_deck_list")
+
+[node name="Scroll" type="ScrollContainer" parent="Panel/Margin/Root/Body/DetailPanel" unique_id=757143331]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="DetailContent" type="VBoxContainer" parent="Panel/Margin/Root/Body/DetailPanel/Scroll" unique_id=1715840034]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="DetailName" type="Label" parent="Panel/Margin/Root/Body/DetailPanel/Scroll/DetailContent" unique_id=983079951]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "点击左侧卡牌查看详情"
+
+[node name="DetailDesc" type="Label" parent="Panel/Margin/Root/Body/DetailPanel/Scroll/DetailContent" unique_id=2095528274]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 0.7)
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+
+[node name="DetailSep" type="HSeparator" parent="Panel/Margin/Root/Body/DetailPanel/Scroll/DetailContent" unique_id=1812738622]
+layout_mode = 2
+
+[node name="DetailInfo" type="Label" parent="Panel/Margin/Root/Body/DetailPanel/Scroll/DetailContent" unique_id=474659844]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+
+[node name="StatusBar" type="HBoxContainer" parent="Panel/Margin/Root" unique_id=1916491946]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="StatusLabel" type="Label" parent="Panel/Margin/Root/StatusBar" unique_id=217675370]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "卡组 0/30 张"
+
+[node name="HintLabel" type="Label" parent="Panel/Margin/Root/StatusBar" unique_id=470886922]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.5)
+theme_override_font_sizes/font_size = 18
+text = "关卡固定卡组优先于玩家卡组"
+
+[node name="DeckSummary" type="Label" parent="Panel/Margin/Root" unique_id=420832918]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 0.7)
+theme_override_font_sizes/font_size = 18
+text = "当前卡组：（空）"
+autowrap_mode = 3
+max_lines_visible = 4

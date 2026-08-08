@@ -380,6 +380,15 @@ public class Context {
 
 - **关卡库懒加载**：`LevelLibrary` 静态构造会级联加载全部关卡→波次→单位→卡组 .tres（数百文件），因此不在主菜单 `_Ready` 触发，改为**首次打开选关面板时**才 `BuildLevelList`（主界面先显示，安卓真机启动明显变快）
 
+### 配置卡组（玩家构筑）
+
+选关面板右下"配置卡组"按钮（EnterButton 右侧）→ `DeckBuilderPanel`（独立预制体 `Scenes/Prefabs/DeckBuilderPanel.tscn` + 脚本，仿 SettingsPanel 架构：全屏 Control + Backdrop 暗幕 + Panel，自管动画，调用方 Show()/Hide()）：
+
+- **选卡**：左右布局——左侧卡牌库全量滚动列表（程序化生成，**懒加载 CardLibrary**——首次打开才加载全部卡牌），每行 卡名/费用/数量"n/3" + [-] [+]；**点击行选中**（白字高亮）在右侧详情区查看完整卡牌信息（名称/类型·稀有度/费用/描述/目标形状/标签/世界势力 + 单位卡的召唤单位属性·被动数、环境卡的持续与移动消耗修正、装备卡的五项加成），仿战斗内 UnitInfoPanel；**单卡最多 3 张、卡组最多 30 张**，超出对应按钮置灰；底部状态条"卡组 N/30 张"，其下实时显示当前卡组构成（"名字×数量"紧凑列表，仿选关面板 Summarize，数量 1 不加后缀）
+- **持久化**：变更即实时写盘 `user://deck.cfg`（`PlayerDeckSave` 静态类，存 CardID 列表，读取时经 CardLibrary 解析、无效 ID 静默跳过）；关闭面板即完成配置，重开面板读取上次配置
+- **生效优先级**（`BattleManager.FinishGameStart`）：关卡固定卡组 `LevelDeck` > 玩家配置卡组（user 存档）> 编辑器默认卡组 `PlayerData.PlayerDeck` > 默认随机。当前 11 关均配置了 LevelDeck，玩家配置卡组对无固定卡组的关卡生效
+- **架构**：`Scripts/Data/PlayerDeckSave.cs` 纯静态 IO（对齐 LevelSelection/PathFinder 工具类风格），面板只读写存档不碰规则层；战斗侧仅 FinishGameStart 取卡组时多一步查档
+
 ### 波次刷怪预告
 
 - **两阶段**：`GameStart` 预计算第 1 波；每回合 `RoundStart` 生成当前波（按预告位置）后立即预告下一波——玩家在整个玩家行动阶段可见
@@ -1730,7 +1739,7 @@ HintView (Container 子类，CanvasLayer 下，右上角 RoundInfoPanel 下方�
 
 ```
 Hints = [HintData{TriggerRound=0, Message="在蓝色高亮区域内点击格子，放置你的门", AutoRetract=true, HoverDuration=3},
-         HintData{TriggerRound=1, Message="回合开始获得费用并抽牌，点击手牌卡牌再点击目标即可出牌", AutoRetract=true, HoverDuration=4}]
+		 HintData{TriggerRound=1, Message="回合开始获得费用并抽牌，点击手牌卡牌再点击目标即可出牌", AutoRetract=true, HoverDuration=4}]
 ```
 
 策划流程：新建 HintData 资源 → 填字段 → 加入关卡 `LevelData.Hints` 数组（编辑器拖入）。

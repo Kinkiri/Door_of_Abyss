@@ -17,6 +17,7 @@ public partial class MainMenu : Control
     [Export] private ColorRect _levelSelectBackdrop;
     [Export] private PanelContainer _levelSelectPanel;
     [Export] private SettingsPanel _settingsPanelUI;
+    [Export] private DeckBuilderPanel _deckBuilderPanelUI;
 
     [Export] private float _dustSpeed = 120f;
     [Export] private float _dustMinX = 120f;
@@ -112,6 +113,7 @@ public partial class MainMenu : Control
         _detailInfo = _levelSelectPanel.GetNode<Label>("Margin/Root/Body/Right/DetailScroll/DetailContent/DetailInfo");
         _levelSelectPanel.GetNode<Button>("Margin/Root/Header/CloseButton").Pressed += HideLevelSelect;
         _levelSelectPanel.GetNode<Button>("Margin/Root/Body/Right/BottomBar/EnterButton").Pressed += StartSelectedLevel;
+        _levelSelectPanel.GetNode<Button>("Margin/Root/Body/Right/BottomBar/DeckButton").Pressed += () => _deckBuilderPanelUI?.Show();
         _levelSelectBackdrop.GuiInput += (InputEvent ev) =>
         {
             if (ev is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left)
