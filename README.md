@@ -198,7 +198,7 @@ Scripts/                         ~7300 行 C#
 │   ├── BattleManager.cs         战斗阶段 + 费用 + 胜利 + 行为执行 + 波次
 │   ├── BuffManager.cs           Buff 生命周期（发事件驱动视图）
 │   ├── CardManager.cs           牌库/手牌/弃牌（发事件驱动视图）
-│   ├── EnemyAI.cs               敌方 AI（按距玩家门排序 + 最短路径寻路 + 被堵留AP）
+│   ├── EnemyAI.cs               敌方 AI（按距玩家门排序 + 最短路径寻路 + 被堵留AP；行动前发镜头预告事件 + CameraPanDelay 停顿）
 │   ├── EnvironmentManager.cs    环境管理器（施加/覆盖/移除/倒计时 + 格子属性统一重算）
 │   ├── EventBus.cs              事件总线（被动效果订阅/触发，Tag 支持）
 │   ├── InitManager.cs           初始化调度
@@ -207,10 +207,10 @@ Scripts/                         ~7300 行 C#
 │   └── UnitManager.cs           单位生命周期（发事件驱动视图）
 ├── View/                        视图层（事件驱动渲染）
 │   ├── BuffView.cs              Buff 图标（Node2D，内含 TextureRect + Label）
-│   ├── CardView.cs              卡牌展示
-│   ├── DragCamera2D.cs          拖拽摄像机（丝滑缩放 + 非线性跟随：选中聚焦/行动跟随）
+│   ├── CardView.cs              卡牌展示（位置动画：平滑移动/贝塞尔弧线飞入/飞出自毁）
+│   ├── DragCamera2D.cs          拖拽摄像机（丝滑缩放 + 非线性跟随：选中聚焦/行动双点中点跟随 + 自适应缩放 + 行动前预告，位置缩放并行）
 │   ├── EnvironmentViewManager.cs 环境图层渲染（订阅环境事件 SetCell/EraseCell）
-│   ├── HandPanel.cs             手牌面板（订阅 CardManager 事件）
+│   ├── HandPanel.cs             手牌面板（增量同步 CardManager 事件：抽牌弧线飞入/用牌飞出/排布平滑）
 │   ├── LevelFadeIn.cs           战斗场景渐变入场（黑幕停留 1s → 0.9s 渐出，CanvasLayer 顶层）
 │   ├── MainMenu.cs              主界面（夜色背景/光尘粒子/呼吸标题/竖排菜单/选关·关于面板/退出；关卡库懒加载）
 │   ├── MapView.cs               地图渲染 + 高亮（含波次刷怪预告层 WavePreviewLayer）
@@ -1372,29 +1372,36 @@ ID | 名称 | 持续 | 最大层数 | 描述 | 动作
 
 ## 13. 动画系统
 
-所有视觉动画内建于 `UnitView`，无需额外节点。
+单位视觉动画内建于 `UnitView`（卡牌动画见 §13.6），无需额外节点。
 
 ### 13.1 动画一览
 
 | 动画 | 触发方式 | 实现位置 |
 |---|---|---|
 | 召唤入场 | `_Ready` | `Scale=0` → `Back.Out` 弹到 1 |
-| 受伤闪红 | `UpdateView` 检测 HP 下降 | `modulate` 闪红 0.12s → 恢复白 |
-| 治疗闪绿 | `UpdateView` 检测 HP 上升 | `modulate` 闪绿 0.12s → 恢复白 |
-| 死亡消散 | `UpdateView` 检测 `IsDead` | 缩放 0 + 淡出 0.35s → `QueueFree` |
-| 移动着陆 | `UpdateView` 检测 GridPos 变化 | `Back.Out` 缩放弹跳 1.15→1 |
+| 受伤闪红 | `UnitManager.OnUnitDamaged` 事件（过滤自己） | `modulate` 闪红 0.12s → 恢复白 |
+| 治疗闪绿 | `UnitManager.OnUnitHealed` 事件（过滤自己） | `modulate` 闪绿 0.12s → 恢复白 |
+| 死亡消散 | `UnitManager.OnUnitRemoved` 事件（过滤自己） | 缩放 0 + 淡出 0.35s → `QueueFree` |
+| 移动着陆 | `UnitManager.OnUnitMoved` 事件（过滤自己） | `Back.Out` 缩放弹跳 1.15→1（传送不弹跳） |
 | Buff 弹跳 | `GameAction.OnAnyExecuted` | `PlayBuffBounce()` 缩放 1.25→1 |
 | 攻击闪白 | `GameAction.OnAnyExecuted` | `modulate` 亮白 0.05s + 恢复 0.08s |
 | 浮动数字 | `UnitManager.OnUnitDamaged/OnUnitHealed` 事件 | `FloatingNumberLayer` 实例化预制体，随机方向/速度抛物线爆出 + 淡出后自毁 |
 | 浮动数字（属性修改） | `UnitManager.ApplyRawHPChange` | 统一 HP 变化入口：DamageUnit/HealUnit/ModifyStatAction 全走此入口（clamp/事件/致死/刷新收敛）；ModifyStatAction 改 MaxHP 附带的血增减、Revert 截断均由此补发反馈 |
+| 抽牌弧线飞入 | `CardManager.OnCardsUpdated` 增量对比（新增卡） | 贝塞尔弧线从右屏外中部飞入槽位（§13.6） |
+| 用牌/弃牌飞出 | 增量对比（移除卡） | 向下飞出屏幕后 `QueueFree`（§13.6） |
+| 排布平滑 | 手牌布局 `QueueSort` | `SmoothMoveTo` 平滑滑到新槽位（§13.6） |
+
+> **UnitView 动画纯事件驱动**（2026-08-08）：受伤/治疗/移动/死亡不再由 `UpdateView` 状态检测触发，改为订阅 `UnitManager` 事件并过滤自身——`ApplyRawHPChange` 是唯一 HP 变化入口必发事件（含 MaxHP 附带增减），`RemoveUnit` 先刷新标签再发 `OnUnitRemoved`（视图尚存活可播死亡动画）。
 
 ### 13.2 死亡动画流程
 
 ```
 DamageUnit → DestroyUnit → RemoveUnit
   ├─ IsDead=true
-  ├─ UpdateUnit() → UpdateView() 检测 IsDead → PlayDeathAnimation()（事件驱动，不再每帧轮询）
-  └─ 发 OnUnitRemoved 事件 → UnitViewManager 清理视图引用（不 QueueFree）
+  ├─ UpdateUnit()（刷新标签）
+  └─ 发 OnUnitRemoved 事件
+       ├─ UnitView 订阅（过滤自己）→ PlayDeathAnimation()（事件驱动，不再每帧轮询）
+       └─ UnitViewManager 清理视图引用（不 QueueFree）
 
 UnitView.PlayDeathAnimation()
   → Tween: scale 0 + modulate 淡出
@@ -1445,11 +1452,22 @@ UnitManager.DamageUnit/HealUnit（实际量 > 0）
 
 - **丝滑缩放**：滚轮触发 Tween 平滑动画（Cubic/EaseOut，`ZoomAnimationDuration` 默认 0.12s），**鼠标锚点缩放**（zoom-to-cursor，放大跟随鼠标位置）；缩放步进为线性（`ZoomStep` 加减），符合"等距离缩放"约定
 - **非线性跟随**：`_Process` 每帧指数平滑逼近（`1-exp(-speed·dt)`，起始快接近慢、帧率无关、无过冲）：
-  - **选中聚焦**：选中单位时镜头平滑移过去（订阅 `SelectionManager.SelectionUpdated`）
-  - **行动跟随**：玩家/AI 单位移动或攻击时跟随行动单位（订阅 `BattleManager.UnitActed`，优先级高于选中）
+  - **选中聚焦**：选中单位时镜头平滑移过去（订阅 `SelectionManager.SelectionUpdated`；仅选中单位实例变化时响应，同一单位状态刷新不打断行动跟随）
+  - **行动跟随（双点中点）**：玩家/AI 攻击时镜头以**攻击者 + 目标的中点**为跟随点（订阅 `BattleManager.UnitActed(unit, target)`，移动为单点），保证双方同屏；目标死亡退化为单点
+  - **行动前预告**：敌人行动前 `EnemyAI` 发 `AiAttackPreviewed/AiMovePreviewed` 事件 → 镜头先飞向行动位置，停顿 `CameraPanDelay`（默认 0.4s）后再执行行动（远距离行动全程可见）；`EnemyAI` 决策/执行拆分（`DecideAction` → 预告 → `ExecutePlan`）
+  - **自适应缩放**：双点/预告跟随建立时按两单位距离计算 `目标缩放 = 视口短边 / (距离 + FollowPadding)`，**只缩小不放大**；走 `_Process` 指数平滑与位置跟随**并行**（同一系数同步过渡，非 tween——tween 期间位置会被暂停形成串行）；滚轮手动缩放即取消自动缩放（手动优先）
   - **单位卡联动**：召唤单位后自动选中新单位（`BattleManager.OnCardPlayActionsDone`），摄像机随之聚焦
-  - **拖拽接管**：中键拖拽开始即取消跟随；缩放动画期间暂停跟随
-- 参数：`EnableFollow` / `FollowSpeed` / `FollowOnSelect` / `FollowOnAct` 均可在 Inspector 调节
+  - **拖拽接管**：中键拖拽开始即取消跟随；手动缩放动画期间暂停跟随
+- 参数：`EnableFollow` / `FollowSpeed` / `FollowOnSelect` / `FollowOnAct` / `FollowPadding` 均可在 Inspector 调节
+
+### 13.6 卡牌动画（HandPanel 增量同步 + CardView 位置动画）
+
+`CardManager.OnCardsUpdated` 触发时 `HandPanel.SyncHand` **增量对比** `HandCards`（替代全量重建，`Dictionary<Card, CardView>` 映射）：
+
+- **抽牌（新增）**：实例化 CardView，起点 = 屏幕右边缘外侧中部（`DrawInStartOffset`，X 正=右屏外 / Y 负=上方）；布局时沿**二次贝塞尔弧线**飞入槽位（`FlyInArc`：控制点 = 两端中点上方 `FlyInArcHeight`，**钳制在视口顶部内**——起点较高时弧顶会顶出屏幕导致曲线不可见；`Quad-Out` + `FlyInDuration` 默认 0.6s）。`PendingFlyInFrom` 只消费一次，**飞入期间（`_isFlyingIn`）布局跳过该卡**——否则下一帧布局的直线分支会 Kill 弧线 tween（曲线/时长失效的根因）
+- **用牌/弃牌（移除）**：`IsLeaving=true` 不占槽位，沿当前位置向下飞出屏幕（`DrawOutDistance`，`Quad-In` + `DrawOutDuration` 0.3s）后 `QueueFree`
+- **排布平滑**：布局对每张卡 `SmoothMoveTo` 平滑滑到新槽位（`LayoutMoveDuration` 0.3s，Kill 旧 tween 防连抽连出抖动）
+- 参数全部 Export：`DrawInStartOffset` / `FlyInArcHeight`（CardView 预制体）/ `FlyInDuration` / `LayoutMoveDuration` / `DrawOutDuration` / `DrawOutDistance`（HandPanel）
 
 ## 14. 装备系统
 

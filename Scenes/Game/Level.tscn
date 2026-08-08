@@ -90,6 +90,7 @@ script = ExtResource("32_touch")
 [node name="Manager" type="Node" parent="." unique_id=385605123]
 
 [node name="Battle" type="Node2D" parent="Manager" unique_id=142002766]
+position = Vector2(1084, -557)
 script = ExtResource("2_22vck")
 PlayerData = ExtResource("4_llcsm")
 
@@ -187,6 +188,10 @@ offset_right = 983.0
 offset_bottom = 990.0
 script = ExtResource("21_f2v14")
 CardViewPrefab = ExtResource("22_w3f5c")
+DrawInStartOffset = Vector2(1044, -338)
+
+[node name="Node2D" type="Node2D" parent="CanvasLayer/Hand" unique_id=651746004]
+position = Vector2(1044, -338)
 
 [node name="RoundInfoPanel" parent="CanvasLayer" unique_id=864477452 instance=ExtResource("31_roundpanel")]
 anchors_preset = 1

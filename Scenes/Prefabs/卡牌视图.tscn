@@ -9,6 +9,7 @@ offset_bottom = 128.0
 pivot_offset = Vector2(64, 67)
 texture_normal = ExtResource("1_um4yc")
 script = ExtResource("2_s5gib")
+FlyInDuration = 0.8
 CardName = NodePath("Name")
 CardCost = NodePath("Cost")
 CardDescription = NodePath("Panel/Description")
