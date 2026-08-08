@@ -364,7 +364,7 @@ public class Context {
 
 - **触发**：Esc 或左上角暂停按钮（`PauseButtonLayer` layer=15 的「⏸ 暂停」按钮，`PauseButton.cs` 调 `PauseMenu.Instance.SetPaused(true)`）切换暂停；暂停时 `GetTree().Paused = true` **真实暂停**——EnemyAI 计时器、ActionQueue、Tween 动画全部停止
   > **约定**：`GetTree().CreateTimer(time)` 默认 `processAlways=true`（暂停时照常计时），核心逻辑计时器必须显式 `processAlways: false`（EnemyAI 行动间隔/推进、ActionQueue 动作节奏、BattleManager 自动推进均已按此约定），否则暂停形同虚设；Tween 默认受暂停影响（浮动数字上飘淡出即依赖此行为——暂停时数字停留）；**PauseMenu 动画例外**——节点 `ProcessMode.Always`，其 `CreateTween()` 跟随节点不受暂停影响，暂停/恢复的渐入渐出动画照常播放
-- **BGM**：暂停时**不暂停但降音量**（`AudioManager.DuckBgm`：录原音量 → 30%，恢复时读 settings.cfg 最新值——暂停中可能改过设置）；AudioManager 所有播放器 `ProcessMode.Always`（UI 按钮音效暂停时可用）
+- **BGM**：暂停时**不暂停但降音量**（`AudioManager.DuckBgm`：录原音量 → **0.5s 渐变**到 30%，恢复时同样渐变回 settings.cfg 最新值——暂停中可能改过设置；Tween 显式 `TweenPauseMode.Process`，暂停期间渐变照常进行）；AudioManager 所有播放器 `ProcessMode.Always`（UI 按钮音效暂停时可用）
 - **面板**：「继续游戏 / 重新开始 / 设置 / 标题画面 / 退出游戏」竖排按钮（仿主菜单样式）；「重新开始」恢复暂停后重载 `Level.tscn`（`LevelSelection.Selected` 仍指向本关，同关重开）；「设置」打开同款 SettingsPanel 组件（盖在暂停面板上，关闭后回到暂停面板）；「标题画面」先解除暂停再切场景（否则新场景继承暂停状态）
 - **动画**：暂停面板渐入渐出（Backdrop 暗幕渐显 + 面板下滑弹出，同主界面/设置面板同款 `AnimatePanelIn/Out`）；切场景/退出按钮走同步恢复路径（`SetPaused(false, animate:false)`），避免动画期间新场景继承暂停
 - **Esc 关闭（面板栈统一管理）**：`PanelStack`（静态栈，`Scripts/View/PanelStack.cs`）+ `IPanel` 接口（`UIPanel.cs`，IsOpen/Open/Close）统一管理所有面板——**打开 Push、关闭 Pop、Esc 只关栈顶**（先进后出，多层面板按打开逆序逐个关闭）：SettingsPanel / DeckBuilderPanel / PauseMenu 实现 IPanel（Show/Hide 内自动入出栈）；主界面关于/选关无独立脚本，用 `PanelAdapter` 委托包装入栈；输入入口仅两处——主界面 `MainMenu._UnhandledInput` 与战斗 `PauseMenu._UnhandledInput` 转发 `PanelStack.HandleEscape()`（栈空时战斗侧兜底打开暂停）。**跨场景残留处理**：两场景入口 `_Ready` 调 `PanelStack.Clear()` 丢弃残留条目（如从选关直接进关卡时选关面板未关闭、其适配器仍在栈中指向已释放节点），否则战斗按 Esc 会访问已释放节点抛 ObjectDisposedException。例：暂停→设置→Esc 关设置→再 Esc 恢复游戏
@@ -1018,6 +1018,8 @@ CellShape（抽象基类）
 场上有 2 个门 (CostPerRound=2, DrawPerRound=1) → +4费, 抽2张
 场上无门 → +0费, 不抽牌
 ```
+
+**停摆规则（2026-08-08）**：门有行动点可主动移动/攻击；**上回合行动过（主动移动/攻击）的门本回合不产资源**，下回合未行动恢复生产。判定：RoundStart 先把 `ActionsThisTurn > 0` 快照到 `Unit.LastTurnActed` 再归零，门收益仅统计 `LastTurnActed == false` 的门。**强制位移（击退/拉拽/传送）不计行动**，被推走不影响生产。门停摆会打印 `[Battle] N 个门上回合行动过，本回合不产资源`。
 
 ### 9.3 门放置流程
 

@@ -40,6 +40,9 @@ public partial class Unit
 
     /// <summary>本回合行动次数（移动/攻击各算一次；出牌和被动自动攻击不计）。RoundStart 归零</summary>
     public int ActionsThisTurn { get; set; }
+
+    /// <summary>上回合是否行动过（主动移动/攻击，ActionsThisTurn 快照；强制位移不计）。RoundStart 更新，门经济据此判定</summary>
+    public bool LastTurnActed { get; set; }
     public UnitType Type { get; set; }
 
 

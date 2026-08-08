@@ -878,6 +878,7 @@ public partial class BattleManager : Node2D
         {
             if (u.IsAlive && !u.IsDead)
             {
+                u.LastTurnActed = u.ActionsThisTurn > 0;   // 快照上回合行动（门经济据此判定）
                 u.ActionPoints = u.MaxActionPoints;
                 u.ActionsThisTurn = 0;
                 u.UpdateUnit();   // 刷新单位视图（AP/HP/位置标签；本轮重置对视图可见）
@@ -885,18 +886,26 @@ public partial class BattleManager : Node2D
         }
         GD.Print($"[Battle] 回合 {RoundCount} 开始，所有单位行动次数已重置");
 
-        // 收集所有我方门的 CostPerRound / DrawPerRound
+        // 收集我方门收益：仅"上回合未行动过"的门生产（主动移动/攻击；强制位移不计）
         int totalCost = 0;
         int totalDraw = 0;
+        int actedDoors = 0;
         foreach (var u in UnitManager.Instance.ActiveUnits)
         {
             if (u.IsAlive && !u.IsDead && u.Team == Team.Player && u.Type == UnitType.门
                 && u.UnitData is DoorData doorData)
             {
+                if (u.LastTurnActed)
+                {
+                    actedDoors++;
+                    continue;
+                }
                 totalCost += doorData.CostPerRound;
                 totalDraw += doorData.DrawPerRound;
             }
         }
+        if (actedDoors > 0)
+            GD.Print($"[Battle] {actedDoors} 个门上回合行动过，本回合不产资源");
 
         if (totalCost > 0)
         {

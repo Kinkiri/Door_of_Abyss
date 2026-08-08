@@ -64,6 +64,7 @@ public partial class AudioManager : Node
     private int _debugSfxIndex;
     private string _currentBgm;
     private float _savedBgmVolume = -1f;
+    private Tween _duckTween;
 
     // 订阅捕获引用：场景切换时旧场景 Manager 已释放，退订须走捕获的旧引用
     // （纯 C# 事件字段，不触引擎，对已释放包装对象 -= 安全）
@@ -322,28 +323,47 @@ public partial class AudioManager : Node
     public float GetSfxVolume() => GetBusLinearVolume(BusSfx);
     public float GetUiVolume() => GetBusLinearVolume(BusUi);
 
+    /// <summary>BGM 压低/恢复渐变时长（秒）</summary>
+    private const float DuckDuration = 0.5f;
+
     /// <summary>
-    /// 暂停时压低 BGM（不写盘）：duck=true 记录当前音量并降为 30%，false 恢复。
-    /// 恢复时读 settings.cfg 的最新 music 值——暂停期间可能改过设置（SetMusicVolume 已写盘）。
+    /// 暂停时压低 BGM（不写盘）：duck=true 记录当前音量并渐变到 30%，false 渐变恢复。
+    /// 恢复目标读 settings.cfg 的最新 music 值——暂停期间可能改过设置（SetMusicVolume 已写盘）。
+    /// Tween 显式 Process 模式：暂停（树 Paused）期间渐变照常进行。
     /// </summary>
     public void DuckBgm(bool duck)
     {
+        _duckTween?.Kill();
         if (duck)
         {
             if (_savedBgmVolume < 0f) _savedBgmVolume = GetBusLinearVolume(BusMusic);
-            SetBusLinearVolume(BusMusic, GetBusLinearVolume(BusMusic) * 0.3f);
+            StartDuckTween(GetBusLinearVolume(BusMusic), _savedBgmVolume * 0.3f);
         }
         else
         {
-            if (_savedBgmVolume >= 0f)
+            float restore = _savedBgmVolume;
+            if (restore >= 0f)
             {
                 var cfg = new ConfigFile();
                 cfg.Load(SettingsPath);
-                float v = (float)cfg.GetValue("audio", "music", _savedBgmVolume);
-                SetBusLinearVolume(BusMusic, v);
+                restore = (float)cfg.GetValue("audio", "music", restore);
             }
+            else
+            {
+                restore = GetBusLinearVolume(BusMusic);
+            }
+            StartDuckTween(GetBusLinearVolume(BusMusic), restore);
             _savedBgmVolume = -1f;
         }
+    }
+
+    private void StartDuckTween(float from, float to)
+    {
+        _duckTween = CreateTween();
+        _duckTween.SetPauseMode(Tween.TweenPauseMode.Process);   // 暂停时照常渐变
+        _duckTween.TweenMethod(Callable.From<float>(v => SetBusLinearVolume(BusMusic, v)),
+            from, to, DuckDuration)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
     }
 
     /// <summary>加载音量设置（user://settings.cfg）；不存在时写入默认值</summary>
