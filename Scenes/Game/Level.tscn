@@ -36,6 +36,8 @@
 [ext_resource type="PackedScene" path="res://Scenes/Prefabs/SettingsPanel.tscn" id="36_settings"]
 [ext_resource type="PackedScene" path="res://Scenes/Prefabs/浮动数字.tscn" id="37_fnum"]
 [ext_resource type="Script" uid="uid://tl5blxwveo7x" path="res://Scripts/View/FloatingNumberLayer.cs" id="38_fnlayer"]
+[ext_resource type="Script" uid="uid://c8mc7qbm57bc2" path="res://Scripts/View/HintView.cs" id="39_hintview"]
+[ext_resource type="PackedScene" uid="uid://bf404lw2x420m" path="res://Scenes/Prefabs/提示面板.tscn" id="40_hintpanel"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8od7v"]
 texture = ExtResource("19_pu45w")
@@ -214,6 +216,21 @@ offset_top = -509.0
 offset_right = 418.0
 offset_bottom = -10.0
 grow_vertical = 0
+
+[node name="HintView" type="Container" parent="CanvasLayer" unique_id=97171751]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -542.0
+offset_top = 82.0
+offset_right = -42.0
+offset_bottom = 82.0
+grow_horizontal = 0
+mouse_filter = 2
+script = ExtResource("39_hintview")
+HintPanelPrefab = ExtResource("40_hintpanel")
+SlideInDuration = 1.2
+SlideOutDuration = 0.4
 
 [node name="FadeInLayer" type="CanvasLayer" parent="." unique_id=1250427062 node_paths=PackedStringArray("_black")]
 layer = 10

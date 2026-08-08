@@ -28,6 +28,7 @@
   - [14. 装备系统](#14-装备系统)
   - [15. 环境系统](#15-环境系统)
   - [16. 音频系统](#16-音频系统)
+  - [17. 对局内提示系统](#17-对局内提示系统)
 
 ---
 
@@ -148,7 +149,8 @@ Scripts/                         ~7300 行 C#
 │   │       └── NotCardFilter.cs   NOT 组合（补集）
 │   ├── Levels/
 │   │   ├── LevelData.cs         关卡配置
-│   │   └── WaveData.cs          波次配置
+│   │   ├── WaveData.cs          波次配置
+│   │   └── HintData.cs          关卡提示数据（按回合触发显示）
 │   ├── Map/
 │   │   ├── BlockData.cs         地形模板
 │   │   └── MapData.cs           地图数据
@@ -211,6 +213,8 @@ Scripts/                         ~7300 行 C#
 │   ├── DragCamera2D.cs          拖拽摄像机（丝滑缩放 + 非线性跟随：选中聚焦/行动双点中点跟随 + 自适应缩放 + 行动前预告，位置缩放并行）
 │   ├── EnvironmentViewManager.cs 环境图层渲染（订阅环境事件 SetCell/EraseCell）
 │   ├── HandPanel.cs             手牌面板（增量同步 CardManager 事件：抽牌弧线飞入/用牌飞出/排布平滑）
+│   ├── HintView.cs              对局内提示总容器（Container 子类：按回合触发创建/排布/销毁，新提示顶旧提示平滑补位）
+│   ├── HintPanel.cs             单个提示面板（滑入/滑出/✕/自动缩回倒计时）
 │   ├── LevelFadeIn.cs           战斗场景渐变入场（黑幕停留 1s → 0.9s 渐出，CanvasLayer 顶层）
 │   ├── MainMenu.cs              主界面（夜色背景/光尘粒子/呼吸标题/竖排菜单/选关·关于面板/退出；关卡库懒加载）
 │   ├── MapView.cs               地图渲染 + 高亮（含波次刷怪预告层 WavePreviewLayer）
@@ -1676,3 +1680,57 @@ AudioManager.Instance.SetMusicVolume(0~1) / SetSfxVolume / SetUiVolume;  // 分�
 ```
 
 > 音量持久化（user:// 存档）与设置面板待做；BGM 淡入淡出切换为预留优化项。
+
+---
+
+## 17. 对局内提示系统
+
+对局内消息提示：关卡配置按回合触发的提示消息，从屏幕右侧平滑滑入，支持自动缩回/手动关闭；新提示插入顶部，旧提示被平滑顶下（补位），关闭后其余平滑上移。
+
+### 17.1 数据（HintData）
+
+`Scripts/Data/Levels/HintData.cs` — `[GlobalClass] Resource`，由 `LevelData.Hints` 数组引用：
+
+| 字段 | 说明 |
+|---|---|
+| `TriggerRound` | 触发回合（0 = 放门/游戏开始阶段，N = 第 N 回合 RoundStart） |
+| `Message` | 提示消息内容（超宽自动换行） |
+| `AutoRetract` | 是否自动缩回（false = 常驻，直到玩家按 ✕） |
+| `HoverDuration` | 停留时长（秒），AutoRetract=true 时到点自动缩回；Esc 暂停时倒计时冻结 |
+
+### 17.2 触发与架构
+
+- **纯 View 层**：`HintView` 不碰规则逻辑，只订阅 `BattleManager.PhaseChanged` 既有事件（Manager 发事件、View 订阅，对齐全项目约定）
+- **触发时机**：GameStart（第 0 回合）与 RoundStart（第 N 回合）进入时，按 `LevelData.Hints` 中 `TriggerRound` 匹配显示；同一提示只触发一次（`_fired` 去重）
+- **程序化调用**：`HintView.Instance` 不可用（非单例，场景内节点），任意时刻可用 `GetNode<HintView>(...).ShowHint(hintData)` 显示临时提示
+
+### 17.3 表现（HintView / HintPanel）
+
+```
+HintView (Container 子类，CanvasLayer 下，右上角 RoundInfoPanel 下方右对齐)
+  ├── HintPanel（提示面板.tscn，横长方形消息框：深色圆角 StyleBoxFlat 同 RoundInfoPanel 风格）
+  │     ├── Message（Label，autowrap 换行）
+  │     └── Close（✕ 按钮）
+  └── HintPanel ...
+```
+
+| 行为 | 说明 |
+|---|---|
+| 滑入 | 新提示从屏幕右侧滑入（Expo.Out 减速缓动，时长 SlideInDuration）；多条提示各自滑入 |
+| 顶动 | 新提示插入顶部（`MoveChild(0)`），旧提示平滑下移补位（SmoothMoveTo，时长 LayoutMoveDuration） |
+| 关闭 | 自动缩回到点 / ✕ 按下 → 向右滑出 + 淡出自毁（Expo.In），其余提示平滑上移 |
+| 布局 | 固定宽度（`ItemWidth=490`），内容高度自适应（Label 换行）；新面板先隐藏等高度稳定再滑入，避免高度时序错位 |
+| 暂停 | 倒计时用 `CreateTimer(processAlways: false)`，Esc 暂停时冻结（对齐项目暂停约定） |
+
+参数全 Export：`ItemWidth` / `Spacing` / `LayoutMoveDuration` / `SlideInDuration` / `SlideOutDuration`（HintView Inspector 可调）。
+
+### 17.4 配置示例
+
+关卡 .tres 的 `Hints` 数组（0-1 演习已配置示例）：
+
+```
+Hints = [HintData{TriggerRound=0, Message="在蓝色高亮区域内点击格子，放置你的门", AutoRetract=true, HoverDuration=3},
+         HintData{TriggerRound=1, Message="回合开始获得费用并抽牌，点击手牌卡牌再点击目标即可出牌", AutoRetract=true, HoverDuration=4}]
+```
+
+策划流程：新建 HintData 资源 → 填字段 → 加入关卡 `LevelData.Hints` 数组（编辑器拖入）。

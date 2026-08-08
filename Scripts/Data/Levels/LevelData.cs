@@ -28,4 +28,7 @@ public partial class LevelData : Resource
 
     /// <summary>关卡固定卡组，不为空时覆盖玩家卡组</summary>
     [Export] public DeckData LevelDeck { get; set; }
+
+    /// <summary>关卡内提示（按触发回合自动显示，0=放门阶段）</summary>
+    [Export] public HintData[] Hints { get; set; }
 }

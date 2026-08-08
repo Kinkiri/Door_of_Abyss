@@ -58,4 +58,5 @@ DoorPlaceZoneMax = Vector2i(-5, 1)
 DefaultSpawnAreaMin = Vector2i(1, -2)
 DefaultSpawnAreaMax = Vector2i(4, 1)
 LevelDeck = SubResource("Resource_1f0gd")
+Hints = null
 metadata/_custom_type_script = "uid://wk0covoailum"

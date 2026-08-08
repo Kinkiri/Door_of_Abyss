@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://bf404lw2x420m"]
+
+[ext_resource type="Script" uid="uid://dkamsyx8bfr7l" path="res://Scripts/View/HintPanel.cs" id="1_hint"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+bg_color = Color(0.05, 0.05, 0.08, 0.82)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="HintPanel" type="PanelContainer" unique_id=1939821684 node_paths=PackedStringArray("MessageLabel", "CloseButton")]
+custom_minimum_size = Vector2(460, 44)
+offset_right = 490.0
+offset_bottom = 85.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+script = ExtResource("1_hint")
+MessageLabel = NodePath("Margin/Row/Message")
+CloseButton = NodePath("Margin/Row/Close")
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=685531910]
+layout_mode = 2
+
+[node name="Row" type="HBoxContainer" parent="Margin" unique_id=725876077]
+layout_mode = 2
+
+[node name="Message" type="Label" parent="Margin/Row" unique_id=1803595889]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 21
+text = "提示"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Close" type="Button" parent="Margin/Row" unique_id=819492377]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.6)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "❌️"
+flat = true
