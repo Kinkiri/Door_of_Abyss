@@ -89,7 +89,7 @@ public static class AiTactics
     /// <summary>
     /// 移动格评分选择（纯函数）：返回评分最高的移动目标格；无可选格返回 null（跳过行动）。
     /// 评分 = 移动后可攻击目标得分（attackScoreAtCell，不含=0）
-    ///       − 到进攻目标的绕障步数（distToGoal，不可达格直接跳过）
+    ///       − 到进攻目标的距离（绕障 BFS 步数优先；目标绕障不可达时回退曼哈顿，朝目标方向走不浪费 AP）
     ///       − 威胁格惩罚（threatenedCells 非空时生效）
     ///       − 刷怪格惩罚（spawnCells 非空且未排除时生效）
     /// 防"来回动"三件套：
@@ -106,6 +106,7 @@ public static class AiTactics
     /// <param name="excludeSpawnCells">true=完全排除刷怪格（主动让位），false=仅惩罚</param>
     /// <param name="previousPos">上回合移动起点（禁止移回该格，防 A↔B 来回）</param>
     /// <param name="maxDetour">允许绕远的步数上限（候选 dist 不得超过当前格 dist + 该值，防无限走丢）</param>
+    /// <param name="fallbackGoal">绕障不可达时的曼哈顿回退目标（通常=进攻目标格；null=不可达则跳过该格）</param>
     public static Vector2I? PickBestMoveCell(
         Vector2I currentPos,
         IReadOnlyCollection<Vector2I> reachable,
@@ -115,13 +116,20 @@ public static class AiTactics
         IReadOnlySet<Vector2I> spawnCells,
         bool excludeSpawnCells = false,
         Vector2I? previousPos = null,
-        int maxDetour = 3)
+        int maxDetour = 3,
+        Vector2I? fallbackGoal = null)
     {
         if (reachable == null || distToGoal == null) return null;
 
-        // 目标不可达当前格 → 移动无意义（避免乱走/来回），跳过行动
-        if (!distToGoal.TryGetValue(currentPos, out int curDist))
-            return null;
+        // 距离取值：绕障 BFS 优先；目标绕障不可达时回退曼哈顿（朝目标方向走，不浪费移动机会）
+        int DistOf(Vector2I pos)
+        {
+            if (distToGoal.TryGetValue(pos, out int d)) return d;
+            return fallbackGoal.HasValue ? ManhattanDist(pos, fallbackGoal.Value) : -1;
+        }
+
+        int curDist = DistOf(currentPos);
+        if (curDist < 0) return null;   // 无距离信息且无回退目标 → 跳过
 
         Vector2I? best = null;
         int bestScore = int.MinValue;
@@ -131,7 +139,8 @@ public static class AiTactics
             if (pos == currentPos) continue;
             if (excludeSpawnCells && spawnCells != null && spawnCells.Contains(pos)) continue;
             if (previousPos.HasValue && pos == previousPos.Value) continue;   // 禁止直接回头
-            if (!distToGoal.TryGetValue(pos, out int dist)) continue;   // 绕障不可达目标 → 去了没用
+            int dist = DistOf(pos);
+            if (dist < 0) continue;
             if (dist > curDist + maxDetour) continue;                   // 绕远过猛 → 防走丢
 
             int score = 0;

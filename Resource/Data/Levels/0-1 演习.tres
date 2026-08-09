@@ -77,4 +77,5 @@ DefaultSpawnAreaMin = Vector2i(1, -2)
 DefaultSpawnAreaMax = Vector2i(4, 1)
 LevelDeck = SubResource("Resource_skj4i")
 Hints = Array[Object]([SubResource("Resource_hint1"), SubResource("Resource_hint2"), SubResource("Resource_hint3"), SubResource("Resource_hint4"), SubResource("Resource_jh4te")])
+AiLevel = 0
 metadata/_custom_type_script = "uid://wk0covoailum"

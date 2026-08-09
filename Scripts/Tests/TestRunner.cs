@@ -4149,15 +4149,28 @@ public partial class TestRunner : Node
                     return pick == null;
                 });
 
-            VAssert("目标绕障不可达 → 跳过行动（null）",
+            VAssert("无距离信息且无回退目标 → 跳过（null）",
                 () =>
                 {
                     var reachable = new HashSet<Vector2I> { new Vector2I(0, 0), new Vector2I(1, 0) };
-                    // 当前格不在 distToGoal（目标被墙隔开）→ 不移动
+                    // 当前格不在 distToGoal，也未传 fallbackGoal → 不移动
                     var dist = new System.Collections.Generic.Dictionary<Vector2I, int> { [new Vector2I(1, 0)] = 2 };
                     var pick = AiTactics.PickBestMoveCell(
                         new Vector2I(0, 0), reachable, null, dist, null, null);
                     return pick == null;
+                });
+
+            VAssert("绕障不可达时回退曼哈顿：朝目标方向走，不浪费移动机会",
+                () =>
+                {
+                    // 当前格 (0,0) 不在 distToGoal（被墙隔开），但传了 fallbackGoal (3,0)
+                    // → 距离回退曼哈顿：(0,0)=3，(1,0)=2 → 移动 (1,0)
+                    var reachable = new HashSet<Vector2I> { new Vector2I(0, 0), new Vector2I(1, 0) };
+                    var dist = new System.Collections.Generic.Dictionary<Vector2I, int> { [new Vector2I(1, 0)] = 2 };
+                    var pick = AiTactics.PickBestMoveCell(
+                        new Vector2I(0, 0), reachable, null, dist, null, null,
+                        fallbackGoal: new Vector2I(3, 0));
+                    return pick.HasValue && pick.Value == new Vector2I(1, 0);
                 });
 
             VAssert("无可选格返回 null",

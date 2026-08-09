@@ -41,11 +41,12 @@ metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [resource]
 script = ExtResource("1_y0i6a")
-LevelName = "格调"
-Description = "百万精兵"
+LevelName = "测试关卡"
+Description = "别玩有bug"
 Waves = Array[Object]([SubResource("Resource_4qidm"), SubResource("Resource_n4hmb"), SubResource("Resource_dqlwa"), SubResource("Resource_glvj2"), SubResource("Resource_aj6n3")])
 MapData = ExtResource("1_wp8c3")
 DoorPlaceZoneMax = Vector2i(1, 1)
 DefaultSpawnAreaMin = Vector2i(-3, 7)
 DefaultSpawnAreaMax = Vector2i(4, 11)
+Hints = null
 metadata/_custom_type_script = "uid://wk0covoailum"

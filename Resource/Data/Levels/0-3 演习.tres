@@ -21,13 +21,11 @@
 script = ExtResource("1_x5pfv")
 TriggerRound = 0
 Message = "有时防守也是进攻"
-HoverDuration = 15.0
 metadata/_custom_type_script = "uid://cov8agd25nia1"
 
 [sub_resource type="Resource" id="Resource_etn6x"]
 script = ExtResource("1_x5pfv")
 Message = "对面敌人太多了，需要范围伤害"
-HoverDuration = 15.0
 metadata/_custom_type_script = "uid://cov8agd25nia1"
 
 [sub_resource type="Resource" id="Resource_4gouf"]
@@ -65,4 +63,5 @@ DefaultSpawnAreaMin = Vector2i(0, -2)
 DefaultSpawnAreaMax = Vector2i(4, 1)
 LevelDeck = SubResource("Resource_4gouf")
 Hints = Array[Object]([SubResource("Resource_bfpla"), SubResource("Resource_etn6x")])
+AiLevel = 0
 metadata/_custom_type_script = "uid://wk0covoailum"

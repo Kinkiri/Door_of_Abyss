@@ -27,13 +27,11 @@
 script = ExtResource("1_ip4hd")
 TriggerRound = 0
 Message = "不止有门可以回费抽牌"
-HoverDuration = 15.0
 metadata/_custom_type_script = "uid://cov8agd25nia1"
 
 [sub_resource type="Resource" id="Resource_owwdw"]
 script = ExtResource("1_ip4hd")
 Message = "思考一下为什么给你俩门"
-HoverDuration = 15.0
 metadata/_custom_type_script = "uid://cov8agd25nia1"
 
 [sub_resource type="Resource" id="Resource_4gouf"]
@@ -71,4 +69,5 @@ DefaultSpawnAreaMin = Vector2i(0, -2)
 DefaultSpawnAreaMax = Vector2i(4, 1)
 LevelDeck = SubResource("Resource_4gouf")
 Hints = Array[Object]([SubResource("Resource_vi4o1"), SubResource("Resource_owwdw")])
+AiLevel = 0
 metadata/_custom_type_script = "uid://wk0covoailum"

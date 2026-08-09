@@ -23,7 +23,6 @@
 script = ExtResource("1_0bsr8")
 TriggerRound = 0
 Message = "法术卡能瞬间产生效果"
-HoverDuration = 15.0
 metadata/_custom_type_script = "uid://cov8agd25nia1"
 
 [sub_resource type="Resource" id="Resource_jbou7"]
@@ -72,4 +71,5 @@ DefaultSpawnAreaMin = Vector2i(1, -2)
 DefaultSpawnAreaMax = Vector2i(4, 1)
 LevelDeck = SubResource("Resource_1f0gd")
 Hints = Array[Object]([SubResource("Resource_v3nlb"), SubResource("Resource_jbou7")])
+AiLevel = 0
 metadata/_custom_type_script = "uid://wk0covoailum"

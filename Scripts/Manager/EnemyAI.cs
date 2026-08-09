@@ -307,13 +307,11 @@ public partial class EnemyAI : Node
         var movePos = AiTactics.PickBestMoveCell(
             enemy.GridPos, reachable, attackScoreAtCell, distToGoal,
             threatCells, cunning ? spawnCells : null, excludeSpawnCells: false,
-            previousPos: prevPos);
+            previousPos: prevPos, fallbackGoal: goal.GridPos);
 
         if (!movePos.HasValue)
         {
-            // 诊断：区分"目标绕障不可达"（distToGoal 缺当前格）与"无可行候选"
-            bool goalReachable = distToGoal.ContainsKey(enemy.GridPos);
-            GD.Print($"[EnemyAI]   跳过移动：可达格 {reachable.Count} 个，目标绕障{(goalReachable ? "可达" : "不可达")}，无可选格");
+            GD.Print($"[EnemyAI]   跳过移动：可达格 {reachable.Count} 个，无可选格");
             return null;
         }
 
@@ -340,7 +338,7 @@ public partial class EnemyAI : Node
         var movePos = AiTactics.PickBestMoveCell(
             enemy.GridPos, reachable, attackScoreAtCell, distToGoal,
             threatCells, spawnCells, excludeSpawnCells: true,
-            previousPos: prevPos);
+            previousPos: prevPos, fallbackGoal: goal.GridPos);
 
         if (!movePos.HasValue || movePos.Value == enemy.GridPos)
         {

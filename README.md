@@ -225,7 +225,7 @@ Scripts/                         ~1.7w 行 C#
 ├── Audio/
 │   └── AudioManager.cs          音频管理器（Autoload：总线/BGM/SFX 池/事件驱动响应）
 ├── Tests/
-│   └── TestRunner.cs            全面系统性测试（512 项，场景内集成运行）
+│   └── TestRunner.cs            全面系统性测试（513 项，场景内集成运行）
 ├── Tools/
 │   └── TextToResourceImporter.cs  文本转 .tres 工具（EditorScript）
 └── Utils/
@@ -1041,7 +1041,7 @@ OnEnterGameStart
 
 `Scripts/Tests/TestRunner.cs` - 全面系统性单元测试，直接在场景中运行。
 
-**用法：** 在场景根节点加 Node，挂载 TestRunner.cs，**默认不运行**（`RunTestsOnReady=false`，防止测试副作用污染战斗全局状态，如修改全局费用）；需要回归时在 Inspector 勾选 `RunTestsOnReady` 后运行。**512 项用例**覆盖：
+**用法：** 在场景根节点加 Node，挂载 TestRunner.cs，**默认不运行**（`RunTestsOnReady=false`，防止测试副作用污染战斗全局状态，如修改全局费用）；需要回归时在 Inspector 勾选 `RunTestsOnReady` 后运行。**513 项用例**覆盖：
 - ValueSource 运算（6 种公式 + 嵌套）
 - Condition 复合（And/Or/Not + Compare/HasBuff/Random）
 - Buff 生命周期（叠层/倒计时/还原/驱散）
@@ -1764,6 +1764,6 @@ Hints = [HintData{TriggerRound=0, Message="在蓝色高亮区域内点击格子�
 | **标准**（默认） | 目标打分：**门 > 一击可杀 > 高攻击威胁 > 距离**；**攻击优先**（能打到就打，不做送死预判）；移动搜索"走到哪格能进入攻击范围"——AP≥2 时一轮内移动+攻击连招；**轻量威胁规避**（火力区落点能攻击轻罚 / 无攻击价值略重罚，权重调低避免过度规避） |
 | **狡诈** | 标准全部 + **刷怪格回避**（不主动站下回合预告刷怪红格；正站在红格上时**主动让位**移开，除非本回合能击杀玩家门——胜负优先） |
 
-> 目标打分权重：门 1000 / 一击击杀 300 / 每点攻击力威胁 +2 / 距离递减；移动格评分：可攻击目标得分 − **到进攻目标的绕障步数**（`PathFinder.GetDistanceFrom` BFS，绕墙/绕玩家占据格；**AI 队友占据格可穿越**——避免援军互相挡路卡死；忽略自身格）− 威胁格惩罚（**能攻击轻罚 150 / 不能攻击重罚 250**——别白送但不过度规避）− 刷怪格 150。**防来回动**：禁止移回上回合起点（EnemyAI 记录 `_lastMoveFrom`）+ 绕远上限 3 格（防走丢）。
+> 目标打分权重：门 1000 / 一击击杀 300 / 每点攻击力威胁 +2 / 距离递减；移动格评分：可攻击目标得分 − **到进攻目标的距离**（绕障 BFS 步数优先，`PathFinder.GetDistanceFrom` 绕墙/绕玩家占据格、AI 队友占据格可穿越防援军互相挡路、忽略自身格；**绕障不可达时回退曼哈顿**——朝目标方向走，不浪费移动机会）− 威胁格惩罚（**能攻击轻罚 150 / 不能攻击重罚 250**——别白送但不过度规避）− 刷怪格 150。**防来回动**：禁止移回上回合起点（EnemyAI 记录 `_lastMoveFrom`）+ 绕远上限 3 格（防走丢）。
 
 **玩家覆盖**：设置面板「游戏」页可全局覆盖（跟随关卡/简单/标准/狡诈，`GameSettings` 读写 `settings.cfg` 的 `game` 段）——跟随关卡=用 `LevelData.AiLevel`，否则玩家选择优先；战斗中修改立即重启当前关卡生效。
