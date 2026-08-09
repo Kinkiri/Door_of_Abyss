@@ -42,6 +42,11 @@ public partial class UnitManager : Node
         Instance = this;
     }
 
+    public override void _ExitTree()
+    {
+        if (Instance == this) Instance = null;
+    }
+
     public void Init() { }
 
     // ======================================================================

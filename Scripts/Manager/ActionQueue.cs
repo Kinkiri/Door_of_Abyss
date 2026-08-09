@@ -18,6 +18,13 @@ public partial class ActionQueue : Node
         Instance = this;
     }
 
+    public override void _ExitTree()
+    {
+        // 清空未执行队列；跨场景存活的 SceneTree 计时器回调经 ProcessNext 的 Instance 校验退出
+        Clear();
+        if (Instance == this) Instance = null;
+    }
+
     public void Init() { }
 
     /// <summary>排到队尾（批量动作）</summary>
@@ -51,6 +58,9 @@ public partial class ActionQueue : Node
 
     private void ProcessNext()
     {
+        // 场景已卸载：跨场景存活的 SceneTree 计时器回调直接退出（Instance 已置空或指向新场景实例）
+        if (Instance != this) return;
+
         if (_queue.Count == 0)
         {
             _isProcessing = false;

@@ -34,6 +34,14 @@ public partial class EventBus : Node
         Instance = this;
     }
 
+    public override void _ExitTree()
+    {
+        // 清理全部订阅（Unit/Card/Environment 运行时实例随战斗销毁）并释放单例
+        _subscriptions.Clear();
+        _triggerCounts.Clear();
+        if (Instance == this) Instance = null;
+    }
+
     public void Init() { }
 
     /// <summary>

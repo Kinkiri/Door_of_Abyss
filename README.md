@@ -11,6 +11,7 @@
 - [架构概览（程序员）](#架构概览程序员)
 - [ECA 效果系统（程序员）](#eca-效果系统程序员)
 - [安卓平台适配（程序员）](#安卓平台适配程序员)
+- [跨场景生命周期注意事项（程序员）](#跨场景生命周期注意事项程序员)
 - [策划配置手册](#策划配置手册)
   - [1. 核心战斗流程](#1-核心战斗流程)
   - [2. 条件（Condition）](#2-条件condition)
@@ -469,6 +470,66 @@ SelectionManager / 放门 / Control 按钮直接可用），`Scripts/View/TouchI
 - **打包后 .tres 被 UID 重映射为 .tres.remap**：`Library.GetAllTresPaths` 已兼容（枚举时去掉 `.remap` 后缀，逻辑路径不变），Windows/Android 导出均正常加载（卡牌库 54 张）
 - **模拟器（MuMu/雷电）限制**：Compatibility 渲染无 Vulkan 依赖；arm64 APK 经 houdini 指令转译，卡牌库加载可能极慢/卡死（真机原生 arm64 正常）；adb swipe 受 INJECT_EVENTS 权限限制无法自动化拖拽手势
 - **待真机验证**：单指拖镜头、双指捏合缩放、安卓端卡牌库加载性能、Compatibility 渲染下冷启动时间
+
+---
+
+## 跨场景生命周期注意事项（程序员）
+
+> 本项目的 C# 场景切换（战斗 ↔ 主界面）曾多次踩跨场景对象生命周期坑，2026-08-09 修复"通关→回主界面→再进关崩溃"
+> 后总结为以下硬性约定。改动场景内单例/资源加载代码前必读。
+
+### 引擎 bug：`gchandle.is_released()` 崩溃（Godot #83762）
+
+**症状**：`FATAL: Condition "gchandle.is_released()" is true.`，栈为
+`GodotObject.Dispose(bool) ← Finalize ← GC.RunFinalizers`（`mono_object_disposed_baseref`，csharp_script.cpp）。
+
+**机制**：Godot C# 的**自定义 C# Resource**（带脚本实例的 RefCounted：`*Data` / `GameAction` / `Condition` /
+`ValueSource` / `TargetFilter` / `CellShape` 等）若其托管包装器被 GC 回收、而原生资源仍存活于 ResourceCache，
+之后再次被引用（refcount 回升）即触发崩溃。**典型场景**：某资源仅被场景节点引用（如 `Level.tscn` 的
+`测试玩家.tres`），场景卸载时原生引用下降 → 包装器成孤立 → 下一场景重新引用该资源时撞上 GC 终结器。
+
+**官方 workaround = 静态强引用钉住包装器**，防其被 GC（`CardLibrary` / `UnitLibrary` / `LevelLibrary`
+即此模式——卡牌/单位/关卡模板因此从未触发此 bug）。
+
+### 项目约定
+
+1. **场景直接加载、不经静态库的自定义 Resource 必须钉住**：注册到 `Scripts/Utils/ResourcePins.cs`，
+   `BattleManager._Ready` 用 `??=` 注册——**首个包装器永不丢弃**（后续场景经实例绑定复用同一包装器，
+   不会产生新旧包装器共存）：
+   ```csharp
+   ResourcePins.PlayerData ??= PlayerData;
+   ResourcePins.LevelData ??= LevelData;
+   ```
+   新增 Data 类型时：若会被场景直接引用（Export 字段），记得补进 ResourcePins（或建静态 Library）。
+
+2. **场景内单例的静态 `Instance` 必须在 `_ExitTree` 置空**（对齐 UnitViewManager/FloatingNumberLayer 等约定）：
+   ```csharp
+   public override void _ExitTree()
+   {
+       // 退订其他 Manager 的事件须判空：_ExitTree 顺序不保证，对方可能已先置空 Instance
+       var sm = SelectionManager.Instance;
+       if (sm != null) sm.UnitMoveRequest -= OnUnitMove;
+       ...
+       if (Instance == this) Instance = null;
+   }
+   ```
+   否则场景卸载后静态字段仍指向已释放包装器，到下一场景 `_Ready` 覆盖时才被丢弃——GC 终结器恰与
+   原生资源二次引用撞上 → 上面的 gchandle 崩溃。全部 Manager + PauseMenu + MapView 已按此约定补齐。
+
+3. **`GetTree().CreateTimer()` 跨场景存活**：计时器归 SceneTree 所有，场景切换后**仍会触发**
+   （`processAlways:false` 仅表示暂停时冻结）。回调必须双防护，防卸载后 NRE 或误推进新场景战斗：
+   ```csharp
+   private void ProcessNext()
+   {
+       if (Instance != this) return;   // 场景已卸载：过期回调直接退出（EnemyAI/ActionQueue 约定）
+       ...
+   }
+   // 匿名回调同样加 Instance 校验，并判空目标：
+   timer.Timeout += () => { if (Instance != this) return; BattleManager.Instance?.AdvancePhase(); };
+   ```
+
+4. **`Callable.From` 回调两种封装都要检查**：Godot 4.7 中委托封装的 Callable 构造时 `Method` 为 null 而
+   `Delegate` 非空，判断是否有回调须两者都查（见 `ActionQueue.Enqueue` 注释，历史静默丢回调教训）。
 
 ---
 

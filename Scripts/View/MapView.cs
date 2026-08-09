@@ -50,13 +50,17 @@ public partial class MapView : Node2D
         if (MapManager.Instance != null)
             MapManager.Instance.MapUpdated -= OnMapUpdated;
 
-        SelectionManager.Instance.SelectionUpdated -= OnSelectionUpdated;
+        // 场景卸载时 SelectionManager 可能已先置空 Instance（_ExitTree 顺序不保证），须判空
+        if (SelectionManager.Instance != null)
+            SelectionManager.Instance.SelectionUpdated -= OnSelectionUpdated;
 
         if (BattleManager.Instance != null)
         {
             BattleManager.Instance.WavePreviewUpdated -= OnWavePreviewUpdated;
             BattleManager.Instance.WavePreviewCleared -= OnWavePreviewCleared;
         }
+
+        if (Instance == this) Instance = null;
     }
 
     /// <summary>帧尾订阅 BattleManager 波次预告事件（渲染红色警示格）</summary>

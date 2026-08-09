@@ -93,6 +93,30 @@ public partial class BattleManager : Node2D
             LevelData = LevelSelection.Selected;
             GD.Print($"[Battle] 选关加载: {LevelData.LevelName}");
         }
+
+        // 跨场景资源引脚：PlayerData/LevelData 是场景直接加载的自定义 C# Resource，
+        // 不钉住的话包装器被 GC 而原生资源仍存活于缓存，再次引用会触发 gchandle.is_released() 崩溃
+        // （Godot C# 引擎 bug #83762，详见 ResourcePins）。??= 保证首个包装器永不被丢弃，
+        // 后续场景重复加载经实例绑定返回同一包装器，不会产生新旧包装器共存。
+        ResourcePins.PlayerData ??= PlayerData;
+        ResourcePins.LevelData ??= LevelData;
+    }
+
+    public override void _ExitTree()
+    {
+        // 取消待触发的自动推进计时器（场景树计时器跨场景存活，退订防对已释放节点回调）
+        CancelAutoAdvance();
+
+        // 退订 SelectionManager 行为请求（与 DoSubscribeSelection 对称；场景卸载时对方可能已置空 Instance）
+        var sm = SelectionManager.Instance;
+        if (sm != null)
+        {
+            sm.UnitMoveRequest -= OnUnitMove;
+            sm.UnitAttackRequest -= OnUnitAttack;
+            sm.CardPlayRequest -= OnCardPlay;
+        }
+
+        if (Instance == this) Instance = null;
     }
 
     public void Init()

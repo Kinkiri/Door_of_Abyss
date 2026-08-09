@@ -36,6 +36,11 @@ public partial class MapManager : Node2D
         Instance = this;
     }
 
+    public override void _ExitTree()
+    {
+        if (Instance == this) Instance = null;
+    }
+
     public void Init() { }
 
     // ======================================================================

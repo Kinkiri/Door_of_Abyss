@@ -45,6 +45,12 @@ public partial class EnemyAI : Node
         GD.Print("[EnemyAI] 就绪");
     }
 
+    public override void _ExitTree()
+    {
+        _actionQueue?.Clear();
+        if (Instance == this) Instance = null;
+    }
+
     public void Init() { }
 
     /// <summary>开始执行敌方回合</summary>
@@ -86,7 +92,7 @@ public partial class EnemyAI : Node
         if (_actionQueue.Count == 0)
         {
             GD.Print("[EnemyAI] 无可行动敌方单位，推进阶段");
-            BattleManager.Instance.AdvancePhase();
+            BattleManager.Instance?.AdvancePhase();
             return;
         }
 
@@ -95,12 +101,19 @@ public partial class EnemyAI : Node
 
     private void ProcessNext()
     {
+        // 场景已卸载：跨场景存活的 SceneTree 计时器回调直接退出（Instance 已置空或指向新场景实例）
+        if (Instance != this) return;
+
         if (_actionQueue.Count == 0)
         {
             GD.Print("[EnemyAI] 全部处理完毕，0.3s 后推进阶段");
             // processAlways:false —— 树暂停（Esc 暂停）时 AI 计时器停止，真实暂停
             var timer = GetTree().CreateTimer(0.3f, processAlways: false);
-            timer.Timeout += () => BattleManager.Instance.AdvancePhase();
+            timer.Timeout += () =>
+            {
+                if (Instance != this) return;
+                BattleManager.Instance?.AdvancePhase();
+            };
             return;
         }
 
@@ -120,6 +133,8 @@ public partial class EnemyAI : Node
         var pan = GetTree().CreateTimer(CameraPanDelay, processAlways: false);
         pan.Timeout += () =>
         {
+            // 场景已卸载：放弃过期行动计划（防跨场景误执行）
+            if (Instance != this) return;
             ExecutePlan(plan);
             // 只处理一个动作，如果还有剩余 AP 则重新入队
             if (enemy.ActionPoints > 0)

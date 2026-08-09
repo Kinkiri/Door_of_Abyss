@@ -56,6 +56,16 @@ public partial class PauseMenu : Control, IPanel
         };
     }
 
+    public override void _ExitTree()
+    {
+        // 若暂停中卸载（如通关后直接回主界面）：出栈防残留 + 恢复暂停状态 + 释放单例
+        if (_paused)
+            SetPaused(false, animate: false);
+        else
+            PanelStack.Pop(this);
+        if (Instance == this) Instance = null;
+    }
+
     public override void _UnhandledInput(InputEvent @event)
     {
         if (@event is InputEventKey key && key.Pressed && !key.Echo && key.Keycode == Key.Escape)

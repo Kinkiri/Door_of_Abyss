@@ -44,10 +44,13 @@ public partial class SelectionManager : Node2D
     public override void _ExitTree()
     {
         var um = UnitManager.Instance;
-        if (um == null) return;
-        um.OnUnitSpawned -= OnAnyUnitChanged;
-        um.OnUnitRemoved -= OnAnyUnitChanged;
-        um.OnUnitMoved -= OnAnyUnitChanged;
+        if (um != null)
+        {
+            um.OnUnitSpawned -= OnAnyUnitChanged;
+            um.OnUnitRemoved -= OnAnyUnitChanged;
+            um.OnUnitMoved -= OnAnyUnitChanged;
+        }
+        if (Instance == this) Instance = null;
     }
 
     public void Init()
