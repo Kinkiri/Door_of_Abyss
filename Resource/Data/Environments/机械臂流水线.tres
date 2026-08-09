@@ -19,6 +19,7 @@ metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
 [sub_resource type="Resource" id="Resource_y038s"]
 script = ExtResource("2_aisks")
 BuffData = ExtResource("1_4guqe")
+InitialStacks = 2
 metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
 
 [sub_resource type="Resource" id="Resource_w2hl2"]
@@ -26,7 +27,7 @@ script = ExtResource("3_euge7")
 TriggerEvent = 18
 Target = 1
 TargetFilters = null
-MaxTriggerCount = 2
+MaxTriggerCount = 1
 Actions = Array[Object]([SubResource("Resource_y038s")])
 Conditions = null
 metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
