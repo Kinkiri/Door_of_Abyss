@@ -25,7 +25,7 @@
 [ext_resource type="Resource" uid="uid://do4vvklkek6hx" path="res://Resource/Data/Cards/擢升之手/闲散员工.tres" id="23_jy5s7"]
 [ext_resource type="Resource" uid="uid://d0sm2c2orqtu2" path="res://Resource/Data/Cards/擢升之手/飞拳斗士.tres" id="24_rfuy5"]
 [ext_resource type="Resource" uid="uid://djiilhm1jyasb" path="res://Resource/Data/Cards/测试/无中生有.tres" id="25_qwdhl"]
-[ext_resource type="Resource" uid="uid://c4fbolq7kffmd" path="res://Resource/Data/Cards/测试/拆除义肢.tres" id="26_ydc72"]
+[ext_resource type="Resource" uid="uid://c4fbolq7kffmd" path="res://Resource/Data/Cards/擢升之手/拆除义肢.tres" id="26_ydc72"]
 [ext_resource type="Resource" uid="uid://d3v0wb7qhg0fl" path="res://Resource/Data/Cards/测试/成瘾性空气.tres" id="27_if0dn"]
 [ext_resource type="Resource" uid="uid://b8oubcccs7tte" path="res://Resource/Data/Cards/测试/火球术.tres" id="28_go4k0"]
 [ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="29_plqsr"]

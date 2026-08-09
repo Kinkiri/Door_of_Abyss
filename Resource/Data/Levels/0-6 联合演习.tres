@@ -2,17 +2,17 @@
 
 [ext_resource type="Resource" uid="uid://bj2geonyyapfc" path="res://Resource/Data/Deck/门客.tres" id="1_mmnx1"]
 [ext_resource type="Script" uid="uid://cov8agd25nia1" path="res://Scripts/Data/Levels/HintData.cs" id="1_rscru"]
+[ext_resource type="Resource" uid="uid://bkw4f7fjiykxq" path="res://Resource/Data/Units/2擢升之手/闲散员工.tres" id="4_rscru"]
+[ext_resource type="Resource" uid="uid://b1p6ar02lyld3" path="res://Resource/Data/Units/2擢升之手/自动机械手.tres" id="5_r28nq"]
+[ext_resource type="Resource" uid="uid://f8jwdartjjfi" path="res://Resource/Data/Units/2擢升之手/门卫.tres" id="7_wb1c7"]
+[ext_resource type="Resource" uid="uid://ccuyks7y3yc4n" path="res://Resource/Data/Units/2擢升之手/构造体工程师.tres" id="8_lqbe6"]
+[ext_resource type="Resource" uid="uid://cgk4anboptubr" path="res://Resource/Data/Units/2擢升之手/钢肢蝼蛄.tres" id="9_tx845"]
+[ext_resource type="Resource" uid="uid://berq0byplvsig" path="res://Resource/Data/Units/2擢升之手/秒速尖兵.tres" id="10_eq063"]
+[ext_resource type="Resource" uid="uid://cns3plqukhny8" path="res://Resource/Data/Units/2擢升之手/S-Catch.tres" id="11_t83c1"]
+[ext_resource type="Resource" uid="uid://bxqx3ibmsjdug" path="res://Resource/Data/Units/2擢升之手/旋钮门.tres" id="12_5hkd0"]
 [ext_resource type="Resource" path="res://Resource/Data/Maps/初入战场.tres" id="17_wp2b0"]
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="18_iyjhw"]
 [ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="19_474bt"]
-[ext_resource type="Resource" uid="uid://bkw4f7fjiykxq" path="res://Resource/Data/Units/擢升之手/闲散员工.tres" id="20_sa6jp"]
-[ext_resource type="Resource" uid="uid://f8jwdartjjfi" path="res://Resource/Data/Units/擢升之手/门卫.tres" id="21_cfnkq"]
-[ext_resource type="Resource" uid="uid://b1p6ar02lyld3" path="res://Resource/Data/Units/擢升之手/自动机械手.tres" id="22_gie45"]
-[ext_resource type="Resource" uid="uid://bxqx3ibmsjdug" path="res://Resource/Data/Units/擢升之手/旋钮门.tres" id="23_ycswt"]
-[ext_resource type="Resource" uid="uid://ccuyks7y3yc4n" path="res://Resource/Data/Units/擢升之手/构造体工程师.tres" id="25_wp2b0"]
-[ext_resource type="Resource" uid="uid://berq0byplvsig" path="res://Resource/Data/Units/擢升之手/秒速尖兵.tres" id="27_cfnkq"]
-[ext_resource type="Resource" uid="uid://cns3plqukhny8" path="res://Resource/Data/Units/擢升之手/S-Catch.tres" id="28_gie45"]
-[ext_resource type="Resource" uid="uid://cgk4anboptubr" path="res://Resource/Data/Units/擢升之手/钢肢蝼蛄.tres" id="29_ycswt"]
 
 [sub_resource type="Resource" id="Resource_xgh6p"]
 script = ExtResource("1_rscru")
@@ -25,12 +25,18 @@ script = ExtResource("1_rscru")
 Message = "敌人变得更聪明了，小心"
 metadata/_custom_type_script = "uid://cov8agd25nia1"
 
+[sub_resource type="Resource" id="Resource_0bsr8"]
+script = ExtResource("1_rscru")
+TriggerRound = 2
+Message = "移动范围使用BFS计算，但移动是瞬移"
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
 [sub_resource type="Resource" id="Resource_ubivf"]
 script = ExtResource("19_474bt")
 Round = 2
 SpawnAreaMin = Vector2i(6, 0)
 SpawnAreaMax = Vector2i(12, 4)
-UnitDatas = Array[Object]([ExtResource("20_sa6jp"), ExtResource("20_sa6jp"), ExtResource("20_sa6jp"), ExtResource("20_sa6jp"), ExtResource("22_gie45")])
+UnitDatas = Array[Object]([ExtResource("4_rscru"), ExtResource("4_rscru"), ExtResource("4_rscru"), ExtResource("4_rscru"), ExtResource("5_r28nq")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_x5pfv"]
@@ -38,7 +44,7 @@ script = ExtResource("19_474bt")
 Round = 4
 SpawnAreaMin = Vector2i(5, 3)
 SpawnAreaMax = Vector2i(7, 5)
-UnitDatas = Array[Object]([ExtResource("21_cfnkq"), ExtResource("25_wp2b0"), ExtResource("21_cfnkq")])
+UnitDatas = Array[Object]([ExtResource("7_wb1c7"), ExtResource("8_lqbe6"), ExtResource("7_wb1c7")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_v0q2j"]
@@ -46,19 +52,19 @@ script = ExtResource("19_474bt")
 Round = 6
 SpawnAreaMin = Vector2i(8, 4)
 SpawnAreaMax = Vector2i(12, 6)
-UnitDatas = Array[Object]([ExtResource("29_ycswt"), ExtResource("29_ycswt"), ExtResource("29_ycswt"), ExtResource("22_gie45")])
+UnitDatas = Array[Object]([ExtResource("9_tx845"), ExtResource("9_tx845"), ExtResource("9_tx845"), ExtResource("5_r28nq")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_d0f75"]
 script = ExtResource("19_474bt")
 Round = 8
-UnitDatas = Array[Object]([ExtResource("25_wp2b0"), ExtResource("27_cfnkq"), ExtResource("27_cfnkq"), ExtResource("28_gie45"), ExtResource("22_gie45")])
+UnitDatas = Array[Object]([ExtResource("8_lqbe6"), ExtResource("10_eq063"), ExtResource("10_eq063"), ExtResource("11_t83c1"), ExtResource("5_r28nq")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_gg0yl"]
 script = ExtResource("19_474bt")
 Round = 10
-UnitDatas = Array[Object]([ExtResource("25_wp2b0"), ExtResource("23_ycswt"), ExtResource("21_cfnkq"), ExtResource("29_ycswt")])
+UnitDatas = Array[Object]([ExtResource("8_lqbe6"), ExtResource("12_5hkd0"), ExtResource("7_wb1c7"), ExtResource("9_tx845")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [resource]
@@ -72,5 +78,5 @@ DoorPlaceZoneMax = Vector2i(0, 4)
 DefaultSpawnAreaMin = Vector2i(8, 0)
 DefaultSpawnAreaMax = Vector2i(12, 7)
 LevelDeck = ExtResource("1_mmnx1")
-Hints = Array[Object]([SubResource("Resource_xgh6p"), SubResource("Resource_g7ke2")])
+Hints = Array[Object]([SubResource("Resource_xgh6p"), SubResource("Resource_g7ke2"), SubResource("Resource_0bsr8")])
 metadata/_custom_type_script = "uid://wk0covoailum"

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_1rjt6"]
 [ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="1_30xqk"]
-[ext_resource type="Resource" uid="uid://ip812cl63enu" path="res://Resource/Data/Units/门客/侦察兵.tres" id="1_awhni"]
+[ext_resource type="Resource" uid="uid://ip812cl63enu" path="res://Resource/Data/Units/1门客/侦察兵.tres" id="1_awhni"]
 [ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_k5g48"]
 
 [sub_resource type="Resource" id="Resource_ip4hd"]

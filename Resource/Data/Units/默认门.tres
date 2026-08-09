@@ -2,17 +2,47 @@
 
 [ext_resource type="Script" uid="uid://d0dw5ofs4ec7f" path="res://Scripts/Data/Units/DoorData.cs" id="1_u8aac"]
 [ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_vd3qs"]
+[ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="1_vgdd0"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="2_d0eax"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="3_gekmr"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="4_yv8vb"]
+
+[sub_resource type="Resource" id="Resource_hpnps"]
+script = ExtResource("1_vgdd0")
+Value = 5
+metadata/_custom_type_script = "uid://bcjncmte44un1"
+
+[sub_resource type="Resource" id="Resource_i14ag"]
+script = ExtResource("2_d0eax")
+Shape = 3
+AreaRange = 3
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_1g5wy"]
+script = ExtResource("3_gekmr")
+Team = 2
+metadata/_custom_type_script = "uid://bjnrbd7iwxb5u"
+
+[sub_resource type="Resource" id="Resource_3t4ft"]
+script = ExtResource("4_yv8vb")
+TriggerEvent = 10
+TargetFilters = Array[Object]([SubResource("Resource_i14ag"), SubResource("Resource_1g5wy")])
+Actions = Array[Object]([SubResource("Resource_hpnps")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
 
 [resource]
 script = ExtResource("1_u8aac")
-UnitID = "自由之门"
-UnitName = "自由之门"
+UnitID = "门"
+UnitName = "门"
+World = 3
+Faction = 4
 Tags = null
 AttackPower = 3
 HealthPoints = 8
 AttackDistance = 2
 Type = 5
-Description = "每回合为你回复2费1卡"
+Description = "每回合为你回复2费1卡；死亡后对菱形3范围内的敌方造成5点伤害"
 UnitPrefab = ExtResource("1_vd3qs")
-PassiveEffects = null
+PassiveEffects = Array[Object]([SubResource("Resource_3t4ft")])
 metadata/_custom_type_script = "uid://d0dw5ofs4ec7f"

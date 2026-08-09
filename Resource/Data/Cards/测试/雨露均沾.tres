@@ -20,7 +20,6 @@ CardName = "雨露均沾"
 Description = "对所有单位造成2点伤害（不分敌我！）"
 Type = 1
 Tags = null
-Cost = 2
 TargetFilters = Array[Object]([SubResource("Resource_tf_shape")])
 Conditions = null
 Actions = Array[Object]([SubResource("Resource_yadyw")])

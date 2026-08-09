@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_4ktt6"]
 [ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="1_yfaky"]
-[ext_resource type="Resource" uid="uid://cgk4anboptubr" path="res://Resource/Data/Units/擢升之手/钢肢蝼蛄.tres" id="2_1pyu8"]
+[ext_resource type="Resource" uid="uid://cgk4anboptubr" path="res://Resource/Data/Units/2擢升之手/钢肢蝼蛄.tres" id="2_1pyu8"]
 [ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="2_dtx4l"]
 [ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="3_dtx4l"]
 

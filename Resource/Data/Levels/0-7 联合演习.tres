@@ -2,21 +2,21 @@
 
 [ext_resource type="Script" uid="uid://cov8agd25nia1" path="res://Scripts/Data/Levels/HintData.cs" id="1_k78tw"]
 [ext_resource type="Resource" uid="uid://bj2geonyyapfc" path="res://Resource/Data/Deck/门客.tres" id="1_vvybx"]
-[ext_resource type="Resource" uid="uid://lrgqm0h2wth5" path="res://Resource/Data/Units/擢升之手/重载章鱼.tres" id="13_tnok5"]
-[ext_resource type="Resource" uid="uid://bbkq67n50v7xu" path="res://Resource/Data/Units/擢升之手/飞拳斗士.tres" id="15_k78tw"]
-[ext_resource type="Resource" uid="uid://c3nsnpssnhx0q" path="res://Resource/Data/Units/擢升之手/充能拳皇.tres" id="16_jbou7"]
+[ext_resource type="Resource" uid="uid://lrgqm0h2wth5" path="res://Resource/Data/Units/2擢升之手/重载章鱼.tres" id="13_tnok5"]
+[ext_resource type="Resource" uid="uid://bbkq67n50v7xu" path="res://Resource/Data/Units/2擢升之手/飞拳斗士.tres" id="15_k78tw"]
+[ext_resource type="Resource" uid="uid://c3nsnpssnhx0q" path="res://Resource/Data/Units/2擢升之手/充能拳皇.tres" id="16_jbou7"]
 [ext_resource type="Resource" path="res://Resource/Data/Maps/初入战场.tres" id="17_mnpx5"]
 [ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="19_e5v74"]
-[ext_resource type="Resource" uid="uid://bkw4f7fjiykxq" path="res://Resource/Data/Units/擢升之手/闲散员工.tres" id="20_y2xjd"]
-[ext_resource type="Resource" uid="uid://f8jwdartjjfi" path="res://Resource/Data/Units/擢升之手/门卫.tres" id="21_xk2q8"]
-[ext_resource type="Resource" uid="uid://b1p6ar02lyld3" path="res://Resource/Data/Units/擢升之手/自动机械手.tres" id="22_1xl7g"]
-[ext_resource type="Resource" uid="uid://bxqx3ibmsjdug" path="res://Resource/Data/Units/擢升之手/旋钮门.tres" id="23_jb2w3"]
-[ext_resource type="Resource" uid="uid://b5nch2litcm26" path="res://Resource/Data/Units/擢升之手/MK0.tres" id="24_8chml"]
-[ext_resource type="Resource" uid="uid://ccuyks7y3yc4n" path="res://Resource/Data/Units/擢升之手/构造体工程师.tres" id="25_thc01"]
-[ext_resource type="Resource" uid="uid://dpur8ccms68r2" path="res://Resource/Data/Units/擢升之手/巨拳近卫.tres" id="26_ycwxg"]
-[ext_resource type="Resource" uid="uid://berq0byplvsig" path="res://Resource/Data/Units/擢升之手/秒速尖兵.tres" id="27_2g402"]
-[ext_resource type="Resource" uid="uid://cns3plqukhny8" path="res://Resource/Data/Units/擢升之手/S-Catch.tres" id="28_d308d"]
-[ext_resource type="Resource" uid="uid://cgk4anboptubr" path="res://Resource/Data/Units/擢升之手/钢肢蝼蛄.tres" id="29_0da24"]
+[ext_resource type="Resource" uid="uid://bkw4f7fjiykxq" path="res://Resource/Data/Units/2擢升之手/闲散员工.tres" id="20_y2xjd"]
+[ext_resource type="Resource" uid="uid://f8jwdartjjfi" path="res://Resource/Data/Units/2擢升之手/门卫.tres" id="21_xk2q8"]
+[ext_resource type="Resource" uid="uid://b1p6ar02lyld3" path="res://Resource/Data/Units/2擢升之手/自动机械手.tres" id="22_1xl7g"]
+[ext_resource type="Resource" uid="uid://bxqx3ibmsjdug" path="res://Resource/Data/Units/2擢升之手/旋钮门.tres" id="23_jb2w3"]
+[ext_resource type="Resource" uid="uid://b5nch2litcm26" path="res://Resource/Data/Units/2擢升之手/MK0.tres" id="24_8chml"]
+[ext_resource type="Resource" uid="uid://ccuyks7y3yc4n" path="res://Resource/Data/Units/2擢升之手/构造体工程师.tres" id="25_thc01"]
+[ext_resource type="Resource" uid="uid://dpur8ccms68r2" path="res://Resource/Data/Units/2擢升之手/巨拳近卫.tres" id="26_ycwxg"]
+[ext_resource type="Resource" uid="uid://berq0byplvsig" path="res://Resource/Data/Units/2擢升之手/秒速尖兵.tres" id="27_2g402"]
+[ext_resource type="Resource" uid="uid://cns3plqukhny8" path="res://Resource/Data/Units/2擢升之手/S-Catch.tres" id="28_d308d"]
+[ext_resource type="Resource" uid="uid://cgk4anboptubr" path="res://Resource/Data/Units/2擢升之手/钢肢蝼蛄.tres" id="29_0da24"]
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="30_e663t"]
 
 [sub_resource type="Resource" id="Resource_o08rj"]
@@ -28,7 +28,6 @@ metadata/_custom_type_script = "uid://cov8agd25nia1"
 
 [sub_resource type="Resource" id="Resource_x5pfv"]
 script = ExtResource("19_e5v74")
-Round = 2
 SpawnAreaMin = Vector2i(5, 3)
 SpawnAreaMax = Vector2i(7, 5)
 UnitDatas = Array[Object]([ExtResource("20_y2xjd"), ExtResource("20_y2xjd"), ExtResource("21_xk2q8")])
@@ -36,19 +35,19 @@ metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_d0f75"]
 script = ExtResource("19_e5v74")
-Round = 4
+Round = 3
 UnitDatas = Array[Object]([ExtResource("22_1xl7g"), ExtResource("22_1xl7g"), ExtResource("23_jb2w3"), ExtResource("23_jb2w3")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_gg0yl"]
 script = ExtResource("19_e5v74")
-Round = 6
+Round = 5
 UnitDatas = Array[Object]([ExtResource("24_8chml"), ExtResource("25_thc01"), ExtResource("26_ycwxg")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_ii83f"]
 script = ExtResource("19_e5v74")
-Round = 9
+Round = 8
 UnitDatas = Array[Object]([ExtResource("25_thc01"), ExtResource("27_2g402"), ExtResource("28_d308d"), ExtResource("13_tnok5"), ExtResource("29_0da24")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 

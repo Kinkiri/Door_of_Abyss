@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="1_4jqh3"]
 [ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_c846h"]
 [ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_qkw3s"]
-[ext_resource type="Resource" uid="uid://ccuyks7y3yc4n" path="res://Resource/Data/Units/擢升之手/构造体工程师.tres" id="3_g4rg6"]
+[ext_resource type="Resource" uid="uid://ccuyks7y3yc4n" path="res://Resource/Data/Units/2擢升之手/构造体工程师.tres" id="3_g4rg6"]
 
 [sub_resource type="Resource" id="Resource_4m7x4"]
 script = ExtResource("1_c846h")

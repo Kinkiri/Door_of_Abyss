@@ -2,29 +2,27 @@
 
 [ext_resource type="Script" uid="uid://cov8agd25nia1" path="res://Scripts/Data/Levels/HintData.cs" id="1_3t4ft"]
 [ext_resource type="Resource" path="res://Resource/Data/Maps/初入战场.tres" id="2_1g5wy"]
-[ext_resource type="Resource" uid="uid://cariyv2bv7esb" path="res://Resource/Data/Units/擢升之手/破碎残躯.tres" id="3_hpnps"]
+[ext_resource type="Resource" uid="uid://cariyv2bv7esb" path="res://Resource/Data/Units/2擢升之手/破碎残躯.tres" id="3_hpnps"]
 [ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="4_aaepc"]
-[ext_resource type="Resource" uid="uid://cx1oa5cbd2al8" path="res://Resource/Data/Units/擢升之手/废件熔铸厂.tres" id="4_i14ag"]
-[ext_resource type="Resource" uid="uid://bkw4f7fjiykxq" path="res://Resource/Data/Units/擢升之手/闲散员工.tres" id="5_eibr3"]
-[ext_resource type="Resource" uid="uid://f8jwdartjjfi" path="res://Resource/Data/Units/擢升之手/门卫.tres" id="6_21txw"]
-[ext_resource type="Resource" uid="uid://b1p6ar02lyld3" path="res://Resource/Data/Units/擢升之手/自动机械手.tres" id="7_ntm27"]
-[ext_resource type="Resource" uid="uid://bxqx3ibmsjdug" path="res://Resource/Data/Units/擢升之手/旋钮门.tres" id="8_lgws3"]
-[ext_resource type="Resource" uid="uid://b5nch2litcm26" path="res://Resource/Data/Units/擢升之手/MK0.tres" id="9_k510v"]
-[ext_resource type="Resource" uid="uid://ccuyks7y3yc4n" path="res://Resource/Data/Units/擢升之手/构造体工程师.tres" id="10_s7b02"]
-[ext_resource type="Resource" uid="uid://berq0byplvsig" path="res://Resource/Data/Units/擢升之手/秒速尖兵.tres" id="12_hxsnw"]
-[ext_resource type="Resource" uid="uid://cns3plqukhny8" path="res://Resource/Data/Units/擢升之手/S-Catch.tres" id="13_kbnat"]
+[ext_resource type="Resource" uid="uid://cx1oa5cbd2al8" path="res://Resource/Data/Units/2擢升之手/废件熔铸厂.tres" id="4_i14ag"]
+[ext_resource type="Resource" uid="uid://bkw4f7fjiykxq" path="res://Resource/Data/Units/2擢升之手/闲散员工.tres" id="5_eibr3"]
+[ext_resource type="Resource" uid="uid://f8jwdartjjfi" path="res://Resource/Data/Units/2擢升之手/门卫.tres" id="6_21txw"]
+[ext_resource type="Resource" uid="uid://b1p6ar02lyld3" path="res://Resource/Data/Units/2擢升之手/自动机械手.tres" id="7_ntm27"]
+[ext_resource type="Resource" uid="uid://bxqx3ibmsjdug" path="res://Resource/Data/Units/2擢升之手/旋钮门.tres" id="8_lgws3"]
+[ext_resource type="Resource" uid="uid://b5nch2litcm26" path="res://Resource/Data/Units/2擢升之手/MK0.tres" id="9_k510v"]
+[ext_resource type="Resource" uid="uid://ccuyks7y3yc4n" path="res://Resource/Data/Units/2擢升之手/构造体工程师.tres" id="10_s7b02"]
+[ext_resource type="Resource" uid="uid://berq0byplvsig" path="res://Resource/Data/Units/2擢升之手/秒速尖兵.tres" id="12_hxsnw"]
+[ext_resource type="Resource" uid="uid://cns3plqukhny8" path="res://Resource/Data/Units/2擢升之手/S-Catch.tres" id="13_kbnat"]
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="15_lqc8t"]
 
 [sub_resource type="Resource" id="Resource_8f5o8"]
 script = ExtResource("1_3t4ft")
-TriggerRound = 0
-Message = "发没发现选关右下有个编辑卡组"
+Message = "发没发现选关右下有个配置卡组"
 AutoRetract = false
 metadata/_custom_type_script = "uid://cov8agd25nia1"
 
 [sub_resource type="Resource" id="Resource_ubivf"]
 script = ExtResource("4_aaepc")
-Round = 2
 SpawnAreaMin = Vector2i(6, 0)
 SpawnAreaMax = Vector2i(12, 4)
 UnitDatas = Array[Object]([ExtResource("3_hpnps"), ExtResource("3_hpnps"), ExtResource("3_hpnps"), ExtResource("3_hpnps"), ExtResource("3_hpnps"), ExtResource("4_i14ag"), ExtResource("4_i14ag")])
@@ -67,7 +65,7 @@ metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 [resource]
 script = ExtResource("15_lqc8t")
 LevelName = "0-8 联合演习"
-Description = "发挥自己的智慧"
+Description = "发挥自己的智慧。别让那堆废铁活过来"
 Waves = Array[Object]([SubResource("Resource_ubivf"), SubResource("Resource_x5pfv"), SubResource("Resource_v0q2j"), SubResource("Resource_d0f75"), SubResource("Resource_gg0yl"), SubResource("Resource_ii83f")])
 MapData = ExtResource("2_1g5wy")
 DoorPlaceZoneMin = Vector2i(0, 2)

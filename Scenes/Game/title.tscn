@@ -223,6 +223,7 @@ text = "退出游戏"
 flat = true
 
 [node name="Version" type="Label" parent="." unique_id=1246043176]
+visible = false
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -317,7 +318,6 @@ size_flags_vertical = 3
 theme_override_constants/separation = 12
 
 [node name="Label" type="Label" parent="CreditsPanel/Margin/Root/Scroll/Content" unique_id=1977942458]
-visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "各位门客，欢迎进入《深秘之门》
@@ -498,6 +498,7 @@ layout_mode = 1
 layout_mode = 1
 
 [node name="FadeOut" type="ColorRect" parent="." unique_id=391542010]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

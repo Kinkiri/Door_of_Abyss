@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_8ocdp"]
 [ext_resource type="Resource" uid="uid://ki3r8ov3q500" path="res://Resource/Data/选择器预设/单格.tres" id="2_8ocdp"]
-[ext_resource type="Resource" uid="uid://b1p6ar02lyld3" path="res://Resource/Data/Units/擢升之手/自动机械手.tres" id="3_8ocdp"]
+[ext_resource type="Resource" uid="uid://b1p6ar02lyld3" path="res://Resource/Data/Units/2擢升之手/自动机械手.tres" id="3_8ocdp"]
 [ext_resource type="Script" uid="uid://p1hhkgy2pem" path="res://Scripts/Data/Card/UnitCardData.cs" id="4_neymv"]
 
 [sub_resource type="Resource" id="Resource_gfhjv"]

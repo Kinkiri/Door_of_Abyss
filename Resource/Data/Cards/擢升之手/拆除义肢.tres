@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://c4fbolq7kffmd"]
+
+[ext_resource type="Script" uid="uid://cq8v06lvy3mmc" path="res://Scripts/Data/Actions/RemoveBuffAction.cs" id="1_my3xm"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="2_h1nar"]
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="3_ow6jg"]
+
+[sub_resource type="Resource" id="Resource_ecxgy"]
+script = ExtResource("1_my3xm")
+BuffID = "义肢"
+metadata/_custom_type_script = "uid://cq8v06lvy3mmc"
+
+[sub_resource type="Resource" id="Resource_vejfn"]
+script = ExtResource("2_h1nar")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[resource]
+script = ExtResource("3_ow6jg")
+CardID = "超级拆解"
+CardName = "超级拆解"
+Description = "清除单位的义肢buff"
+Type = 1
+World = 1
+Faction = 2
+Tags = null
+Rarity = 2
+Cost = 4
+TargetFilters = Array[Object]([SubResource("Resource_vejfn")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_ecxgy")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

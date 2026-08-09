@@ -3,19 +3,20 @@
 [ext_resource type="Script" uid="uid://cov8agd25nia1" path="res://Scripts/Data/Levels/HintData.cs" id="1_x5pfv"]
 [ext_resource type="Resource" uid="uid://caxsku5uakdiv" path="res://Resource/Data/Cards/门客/维护.tres" id="6_v0q2j"]
 [ext_resource type="Resource" uid="uid://b3ro8ae005jdc" path="res://Resource/Data/Cards/门客/狙击手.tres" id="7_m37hh"]
+[ext_resource type="Resource" uid="uid://d3v0wb7qhg0fl" path="res://Resource/Data/Cards/测试/成瘾性空气.tres" id="7_v0q2j"]
 [ext_resource type="Resource" uid="uid://ckdf28q1oi48h" path="res://Resource/Data/Cards/门客/炮兵.tres" id="7_wxum1"]
 [ext_resource type="Resource" uid="uid://b7q4hi5df4l72" path="res://Resource/Data/Cards/门客/防御工事.tres" id="8_j68p7"]
 [ext_resource type="Resource" uid="uid://b1c22fwu3g480" path="res://Resource/Data/Cards/门客/燃烧弹.tres" id="9_28b8c"]
+[ext_resource type="Resource" uid="uid://vyqut7nte65d" path="res://Resource/Data/Units/1门客/老兵.tres" id="9_x5pfv"]
 [ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="10_k18qg"]
+[ext_resource type="Resource" uid="uid://c88fw4ryw05k3" path="res://Resource/Data/Units/1门客/新兵.tres" id="10_v0q2j"]
 [ext_resource type="Resource" path="res://Resource/Data/Maps/横向1.tres" id="11_dop7p"]
-[ext_resource type="Resource" uid="uid://c88fw4ryw05k3" path="res://Resource/Data/Units/门客/新兵.tres" id="12_k0a2x"]
-[ext_resource type="Resource" uid="uid://4y4yqupug01b" path="res://Resource/Data/Units/门客/步枪兵.tres" id="13_c7dqi"]
+[ext_resource type="Resource" uid="uid://4y4yqupug01b" path="res://Resource/Data/Units/1门客/步枪兵.tres" id="12_d0f75"]
+[ext_resource type="Resource" uid="uid://bwwcvxll4uiq3" path="res://Resource/Data/Units/1门客/军医.tres" id="13_gg0yl"]
+[ext_resource type="Resource" uid="uid://g00voouo7lc2" path="res://Resource/Data/Units/1门客/炮兵.tres" id="14_m37hh"]
 [ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="14_t0yki"]
-[ext_resource type="Resource" uid="uid://vyqut7nte65d" path="res://Resource/Data/Units/门客/老兵.tres" id="15_1ntt3"]
-[ext_resource type="Resource" uid="uid://g00voouo7lc2" path="res://Resource/Data/Units/门客/炮兵.tres" id="16_5qm25"]
-[ext_resource type="Resource" uid="uid://bwwcvxll4uiq3" path="res://Resource/Data/Units/门客/军医.tres" id="16_wxum1"]
+[ext_resource type="Resource" uid="uid://c52vijing117o" path="res://Resource/Data/Units/1门客/狙击手.tres" id="15_j68p7"]
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="17_qew63"]
-[ext_resource type="Resource" uid="uid://c52vijing117o" path="res://Resource/Data/Units/门客/狙击手.tres" id="18_ertcf"]
 
 [sub_resource type="Resource" id="Resource_bfpla"]
 script = ExtResource("1_x5pfv")
@@ -28,27 +29,33 @@ script = ExtResource("1_x5pfv")
 Message = "对面敌人太多了，需要范围伤害"
 metadata/_custom_type_script = "uid://cov8agd25nia1"
 
+[sub_resource type="Resource" id="Resource_lb1fy"]
+script = ExtResource("1_x5pfv")
+TriggerRound = 2
+Message = "危机时刻把一个门卖了也是一种选择"
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
 [sub_resource type="Resource" id="Resource_4gouf"]
 script = ExtResource("10_k18qg")
 DeckName = "0-3 演习固定"
-Cards = Array[Object]([ExtResource("8_j68p7"), ExtResource("8_j68p7"), ExtResource("8_j68p7"), ExtResource("9_28b8c"), ExtResource("9_28b8c"), ExtResource("9_28b8c"), ExtResource("7_m37hh"), ExtResource("6_v0q2j"), ExtResource("6_v0q2j"), ExtResource("7_wxum1"), ExtResource("9_28b8c")])
+Cards = Array[Object]([ExtResource("8_j68p7"), ExtResource("8_j68p7"), ExtResource("8_j68p7"), ExtResource("9_28b8c"), ExtResource("9_28b8c"), ExtResource("9_28b8c"), ExtResource("7_m37hh"), ExtResource("6_v0q2j"), ExtResource("6_v0q2j"), ExtResource("7_wxum1"), ExtResource("9_28b8c"), ExtResource("7_v0q2j"), ExtResource("7_v0q2j")])
 metadata/_custom_type_script = "uid://b1eamjx1y7exn"
 
 [sub_resource type="Resource" id="Resource_jnwx2"]
 script = ExtResource("14_t0yki")
-UnitDatas = Array[Object]([ExtResource("15_1ntt3"), ExtResource("12_k0a2x"), ExtResource("12_k0a2x")])
+UnitDatas = Array[Object]([ExtResource("9_x5pfv"), ExtResource("10_v0q2j"), ExtResource("10_v0q2j")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_hfokx"]
 script = ExtResource("14_t0yki")
 Round = 3
-UnitDatas = Array[Object]([ExtResource("13_c7dqi"), ExtResource("16_wxum1"), ExtResource("13_c7dqi"), ExtResource("15_1ntt3"), ExtResource("15_1ntt3")])
+UnitDatas = Array[Object]([ExtResource("12_d0f75"), ExtResource("13_gg0yl"), ExtResource("12_d0f75"), ExtResource("9_x5pfv"), ExtResource("9_x5pfv")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_udl6o"]
 script = ExtResource("14_t0yki")
 Round = 4
-UnitDatas = Array[Object]([ExtResource("16_5qm25"), ExtResource("16_5qm25"), ExtResource("18_ertcf"), ExtResource("18_ertcf"), ExtResource("16_wxum1")])
+UnitDatas = Array[Object]([ExtResource("14_m37hh"), ExtResource("14_m37hh"), ExtResource("15_j68p7"), ExtResource("15_j68p7"), ExtResource("13_gg0yl")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [resource]
@@ -62,6 +69,6 @@ DoorPlaceZoneMax = Vector2i(-5, 1)
 DefaultSpawnAreaMin = Vector2i(0, -2)
 DefaultSpawnAreaMax = Vector2i(4, 1)
 LevelDeck = SubResource("Resource_4gouf")
-Hints = Array[Object]([SubResource("Resource_bfpla"), SubResource("Resource_etn6x")])
+Hints = Array[Object]([SubResource("Resource_bfpla"), SubResource("Resource_etn6x"), SubResource("Resource_lb1fy")])
 AiLevel = 0
 metadata/_custom_type_script = "uid://wk0covoailum"

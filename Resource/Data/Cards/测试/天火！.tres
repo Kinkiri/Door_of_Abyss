@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="1_actions"]
 [ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_card"]
 [ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="2_6rmfr"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="3_yk4wx"]
 
 [sub_resource type="Resource" id="Resource_pdtq3"]
 script = ExtResource("1_actions")
@@ -13,16 +14,21 @@ script = ExtResource("2_6rmfr")
 Shape = 4
 metadata/_custom_type_script = "uid://bh835k2ig4ik"
 
+[sub_resource type="Resource" id="Resource_yk4wx"]
+script = ExtResource("3_yk4wx")
+Team = 2
+metadata/_custom_type_script = "uid://bjnrbd7iwxb5u"
+
 [resource]
 script = ExtResource("1_card")
 CardID = "天火"
 CardName = "天火！"
-Description = "对3*3的区域的所有敌方单位造成2点伤害"
+Description = "对3*3的区域的所有敌方单位造成1点伤害"
 Type = 1
 Tags = null
 Cost = 2
-TargetFilters = Array[Object]([SubResource("Resource_xx80y")])
-Conditions = Array[Object]([])
+TargetFilters = Array[Object]([SubResource("Resource_xx80y"), SubResource("Resource_yk4wx")])
+Conditions = null
 Actions = Array[Object]([SubResource("Resource_pdtq3")])
 PassiveEffects = null
 metadata/_custom_type_script = "uid://dm4jsgv06hcws"

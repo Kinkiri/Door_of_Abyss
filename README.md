@@ -506,11 +506,11 @@ SelectionManager / 放门 / Control 按钮直接可用），`Scripts/View/TouchI
    ```csharp
    public override void _ExitTree()
    {
-       // 退订其他 Manager 的事件须判空：_ExitTree 顺序不保证，对方可能已先置空 Instance
-       var sm = SelectionManager.Instance;
-       if (sm != null) sm.UnitMoveRequest -= OnUnitMove;
-       ...
-       if (Instance == this) Instance = null;
+	   // 退订其他 Manager 的事件须判空：_ExitTree 顺序不保证，对方可能已先置空 Instance
+	   var sm = SelectionManager.Instance;
+	   if (sm != null) sm.UnitMoveRequest -= OnUnitMove;
+	   ...
+	   if (Instance == this) Instance = null;
    }
    ```
    否则场景卸载后静态字段仍指向已释放包装器，到下一场景 `_Ready` 覆盖时才被丢弃——GC 终结器恰与
@@ -521,8 +521,8 @@ SelectionManager / 放门 / Control 按钮直接可用），`Scripts/View/TouchI
    ```csharp
    private void ProcessNext()
    {
-       if (Instance != this) return;   // 场景已卸载：过期回调直接退出（EnemyAI/ActionQueue 约定）
-       ...
+	   if (Instance != this) return;   // 场景已卸载：过期回调直接退出（EnemyAI/ActionQueue 约定）
+	   ...
    }
    // 匿名回调同样加 Instance 校验，并判空目标：
    timer.Timeout += () => { if (Instance != this) return; BattleManager.Instance?.AdvancePhase(); };

@@ -11,13 +11,13 @@
 [ext_resource type="Resource" uid="uid://bmlrjar80lfyq" path="res://Resource/Data/Cards/门客/先锋.tres" id="5_0bmid"]
 [ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="6_0bsr8"]
 [ext_resource type="Resource" path="res://Resource/Data/Maps/横向1.tres" id="7_rs8oh"]
-[ext_resource type="Resource" uid="uid://c88fw4ryw05k3" path="res://Resource/Data/Units/门客/新兵.tres" id="8_wdqcc"]
 [ext_resource type="Resource" uid="uid://ce6bu28qumhkv" path="res://Resource/Data/Cards/擢升之手/腾跃.tres" id="9_0bmid"]
-[ext_resource type="Resource" uid="uid://4y4yqupug01b" path="res://Resource/Data/Units/门客/步枪兵.tres" id="9_l6s73"]
 [ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="10_yi0m2"]
-[ext_resource type="Resource" uid="uid://vyqut7nte65d" path="res://Resource/Data/Units/门客/老兵.tres" id="11_tbwe1"]
-[ext_resource type="Resource" uid="uid://g00voouo7lc2" path="res://Resource/Data/Units/门客/炮兵.tres" id="12_7vx37"]
+[ext_resource type="Resource" uid="uid://c88fw4ryw05k3" path="res://Resource/Data/Units/1门客/新兵.tres" id="13_0bsr8"]
 [ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="13_33kc0"]
+[ext_resource type="Resource" uid="uid://4y4yqupug01b" path="res://Resource/Data/Units/1门客/步枪兵.tres" id="14_rs8oh"]
+[ext_resource type="Resource" uid="uid://vyqut7nte65d" path="res://Resource/Data/Units/1门客/老兵.tres" id="16_wdqcc"]
+[ext_resource type="Resource" uid="uid://g00voouo7lc2" path="res://Resource/Data/Units/1门客/炮兵.tres" id="17_l6s73"]
 
 [sub_resource type="Resource" id="Resource_v3nlb"]
 script = ExtResource("1_0bsr8")
@@ -27,7 +27,13 @@ metadata/_custom_type_script = "uid://cov8agd25nia1"
 
 [sub_resource type="Resource" id="Resource_jbou7"]
 script = ExtResource("1_0bsr8")
-Message = "门也可以移动攻击，不过凡事皆有代价，它在此回合将不会为你生产！"
+Message = "门也可以移动攻击，不过凡事皆有代价，它在下回合将不会为你生产！"
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
+[sub_resource type="Resource" id="Resource_x5pfv"]
+script = ExtResource("1_0bsr8")
+TriggerRound = 2
+Message = "占据敌人增援点可以阻止敌方增援"
 metadata/_custom_type_script = "uid://cov8agd25nia1"
 
 [sub_resource type="Resource" id="Resource_1f0gd"]
@@ -40,7 +46,7 @@ metadata/_custom_type_script = "uid://b1eamjx1y7exn"
 script = ExtResource("10_yi0m2")
 SpawnAreaMin = Vector2i(0, -1)
 SpawnAreaMax = Vector2i(1, 1)
-UnitDatas = Array[Object]([ExtResource("8_wdqcc"), ExtResource("8_wdqcc"), ExtResource("9_l6s73")])
+UnitDatas = Array[Object]([ExtResource("13_0bsr8"), ExtResource("13_0bsr8"), ExtResource("14_rs8oh")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_hfokx"]
@@ -48,7 +54,7 @@ script = ExtResource("10_yi0m2")
 Round = 3
 SpawnAreaMin = Vector2i(2, -2)
 SpawnAreaMax = Vector2i(3, 0)
-UnitDatas = Array[Object]([ExtResource("9_l6s73"), ExtResource("11_tbwe1"), ExtResource("9_l6s73")])
+UnitDatas = Array[Object]([ExtResource("14_rs8oh"), ExtResource("16_wdqcc"), ExtResource("14_rs8oh")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [sub_resource type="Resource" id="Resource_udl6o"]
@@ -56,7 +62,7 @@ script = ExtResource("10_yi0m2")
 Round = 4
 SpawnAreaMin = Vector2i(4, -1)
 SpawnAreaMax = Vector2i(4, 0)
-UnitDatas = Array[Object]([ExtResource("12_7vx37"), ExtResource("12_7vx37")])
+UnitDatas = Array[Object]([ExtResource("17_l6s73"), ExtResource("17_l6s73")])
 metadata/_custom_type_script = "uid://hrjjaa0stxx1"
 
 [resource]
@@ -70,6 +76,6 @@ DoorPlaceZoneMax = Vector2i(-5, 1)
 DefaultSpawnAreaMin = Vector2i(1, -2)
 DefaultSpawnAreaMax = Vector2i(4, 1)
 LevelDeck = SubResource("Resource_1f0gd")
-Hints = Array[Object]([SubResource("Resource_v3nlb"), SubResource("Resource_jbou7")])
+Hints = Array[Object]([SubResource("Resource_v3nlb"), SubResource("Resource_jbou7"), SubResource("Resource_x5pfv")])
 AiLevel = 0
 metadata/_custom_type_script = "uid://wk0covoailum"

@@ -74,7 +74,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 39
-text = " 配置卡组"
+text = " 配置卡组（测试未删减）"
 
 [node name="CloseButton" type="Button" parent="Panel/Margin/Root/Header" unique_id=1846645084]
 layout_mode = 2
