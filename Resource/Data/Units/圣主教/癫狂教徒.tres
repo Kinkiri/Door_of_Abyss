@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://dcn0trco7dp5h"]
 
-[ext_resource type="Resource" uid="uid://1vn7taouefwf" path="res://Resource/Data/Cards/圣主教/赎罪券.tres" id="1_3smf4"]
+[ext_resource type="Resource" uid="uid://1vn7taouefwf" path="res://Resource/Data/Cards/3圣主教/赎罪券.tres" id="1_3smf4"]
 [ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_21878"]
 [ext_resource type="Script" uid="uid://osx8pac8nfq5" path="res://Scripts/Data/Actions/CreateCardAction.cs" id="2_r7qo1"]
 [ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_kfm7r"]

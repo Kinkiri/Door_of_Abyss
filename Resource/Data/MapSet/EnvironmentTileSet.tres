@@ -3,6 +3,7 @@
 [ext_resource type="Resource" uid="uid://cjejmedpg47cy" path="res://Resource/Data/Environments/火焰之地.tres" id="2_ntae6"]
 [ext_resource type="Resource" uid="uid://dbo7a5f0uk188" path="res://Resource/Data/Environments/水.tres" id="2_sah3s"]
 [ext_resource type="Texture2D" uid="uid://dt00ds7chvwx8" path="res://Resource/Art/环境.png" id="3_h2e46"]
+[ext_resource type="Resource" uid="uid://c7t56nwe60ih0" path="res://Resource/Data/Environments/机械臂流水线.tres" id="3_sah3s"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_unq31"]
 resource_name = "水火"
@@ -12,6 +13,8 @@ texture_region_size = Vector2i(128, 128)
 0:0/0/custom_data_0 = ExtResource("2_ntae6")
 1:0/0 = 0
 1:0/0/custom_data_0 = ExtResource("2_sah3s")
+2:0/0 = 0
+2:0/0/custom_data_0 = ExtResource("3_sah3s")
 
 [resource]
 tile_size = Vector2i(128, 128)

@@ -223,7 +223,6 @@ text = "退出游戏"
 flat = true
 
 [node name="Version" type="Label" parent="." unique_id=1246043176]
-visible = false
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -237,7 +236,7 @@ offset_bottom = -24.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_font_sizes/font_size = 18
-text = "v0.2.3-a"
+text = "v0.2.4-a"
 horizontal_alignment = 2
 
 [node name="Toast" type="Label" parent="." unique_id=1809171299]
@@ -498,7 +497,6 @@ layout_mode = 1
 layout_mode = 1
 
 [node name="FadeOut" type="ColorRect" parent="." unique_id=391542010]
-visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

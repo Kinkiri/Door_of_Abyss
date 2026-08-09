@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// 敌方 AI：在 EnemyAction 阶段自动驱动作战单位行动
-/// 决策按关卡 AI 等级（LevelData.AiLevel）门控：简单=基础行为，标准=目标打分+移动进射程，狡诈=+威胁规避+刷怪格回避
+/// 敌方 AI 执行层：在 EnemyAction 阶段自动驱动作战单位行动。
+/// 决策与执行分离——决策纯逻辑在 AiTactics（效用评分系统），本类只负责：
+/// 收集战场快照（BuildBattleData）、狡诈行动顺序、集火状态维护、镜头预告、节奏控制（计时器/间隔）。
+/// 决策按关卡 AI 等级（LevelData.AiLevel）门控：简单=无脑冲用光AP；标准=效用评分（火力区/刷怪格/卡位/留点）；
+/// 狡诈=标准+集火/弱侧门/两步前瞻/预测威胁/行动顺序决策。
 /// </summary>
 public partial class EnemyAI : Node
 {
@@ -22,14 +25,11 @@ public partial class EnemyAI : Node
     /// <summary>AI 移动行动预告（行动前发出，View 层订阅）；参数：移动单位 + 目标格</summary>
     public event System.Action<Unit, Vector2I> AiMovePreviewed;
 
-    /// <summary>AI 单次行动计划（决策与执行分离：决策后预告镜头，停顿后再执行）</summary>
-    private class AiPlan
-    {
-        public Unit Enemy;
-        public Unit AttackTarget;   // Kind=Attack
-        public Vector2I MovePos;    // Kind=Move
-        public bool IsAttack;
-    }
+    /// <summary>
+    /// 输出 AI 决策过程日志（[AI][决策] 前缀：战场摘要/候选评分分解/决策理由），调试用，默认关。
+    /// 勾选后每回合 StartAITurn 时订阅 AiTactics.DebugLog（测试不订阅 → 无输出，纯逻辑可单测）。
+    /// </summary>
+    [Export] public bool DebugDecisions { get; set; } = false;
 
     private Queue<Unit> _actionQueue;
 
@@ -38,6 +38,9 @@ public partial class EnemyAI : Node
 
     /// <summary>各单位上回合移动起点（防 A↔B 来回动：移动决策排除该格）</summary>
     private readonly Dictionary<int, Vector2I> _lastMoveFrom = new();
+
+    /// <summary>狡诈集火目标（攻击未打死的非门玩家单位；目标死亡/回合开始清除；决策侧只作 +4000 加成不锁死）</summary>
+    private Unit _focusTarget;
 
     public override void _Ready()
     {
@@ -48,7 +51,11 @@ public partial class EnemyAI : Node
     public override void _ExitTree()
     {
         _actionQueue?.Clear();
-        if (Instance == this) Instance = null;
+        if (Instance == this)
+        {
+            AiTactics.DebugLog = null;   // 解除日志钩子（防跨场景悬挂）
+            Instance = null;
+        }
     }
 
     public void Init() { }
@@ -57,6 +64,9 @@ public partial class EnemyAI : Node
     public void StartAITurn()
     {
         _actionQueue = new Queue<Unit>();
+        _focusTarget = null;
+        // 决策日志钩子（DebugDecisions 勾选时输出 [AI][决策] 过程日志，方便观察 AI 在想什么）
+        AiTactics.DebugLog = DebugDecisions ? (string m) => GD.Print(m) : null;
         // 玩家设置覆盖优先（settings.cfg game 段），无则用关卡配置 LevelData.AiLevel
         var overrideLevel = GameSettings.GetAiLevelOverride();
         _aiLevel = overrideLevel ?? BattleManager.Instance?.LevelData?.AiLevel ?? AiLevel.标准;
@@ -73,14 +83,25 @@ public partial class EnemyAI : Node
                 tempList.Add(u);
         }
 
-        // 按离最近玩家门距离排序（近的先行动，攻击优先）
         var playerDoors = UnitManager.GetDoors(Team.Player).ToList();
-        tempList.Sort((a, b) =>
+        if (_aiLevel == AiLevel.狡诈)
         {
-            int da = playerDoors.Count > 0 ? playerDoors.Min(d => ManhattanDist(a.GridPos, d.GridPos)) : 0;
-            int db = playerDoors.Count > 0 ? playerDoors.Min(d => ManhattanDist(b.GridPos, d.GridPos)) : 0;
-            return da.CompareTo(db);
-        });
+            // 狡诈：单位行动顺序决策——按粗效用降序（能击杀/打门、高攻、近门先手）
+            var data = BuildBattleData();
+            tempList.Sort((a, b) =>
+            {
+                int sa = AiTactics.RoughPriority(a, data);
+                int sb = AiTactics.RoughPriority(b, data);
+                if (sa != sb) return sb.CompareTo(sa);
+                return DistToNearestDoor(a.GridPos, playerDoors).CompareTo(DistToNearestDoor(b.GridPos, playerDoors));
+            });
+        }
+        else
+        {
+            // 简单/标准：按离最近玩家门距离排序（近的先行动）
+            tempList.Sort((a, b) =>
+                DistToNearestDoor(a.GridPos, playerDoors).CompareTo(DistToNearestDoor(b.GridPos, playerDoors)));
+        }
 
         string doorInfo = playerDoors.Count > 0
             ? string.Join(", ", playerDoors.Select(d => $"{d.UnitData?.UnitName}@{d.GridPos}"))
@@ -119,24 +140,25 @@ public partial class EnemyAI : Node
 
         var enemy = _actionQueue.Dequeue();
 
-        // 决策（纯读）→ 预告镜头 → 停顿让摄像机跑过去 → 再执行行动（保证远距离行动全程可见）
-        var plan = DecideAction(enemy);
-        if (plan == null)
+        // 决策（纯读，AiTactics 效用评分）→ 预告镜头 → 停顿让摄像机跑过去 → 再执行行动
+        var action = DecideAction(enemy);
+        if (action == null || action.Kind == AiActionKind.Skip)
         {
-            // 无可行动作（找不到玩家等）：直接下一个
+            // 无有价值行动：结束该单位本回合（不重新入队，防 AP>0 死循环），保留行动点
+            GD.Print($"[EnemyAI] {enemy.UnitData?.UnitName} {action?.Reason ?? "无可行动作"}（保留 AP {enemy.ActionPoints}）");
             var next = GetTree().CreateTimer(ActionDelay, processAlways: false);
             next.Timeout += ProcessNext;
             return;
         }
 
-        PreviewCamera(plan);
+        PreviewCamera(enemy, action);
         var pan = GetTree().CreateTimer(CameraPanDelay, processAlways: false);
         pan.Timeout += () =>
         {
             // 场景已卸载：放弃过期行动计划（防跨场景误执行）
             if (Instance != this) return;
-            ExecutePlan(plan);
-            // 只处理一个动作，如果还有剩余 AP 则重新入队
+            ExecutePlan(enemy, action);
+            // 只处理一个动作，如果还有剩余 AP 则重新入队（下一决策状态新鲜：位置/血量已更新）
             if (enemy.ActionPoints > 0)
                 _actionQueue.Enqueue(enemy);
             var next = GetTree().CreateTimer(ActionDelay, processAlways: false);
@@ -144,316 +166,80 @@ public partial class EnemyAI : Node
         };
     }
 
-    /// <summary>预告摄像机（发事件，View 层订阅驱动镜头）：攻击 → 行动单位+目标单位中点；移动 → 行动单位+目标格中点</summary>
-    private void PreviewCamera(AiPlan plan)
+    /// <summary>构建战场快照（每决策重建——前一单位行动后状态新鲜；纯数据零 Manager 依赖，供 AiTactics 读）</summary>
+    private AiBattleData BuildBattleData()
     {
-        if (plan.IsAttack)
-            AiAttackPreviewed?.Invoke(plan.Enemy, plan.AttackTarget);
-        else
-            AiMovePreviewed?.Invoke(plan.Enemy, plan.MovePos);
+        var players = UnitManager.Instance.ActiveUnits
+            .Where(u => u.Team == Team.Player && u.IsAlive && !u.IsDead).ToList();
+
+        Unit focus = null;
+        if (_aiLevel == AiLevel.狡诈 && _focusTarget != null && _focusTarget.IsAlive && !_focusTarget.IsDead)
+            focus = _focusTarget;
+
+        return new AiBattleData
+        {
+            Map = MapManager.Instance.Map,
+            PlayerUnits = players,
+            PlayerDoors = players.Where(u => u.Type == UnitType.门).ToList(),
+            SpawnCells = _aiLevel != AiLevel.简单
+                ? new HashSet<Vector2I>(BattleManager.Instance?.NextWaveSpawnPositions() ?? Enumerable.Empty<Vector2I>())
+                : null,
+            FocusTarget = focus,
+            Level = _aiLevel,
+        };
     }
 
-    /// <summary>执行已决策的行动（停顿结束后调用）</summary>
-    private void ExecutePlan(AiPlan plan)
-    {
-        var bm = BattleManager.Instance;
-        if (plan.IsAttack)
-        {
-            bm?.AIDoAttack(plan.Enemy, plan.AttackTarget);
-        }
-        else
-        {
-            // 记录移动起点（供下回合防来回：禁止移回该格）
-            _lastMoveFrom[plan.Enemy.ID] = plan.Enemy.GridPos;
-            bm?.AIDoMove(plan.Enemy, plan.MovePos);
-        }
-    }
-
-    /// <summary>
-    /// 决策单个动作（一次攻击或一次移动），返回行动计划；不执行。
-    /// 按 AI 等级分流：简单=旧逻辑（最近目标+直线逼近）；标准/狡诈=战术管线。
-    /// </summary>
-    private AiPlan DecideAction(Unit enemy)
+    /// <summary>决策单个动作（一次攻击或一次移动），返回行动计划；不执行。</summary>
+    private AiAction DecideAction(Unit enemy)
     {
         if (!enemy.IsAlive || enemy.IsDead || enemy.ActionPoints <= 0)
             return null;
 
-        if (_aiLevel == AiLevel.简单)
-            return DecideSimple(enemy);
-
-        return DecideTactical(enemy);
+        var data = BuildBattleData();
+        data.PreviousPos = _lastMoveFrom.TryGetValue(enemy.ID, out var prev) ? prev : (Vector2I?)null;
+        return AiTactics.DecideAction(enemy, data);
     }
 
-    /// <summary>简单：攻击范围内最近的玩家，否则朝最近玩家走一步（原贪心逻辑）</summary>
-    private AiPlan DecideSimple(Unit enemy)
+    /// <summary>预告摄像机（发事件，View 层订阅驱动镜头）：攻击 → 行动单位+目标单位中点；移动 → 行动单位+目标格中点</summary>
+    private void PreviewCamera(Unit enemy, AiAction action)
     {
-        var map = MapManager.Instance.Map;
-
-        GD.Print($"[EnemyAI] 处理 {enemy.UnitData?.UnitName} 位置={enemy.GridPos} AP={enemy.ActionPoints}");
-
-        // 1. 找攻击范围内可攻击的玩家单位
-        map.TryGetValue(enemy.GridPos, out Cell enemyCell);
-        var atkCtx = new Context { SourceUnit = enemy, Map = map, TargetCell = enemyCell };
-        var attackablePositions = PathFinder.GetAttackableTargets(
-            enemy.GridPos, enemy.AttackShape, enemy.AttackDistance, enemy.Team, map, atkCtx);
-
-        Unit nearestTarget = null;
-        int nearestDist = int.MaxValue;
-
-        foreach (var pos in attackablePositions)
-        {
-            if (!map.TryGetValue(pos, out Cell c)) continue;
-            var occupant = c.OccupyingUnit;
-            if (occupant == null || occupant.Team != Team.Player || !occupant.IsAlive) continue;
-
-            int dist = ManhattanDist(enemy.GridPos, occupant.GridPos);
-            if (dist < nearestDist)
-            {
-                nearestDist = dist;
-                nearestTarget = occupant;
-            }
-        }
-
-        if (nearestTarget != null)
-        {
-            GD.Print($"[EnemyAI]   攻击目标: {nearestTarget.UnitData?.UnitName}");
-            return new AiPlan { Enemy = enemy, AttackTarget = nearestTarget, IsAttack = true };
-        }
-
-        // 2. 无法攻击 → 沿最短路径朝最近玩家走一步
-        var nearestPlayer = FindNearestPlayer(enemy.GridPos);
-        if (nearestPlayer == null)
-        {
-            GD.Print($"[EnemyAI]   未找到玩家单位");
-            return null;
-        }
-
-        GD.Print($"[EnemyAI]   最近玩家: {nearestPlayer.UnitData?.UnitName} 在 {nearestPlayer.GridPos}");
-
-        // 找所有可达格子，选离目标最近的（不走玩家站着的格，因为 CanStand=false）
-        var reachable = PathFinder.GetReachableCells(
-            enemy.GridPos, enemy.Stamina, map);
-
-        Vector2I? bestMove = null;
-        int bestDist = int.MaxValue;
-        foreach (var pos in reachable)
-        {
-            if (pos == enemy.GridPos) continue;
-            if (!map.TryGetValue(pos, out Cell c) || c.OccupyingUnit != null) continue;
-            int dist = ManhattanDist(pos, nearestPlayer.GridPos);
-            if (dist < bestDist)
-            {
-                bestDist = dist;
-                bestMove = pos;
-            }
-        }
-
-        if (!bestMove.HasValue)
-        {
-            GD.Print($"[EnemyAI]   无可达格子（体力={enemy.Stamina}）");
-            return null;
-        }
-
-        GD.Print($"[EnemyAI]   移动到 ({bestMove.Value.X},{bestMove.Value.Y}) 距离玩家 {bestDist}");
-        return new AiPlan { Enemy = enemy, MovePos = bestMove.Value, IsAttack = false };
+        if (action.Kind == AiActionKind.Attack)
+            AiAttackPreviewed?.Invoke(enemy, action.Target);
+        else
+            AiMovePreviewed?.Invoke(enemy, action.MovePos.Value);
     }
 
-    /// <summary>
-    /// 战术决策（标准/狡诈）：
-    /// 0.（狡诈）站在下回合刷怪格 → 让位优先：先移动离开（除非本回合能击杀玩家门——胜负优先）
-    /// 1. 当前可攻击目标 → 打分选（门 > 一击击杀 > 高威胁 > 距离）
-    /// 2. 无 → 搜索"移动后可攻击"的最佳格（AP≥2 一轮移动+攻击）；无攻击位则逼近最优目标
-    ///    （标准+：威胁规避卡位——进玩家火力区的落点必须有攻击价值，否则站火力范围外等机会；
-    ///     狡诈再叠加：刷怪格惩罚/排除）
-    /// </summary>
-    private AiPlan DecideTactical(Unit enemy)
+    /// <summary>执行已决策的行动（停顿结束后调用）</summary>
+    private void ExecutePlan(Unit enemy, AiAction action)
     {
-        var map = MapManager.Instance.Map;
-        bool cunning = _aiLevel == AiLevel.狡诈;
-
-        GD.Print($"[EnemyAI] 处理 {enemy.UnitData?.UnitName} 位置={enemy.GridPos} AP={enemy.ActionPoints} ({(cunning ? "狡诈" : "标准")})");
-
-        // 威胁规避 = 标准级基础安全（避免移动进玩家火力区白送）；刷怪格回避仍狡诈专属
-        HashSet<Vector2I> threatCells = null;
-        if (_aiLevel != AiLevel.简单)
-            threatCells = ComputeThreatCells(map);
-        HashSet<Vector2I> spawnCells = null;
-        if (cunning)
-            spawnCells = ComputeSpawnCells();
-
-        // 当前可攻击的玩家单位（含门）
-        var attackableNow = GetAttackableUnits(enemy, enemy.GridPos, map);
-
-        // 让位优先：站在下回合刷怪格 → 先走开（除非本回合能击杀玩家门）
-        bool killDoorNow = attackableNow.Any(u => u.Type == UnitType.门 && u.CurrentHP <= enemy.AttackPower);
-        if (cunning && spawnCells != null && spawnCells.Contains(enemy.GridPos) && !killDoorNow)
-        {
-            GD.Print($"[EnemyAI]   站在下回合刷怪格，主动让位");
-            return PlanMoveAway(enemy, map, threatCells, spawnCells);
-        }
-
-        // 1. 攻击：打分选目标（攻击优先——能打到就打，不做送死预判，避免过度规避）
-        var bestTarget = AiTactics.PickAttackTarget(attackableNow, enemy);
-        if (bestTarget != null)
-        {
-            GD.Print($"[EnemyAI]   攻击目标: {bestTarget.UnitData?.UnitName}");
-            return new AiPlan { Enemy = enemy, AttackTarget = bestTarget, IsAttack = true };
-        }
-
-        // 2. 移动：搜索"移动后可攻击"的位置，无则逼近最优进攻目标
-        var allPlayers = UnitManager.Instance.ActiveUnits
-            .Where(u => u.Team == Team.Player && u.IsAlive && !u.IsDead).ToList();
-        if (allPlayers.Count == 0)
-        {
-            GD.Print($"[EnemyAI]   未找到玩家单位");
-            return null;
-        }
-        var goal = AiTactics.PickAttackTarget(allPlayers, enemy);   // 最优进攻目标（门优先）
-        GD.Print($"[EnemyAI]   进攻目标: {goal.UnitData?.UnitName} 在 {goal.GridPos}");
-
-        var reachable = PathFinder.GetReachableCells(enemy.GridPos, enemy.Stamina, map);
-        var attackScoreAtCell = ComputeAttackScores(enemy, reachable, map);
-        // 绕障路径距离（绕墙/绕玩家占据格；队友格可穿越防自挡；忽略自身格）
-        var distToGoal = PathFinder.GetDistanceFrom(goal.GridPos, map, enemy.GridPos, Team.Enemy);
-
-        // 上回合移动起点：禁止移回（防 A↔B 来回动）
-        Vector2I? prevPos = _lastMoveFrom.TryGetValue(enemy.ID, out var prev) ? prev : (Vector2I?)null;
-
-        var movePos = AiTactics.PickBestMoveCell(
-            enemy.GridPos, reachable, attackScoreAtCell, distToGoal,
-            threatCells, cunning ? spawnCells : null, excludeSpawnCells: false,
-            previousPos: prevPos, fallbackGoal: goal.GridPos);
-
-        if (!movePos.HasValue)
-        {
-            GD.Print($"[EnemyAI]   跳过移动：可达格 {reachable.Count} 个，无可选格");
-            return null;
-        }
-
-        GD.Print($"[EnemyAI]   移动到 ({movePos.Value.X},{movePos.Value.Y}) 逼近 {goal.UnitData?.UnitName}");
-        return new AiPlan { Enemy = enemy, MovePos = movePos.Value, IsAttack = false };
-    }
-
-    /// <summary>让位移动：从非刷怪格中选评分最优格（仍兼顾攻击位/逼近/威胁规避）</summary>
-    private AiPlan PlanMoveAway(Unit enemy, Dictionary<Vector2I, Cell> map,
-        HashSet<Vector2I> threatCells, HashSet<Vector2I> spawnCells)
-    {
-        var allPlayers = UnitManager.Instance.ActiveUnits
-            .Where(u => u.Team == Team.Player && u.IsAlive && !u.IsDead).ToList();
-        if (allPlayers.Count == 0) return null;
-        var goal = AiTactics.PickAttackTarget(allPlayers, enemy);
-
-        var reachable = PathFinder.GetReachableCells(enemy.GridPos, enemy.Stamina, map);
-        var attackScoreAtCell = ComputeAttackScores(enemy, reachable, map);
-        var distToGoal = PathFinder.GetDistanceFrom(goal.GridPos, map, enemy.GridPos, Team.Enemy);
-
-        // 上回合移动起点：禁止移回（防 A↔B 来回动）
-        Vector2I? prevPos = _lastMoveFrom.TryGetValue(enemy.ID, out var prev) ? prev : (Vector2I?)null;
-
-        var movePos = AiTactics.PickBestMoveCell(
-            enemy.GridPos, reachable, attackScoreAtCell, distToGoal,
-            threatCells, spawnCells, excludeSpawnCells: true,
-            previousPos: prevPos, fallbackGoal: goal.GridPos);
-
-        if (!movePos.HasValue || movePos.Value == enemy.GridPos)
-        {
-            GD.Print($"[EnemyAI]   让位失败：无可离开的格（可达格 {reachable.Count}）");
-            return null;
-        }
-
-        GD.Print($"[EnemyAI]   让位移动到 ({movePos.Value.X},{movePos.Value.Y})");
-        return new AiPlan { Enemy = enemy, MovePos = movePos.Value, IsAttack = false };
-    }
-
-    /// <summary>从指定位置收集可攻击的存活玩家单位</summary>
-    private List<Unit> GetAttackableUnits(Unit enemy, Vector2I from, Dictionary<Vector2I, Cell> map)
-    {
-        var result = new List<Unit>();
-        map.TryGetValue(from, out Cell cell);
-        var ctx = new Context { SourceUnit = enemy, Map = map, TargetCell = cell };
-        foreach (var pos in PathFinder.GetAttackableTargets(from, enemy.AttackShape, enemy.AttackDistance, enemy.Team, map, ctx))
-        {
-            if (!map.TryGetValue(pos, out Cell c)) continue;
-            var u = c.OccupyingUnit;
-            if (u != null && u.IsAlive && !u.IsDead && u.Team == Team.Player)
-                result.Add(u);
-        }
-        return result;
-    }
-
-    /// <summary>计算每格"移动后可攻击目标"的最高得分（标准+ 走位用）；无攻击可能的格不入字典</summary>
-    private Dictionary<Vector2I, int> ComputeAttackScores(Unit enemy, HashSet<Vector2I> reachable, Dictionary<Vector2I, Cell> map)
-    {
-        var scores = new Dictionary<Vector2I, int>();
-        foreach (var pos in reachable)
-        {
-            map.TryGetValue(pos, out Cell cell);
-            var ctx = new Context { SourceUnit = enemy, Map = map, TargetCell = cell };
-            int bestScore = int.MinValue;
-            foreach (var ap in PathFinder.GetAttackableTargets(pos, enemy.AttackShape, enemy.AttackDistance, enemy.Team, map, ctx))
-            {
-                if (!map.TryGetValue(ap, out Cell c)) continue;
-                var t = c.OccupyingUnit;
-                if (t == null || t.Team != Team.Player || !t.IsAlive || t.IsDead) continue;
-                int s = AiTactics.ScoreTarget(enemy, t, AiTactics.ManhattanDist(pos, ap));
-                if (s > bestScore) bestScore = s;
-            }
-            if (bestScore > int.MinValue)
-                scores[pos] = bestScore;
-        }
-        return scores;
-    }
-
-    /// <summary>玩家攻击威胁格集（标准+：所有存活玩家单位的**火力覆盖区域**，含门，需攻击力&gt;0）</summary>
-    /// <remarks>用 GetAttackRange（攻击范围内所有格）而非 GetAttackableTargets（只含当前有敌军的格）——
-    /// 威胁规避必须知道"哪些格会被打"，而不是"现在谁被打"。</remarks>
-    private HashSet<Vector2I> ComputeThreatCells(Dictionary<Vector2I, Cell> map)
-    {
-        var cells = new HashSet<Vector2I>();
-        foreach (var u in UnitManager.Instance.ActiveUnits)
-        {
-            if (u.Team != Team.Player || !u.IsAlive || u.IsDead) continue;
-            if (u.AttackPower <= 0) continue;
-            map.TryGetValue(u.GridPos, out Cell cell);
-            var ctx = new Context { SourceUnit = u, Map = map, TargetCell = cell };
-            foreach (var pos in PathFinder.GetAttackRange(u.GridPos, u.AttackShape, u.AttackDistance, map, ctx))
-                cells.Add(pos);
-        }
-        return cells;
-    }
-
-    /// <summary>下回合刷怪格集（狡诈：避免挡住己方援军刷新）</summary>
-    private HashSet<Vector2I> ComputeSpawnCells()
-    {
-        var cells = new HashSet<Vector2I>();
         var bm = BattleManager.Instance;
-        if (bm == null) return cells;
-        foreach (var pos in bm.NextWaveSpawnPositions())
-            cells.Add(pos);
-        return cells;
-    }
-
-    private Unit FindNearestPlayer(Vector2I from)
-    {
-        Unit nearest = null;
-        int minDist = int.MaxValue;
-
-        foreach (var u in UnitManager.Instance.ActiveUnits)
+        if (action.Kind == AiActionKind.Attack)
         {
-            if (u.Team != Team.Player || !u.IsAlive || u.IsDead) continue;
-            int dist = ManhattanDist(from, u.GridPos);
-            if (dist < minDist)
-            {
-                minDist = dist;
-                nearest = u;
-            }
+            bm?.AIDoAttack(enemy, action.Target);
+            UpdateFocus(action.Target);
         }
-
-        return nearest;
+        else
+        {
+            // 记录移动起点（供下回合防来回：禁止移回该格）
+            _lastMoveFrom[enemy.ID] = enemy.GridPos;
+            bm?.AIDoMove(enemy, action.MovePos.Value);
+        }
     }
 
-    private static int ManhattanDist(Vector2I a, Vector2I b)
+    /// <summary>集火状态维护（狡诈）：攻击未打死的非门玩家 → 成为集火目标（目标死亡自动清除，见 BuildBattleData 存活检查）</summary>
+    private void UpdateFocus(Unit target)
     {
-        return Mathf.Abs(a.X - b.X) + Mathf.Abs(a.Y - b.Y);
+        if (_aiLevel != AiLevel.狡诈 || target == null) return;
+        if (target.IsAlive && !target.IsDead && target.Team == Team.Player && target.Type != UnitType.门)
+            _focusTarget = target;
+    }
+
+    private static int DistToNearestDoor(Vector2I pos, List<Unit> playerDoors)
+    {
+        if (playerDoors.Count == 0) return 0;
+        int min = int.MaxValue;
+        foreach (var d in playerDoors)
+            min = Mathf.Min(min, AiTactics.ManhattanDist(pos, d.GridPos));
+        return min;
     }
 }

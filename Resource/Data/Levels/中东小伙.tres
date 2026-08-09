@@ -57,4 +57,5 @@ DoorPlaceZoneMin = Vector2i(3, 3)
 DoorPlaceZoneMax = Vector2i(4, 4)
 DefaultSpawnAreaMax = Vector2i(0, 6)
 LevelDeck = ExtResource("1_xucor")
+Hints = null
 metadata/_custom_type_script = "uid://wk0covoailum"

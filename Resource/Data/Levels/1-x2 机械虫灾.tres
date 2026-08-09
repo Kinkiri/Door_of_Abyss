@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://n72uc3tqsjq7"]
+
+[ext_resource type="Resource" path="res://Resource/Data/Maps/机械臂油湖.tres" id="1_kdlb3"]
+[ext_resource type="Resource" uid="uid://b1p6ar02lyld3" path="res://Resource/Data/Units/2擢升之手/自动机械手.tres" id="2_kdlb3"]
+[ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="3_g0dqk"]
+[ext_resource type="Resource" uid="uid://cgk4anboptubr" path="res://Resource/Data/Units/2擢升之手/钢肢蝼蛄.tres" id="4_37v8u"]
+[ext_resource type="Resource" uid="uid://ccuyks7y3yc4n" path="res://Resource/Data/Units/2擢升之手/构造体工程师.tres" id="5_kdlb3"]
+[ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="5_wv1dq"]
+
+[sub_resource type="Resource" id="Resource_ntae6"]
+script = ExtResource("3_g0dqk")
+UnitDatas = Array[Object]([ExtResource("2_kdlb3"), ExtResource("2_kdlb3"), ExtResource("2_kdlb3"), ExtResource("2_kdlb3"), ExtResource("2_kdlb3"), ExtResource("2_kdlb3")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_cqfmt"]
+script = ExtResource("3_g0dqk")
+Round = 3
+SpawnAreaMin = Vector2i(10, -3)
+SpawnAreaMax = Vector2i(11, 0)
+UnitDatas = Array[Object]([ExtResource("4_37v8u"), ExtResource("4_37v8u"), ExtResource("5_kdlb3")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_kdlb3"]
+script = ExtResource("3_g0dqk")
+Round = 5
+SpawnAreaMin = Vector2i(9, 5)
+SpawnAreaMax = Vector2i(12, 8)
+UnitDatas = Array[Object]([ExtResource("4_37v8u"), ExtResource("4_37v8u"), ExtResource("5_kdlb3")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_g0dqk"]
+script = ExtResource("3_g0dqk")
+Round = 7
+SpawnAreaMin = Vector2i(1, 6)
+SpawnAreaMax = Vector2i(3, 8)
+UnitDatas = Array[Object]([ExtResource("4_37v8u"), ExtResource("4_37v8u"), ExtResource("5_kdlb3")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_37v8u"]
+script = ExtResource("3_g0dqk")
+Round = 9
+SpawnAreaMin = Vector2i(0, -3)
+SpawnAreaMax = Vector2i(3, -1)
+UnitDatas = Array[Object]([ExtResource("4_37v8u"), ExtResource("4_37v8u"), ExtResource("5_kdlb3")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wv1dq"]
+script = ExtResource("3_g0dqk")
+Round = 11
+UnitDatas = Array[Object]([ExtResource("4_37v8u"), ExtResource("4_37v8u"), ExtResource("4_37v8u"), ExtResource("4_37v8u"), ExtResource("5_kdlb3")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[resource]
+script = ExtResource("5_wv1dq")
+LevelName = "1-x2 机械-虫灾"
+Description = "有没有杀虫剂能对付这些虫子？"
+Waves = Array[Object]([SubResource("Resource_ntae6"), SubResource("Resource_cqfmt"), SubResource("Resource_kdlb3"), SubResource("Resource_g0dqk"), SubResource("Resource_37v8u"), SubResource("Resource_wv1dq")])
+MapData = ExtResource("1_kdlb3")
+DoorPlaceZoneMin = Vector2i(4, 1)
+DoorPlaceZoneMax = Vector2i(5, 2)
+DefaultSpawnAreaMin = Vector2i(0, -4)
+DefaultSpawnAreaMax = Vector2i(12, 8)
+Hints = null
+metadata/_custom_type_script = "uid://wk0covoailum"

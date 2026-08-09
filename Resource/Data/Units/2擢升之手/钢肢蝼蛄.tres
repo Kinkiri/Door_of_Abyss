@@ -1,24 +1,24 @@
 [gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://cgk4anboptubr"]
 
-[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_sco3p"]
-[ext_resource type="Script" uid="uid://ce73rlwqwvo0j" path="res://Scripts/Data/Conditions/HasBuffCondition.cs" id="2_6efkh"]
-[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_gfiwa"]
-[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="4_6n652"]
-[ext_resource type="PackedScene" uid="uid://cjol7n7xtdkx4" path="res://Scenes/Prefabs/Units/蚂蚁.tscn" id="5_afbfo"]
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="1_6jqcr"]
+[ext_resource type="Script" uid="uid://ce73rlwqwvo0j" path="res://Scripts/Data/Conditions/HasBuffCondition.cs" id="2_tcave"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_55ugi"]
+[ext_resource type="PackedScene" uid="uid://cjol7n7xtdkx4" path="res://Scenes/Prefabs/Units/蚂蚁.tscn" id="4_2vbk8"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="5_7juyb"]
 
 [sub_resource type="Resource" id="Resource_6efkh"]
-script = ExtResource("4_6n652")
+script = ExtResource("1_6jqcr")
 UnitID = "钢肢蝼蛄"
 metadata/_custom_type_script = "uid://d30a56l3sh3q0"
 
 [sub_resource type="Resource" id="Resource_qv6y3"]
-script = ExtResource("2_6efkh")
+script = ExtResource("2_tcave")
 CheckTarget = 0
 BuffID = "义肢"
 metadata/_custom_type_script = "uid://ce73rlwqwvo0j"
 
 [sub_resource type="Resource" id="Resource_aflhj"]
-script = ExtResource("3_gfiwa")
+script = ExtResource("3_55ugi")
 TriggerEvent = 10
 TargetFilters = null
 Actions = Array[Object]([SubResource("Resource_6efkh")])
@@ -26,7 +26,7 @@ Conditions = Array[Object]([SubResource("Resource_qv6y3")])
 metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
 
 [resource]
-script = ExtResource("1_sco3p")
+script = ExtResource("5_7juyb")
 UnitID = "钢肢蝼蛄"
 UnitName = "钢肢蝼蛄"
 World = 1
@@ -35,6 +35,6 @@ Tags = Array[int]([4, 0, 7])
 Rarity = 1
 ActionPoints = 2
 Description = "被消灭：若拥有义肢，则在原地部署另一只钢肢蝼蛄"
-UnitPrefab = ExtResource("5_afbfo")
+UnitPrefab = ExtResource("4_2vbk8")
 PassiveEffects = Array[Object]([SubResource("Resource_aflhj")])
 metadata/_custom_type_script = "uid://cthrvfilibvfl"

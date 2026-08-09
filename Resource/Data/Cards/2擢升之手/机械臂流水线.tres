@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="EnvironmentCardData" format=3 uid="uid://c5msqqrmhw3ev"]
+
+[ext_resource type="Resource" uid="uid://c7t56nwe60ih0" path="res://Resource/Data/Environments/机械臂流水线.tres" id="1_i2hja"]
+[ext_resource type="Script" uid="uid://b2pjt30c5oyw2" path="res://Scripts/Data/Card/EnvironmentCardData.cs" id="1_xwr1x"]
+[ext_resource type="Script" uid="uid://dslk7uvnawnj5" path="res://Scripts/Data/Actions/ApplyEnvironmentAction.cs" id="2_l368k"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_fjjsl"]
+
+[sub_resource type="Resource" id="Resource_i2hja"]
+script = ExtResource("2_l368k")
+EnvironmentData = ExtResource("1_i2hja")
+metadata/_custom_type_script = "uid://dslk7uvnawnj5"
+
+[sub_resource type="Resource" id="Resource_yx04m"]
+script = ExtResource("3_fjjsl")
+Shape = 6
+AreaRange = 3
+Kind = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[resource]
+script = ExtResource("1_xwr1x")
+EnvironmentData = ExtResource("1_i2hja")
+CardID = "机械臂流水线（bug）"
+CardName = "机械臂流水线"
+Description = "用机械臂生产机械臂"
+Type = 2
+World = 1
+Faction = 2
+Tags = Array[int]([0])
+Rarity = 3
+Cost = 4
+TargetFilters = Array[Object]([SubResource("Resource_yx04m")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_i2hja")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://b2pjt30c5oyw2"

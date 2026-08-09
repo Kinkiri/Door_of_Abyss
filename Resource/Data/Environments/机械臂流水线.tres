@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="EnvironmentData" format=3 uid="uid://c7t56nwe60ih0"]
+
+[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="1_4guqe"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_aisks"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_euge7"]
+[ext_resource type="Script" uid="uid://bubokmjt34mm" path="res://Scripts/Data/Actions/ModifyBuffAction.cs" id="4_jh6xa"]
+[ext_resource type="Script" uid="uid://lxjpnv33tlmg" path="res://Scripts/Data/EnvironmentData.cs" id="5_d5rmt"]
+
+[sub_resource type="Resource" id="Resource_l368k"]
+script = ExtResource("2_aisks")
+BuffData = ExtResource("1_4guqe")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_fjjsl"]
+script = ExtResource("2_aisks")
+BuffData = ExtResource("1_4guqe")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_y038s"]
+script = ExtResource("2_aisks")
+BuffData = ExtResource("1_4guqe")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_w2hl2"]
+script = ExtResource("3_euge7")
+TriggerEvent = 18
+Target = 1
+TargetFilters = null
+MaxTriggerCount = 2
+Actions = Array[Object]([SubResource("Resource_y038s")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[sub_resource type="Resource" id="Resource_1xqga"]
+script = ExtResource("4_jh6xa")
+BuffID = "义肢"
+StacksDelta = -1
+metadata/_custom_type_script = "uid://bubokmjt34mm"
+
+[sub_resource type="Resource" id="Resource_y7uvh"]
+script = ExtResource("3_euge7")
+TriggerEvent = 19
+Target = 1
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_1xqga")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("5_d5rmt")
+EnvironmentID = "机械臂流水线"
+EnvironmentName = "机械臂流水线"
+Description = "施加获得1义肢，进入获得2义肢（单格一回合一次），出去减少1义肢，回合开始获得1义肢"
+AtlasCoords = Vector2i(2, 0)
+OnApplyActions = Array[Object]([SubResource("Resource_l368k")])
+OnExpireActions = null
+OnRoundEndActions = Array[Object]([SubResource("Resource_fjjsl")])
+PassiveEffects = Array[Object]([SubResource("Resource_w2hl2"), SubResource("Resource_y7uvh")])
+metadata/_custom_type_script = "uid://lxjpnv33tlmg"

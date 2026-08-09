@@ -55,4 +55,5 @@ MapData = ExtResource("10_cvjv1")
 DoorPlaceZoneMax = Vector2i(3, 3)
 DefaultSpawnAreaMax = Vector2i(12, 12)
 LevelDeck = ExtResource("1_1cl0d")
+Hints = null
 metadata/_custom_type_script = "uid://wk0covoailum"

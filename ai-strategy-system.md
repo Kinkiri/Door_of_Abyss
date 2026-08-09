@@ -102,11 +102,3 @@ APGreaterOrEqual(1):
 |---|---|---|
 | 1 | NearestEnemyInRange | AttackNearest |
 | 2 | Always | Skip |
-
-### 牧师（治疗优先）
-
-| # | 条件 | 动作 |
-|---|---|---|
-| 1 | HasAllyLowHP(50) | MoveToNearestEnemy ← 将来改为治疗动作 |
-| 2 | NearestEnemyInRange | AttackNearest |
-| 3 | Always | MoveToNearestEnemy |

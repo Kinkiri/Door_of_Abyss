@@ -1,37 +1,37 @@
 [gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://b1p6ar02lyld3"]
 
-[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="1_1yohf"]
-[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="1_rqqon"]
-[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_ejw8n"]
-[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_yk5q0"]
-[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="5_q34s8"]
-[ext_resource type="Script" uid="uid://dbviswjwggeup" path="res://Scripts/Data/Targeting/UnitTypeTargetFilter.cs" id="5_rqqon"]
-[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="6_4ako6"]
-[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="7_gw5u2"]
+[ext_resource type="Resource" uid="uid://dg376asw4ubsn" path="res://Resource/Data/Buff/义肢.tres" id="1_frhpk"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_d6cm8"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_mqkg7"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="4_itjvj"]
+[ext_resource type="Script" uid="uid://dbviswjwggeup" path="res://Scripts/Data/Targeting/UnitTypeTargetFilter.cs" id="5_fy07x"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="6_8dh7e"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="7_prx5u"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="8_pjmen"]
 
 [sub_resource type="Resource" id="Resource_w60by"]
-script = ExtResource("2_ejw8n")
-BuffData = ExtResource("1_rqqon")
+script = ExtResource("2_d6cm8")
+BuffData = ExtResource("1_frhpk")
 metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
 
 [sub_resource type="Resource" id="Resource_amomv"]
-script = ExtResource("3_yk5q0")
+script = ExtResource("3_mqkg7")
 Shape = 3
 AreaRange = 2
 metadata/_custom_type_script = "uid://bh835k2ig4ik"
 
 [sub_resource type="Resource" id="Resource_kk43m"]
-script = ExtResource("5_q34s8")
+script = ExtResource("4_itjvj")
 Team = 1
 metadata/_custom_type_script = "uid://bjnrbd7iwxb5u"
 
 [sub_resource type="Resource" id="Resource_xims4"]
-script = ExtResource("5_rqqon")
+script = ExtResource("5_fy07x")
 UnitTypes = Array[int]([0])
 metadata/_custom_type_script = "uid://dbviswjwggeup"
 
 [sub_resource type="Resource" id="Resource_h4ebq"]
-script = ExtResource("6_4ako6")
+script = ExtResource("6_8dh7e")
 TargetFilters = Array[Object]([SubResource("Resource_amomv"), SubResource("Resource_kk43m"), SubResource("Resource_xims4")])
 MaxTriggerCount = 1
 Actions = Array[Object]([SubResource("Resource_w60by")])
@@ -39,18 +39,17 @@ Conditions = null
 metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
 
 [resource]
-script = ExtResource("1_1yohf")
+script = ExtResource("8_pjmen")
 UnitID = "自动机械手"
 UnitName = "自动机械手"
 World = 1
 Faction = 2
 Tags = Array[int]([0])
-AttackPower = 0
+HealthPoints = 4
 Stamina = 0
 AttackDistance = 0
 Type = 1
-ActionPoints = 0
 Description = "回合开始时：令距离2以内的所有己方兵种获得义肢1"
-UnitPrefab = ExtResource("7_gw5u2")
+UnitPrefab = ExtResource("7_prx5u")
 PassiveEffects = Array[Object]([SubResource("Resource_h4ebq")])
 metadata/_custom_type_script = "uid://cthrvfilibvfl"

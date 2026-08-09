@@ -4059,6 +4059,26 @@ public partial class TestRunner : Node
                 farTgt.GridPos = new Vector2I(1, 1);   // 距离 attacker 2 > 攻击范围 1
                 VAssert("目标够不到 attacker 不算送死",
                     () => !AiTactics.IsSuicidalAttack(attacker, farTgt, new[] { farTgt }, aiMap));
+
+                // fromPos：移动+攻击连招的落点反杀检查（连招后站在新位置，覆盖不同）
+                var comboMap = new System.Collections.Generic.Dictionary<Vector2I, Cell>();
+                for (int y = 0; y <= 1; y++)
+                    for (int x = 0; x <= 1; x++)
+                        comboMap[new Vector2I(x, y)] = MakeCell(new Vector2I(x, y), new BlockData());
+                var comboAttacker = MakeUnit("连招敌", 2, 3);   // ATK2 打不死 HP5
+                comboAttacker.Team = Team.Enemy;
+                comboAttacker.GridPos = new Vector2I(0, 0);
+                comboMap[new Vector2I(1, 1)].OccupyingUnit = comboAttacker;   // fromPos 落点需有占据者（GetAttackableTargets 检查占据）
+                comboMap[new Vector2I(0, 1)].OccupyingUnit = comboAttacker;
+                var comboPlayer = MakeUnit("连招玩家", 3, 5);   // ATK3 ≥ HP3 → 能反杀
+                comboPlayer.AttackDistance = 1;
+                comboPlayer.GridPos = new Vector2I(1, 0);
+                VAssert("fromPos 落点会被反杀 → 送死（连招用）",
+                    () => AiTactics.IsSuicidalAttack(comboAttacker, comboPlayer, new[] { comboPlayer }, comboMap,
+                        fromPos: new Vector2I(1, 1)));
+                VAssert("fromPos 落点够不到 → 不送死（连招用）",
+                    () => !AiTactics.IsSuicidalAttack(comboAttacker, comboPlayer, new[] { comboPlayer }, comboMap,
+                        fromPos: new Vector2I(0, 1)));
             }
 
             // ── PickBestMoveCell 移动格排序（distToGoal=绕障距离，不可达格不在字典）──
@@ -4077,10 +4097,10 @@ public partial class TestRunner : Node
             VAssert("卡位：威胁区无攻击价值 → 重罚（站火力范围外）",
                 () =>
                 {
-                    // (1,0) 在威胁区且无攻击价值 → -500 重罚；(0,1) 绕远但安全 → 被选
+                    // (1,0) 在威胁区且无攻击价值 → -6000 重罚（净 -3000）；(0,1) 同距横移 0 分但安全 → 被选
                     var reachable = new HashSet<Vector2I> { new Vector2I(0, 0), new Vector2I(1, 0), new Vector2I(0, 1) };
                     var dist = new System.Collections.Generic.Dictionary<Vector2I, int>
-                        { [new Vector2I(0, 0)] = 5, [new Vector2I(1, 0)] = 4, [new Vector2I(0, 1)] = 6 };
+                        { [new Vector2I(0, 0)] = 5, [new Vector2I(1, 0)] = 4, [new Vector2I(0, 1)] = 5 };
                     var threatened = new HashSet<Vector2I> { new Vector2I(1, 0) };
                     var pick = AiTactics.PickBestMoveCell(
                         new Vector2I(0, 0), reachable, null, dist, threatened, null);
@@ -4090,8 +4110,9 @@ public partial class TestRunner : Node
             VAssert("可攻击的威胁格仍优先（值得冒险）",
                 () =>
                 {
+                    // 击杀级攻击价值（50000）压过火力区惩罚（6000）→ 仍选威胁格（旧常数 998 在新权重下会翻案，改为击杀级）
                     var reachable = new HashSet<Vector2I> { new Vector2I(0, 0), new Vector2I(1, 0), new Vector2I(0, 1) };
-                    var atkScores = new System.Collections.Generic.Dictionary<Vector2I, int> { [new Vector2I(1, 0)] = 998 };
+                    var atkScores = new System.Collections.Generic.Dictionary<Vector2I, int> { [new Vector2I(1, 0)] = 50000 };
                     var dist = new System.Collections.Generic.Dictionary<Vector2I, int>
                         { [new Vector2I(0, 0)] = 3, [new Vector2I(1, 0)] = 2, [new Vector2I(0, 1)] = 4 };
                     var threatened = new HashSet<Vector2I> { new Vector2I(1, 0) };
@@ -4105,7 +4126,7 @@ public partial class TestRunner : Node
                 {
                     var reachable = new HashSet<Vector2I> { new Vector2I(0, 0), new Vector2I(1, 0), new Vector2I(0, 1) };
                     var dist = new System.Collections.Generic.Dictionary<Vector2I, int>
-                        { [new Vector2I(0, 0)] = 3, [new Vector2I(1, 0)] = 2, [new Vector2I(0, 1)] = 4 };
+                        { [new Vector2I(0, 0)] = 3, [new Vector2I(1, 0)] = 2, [new Vector2I(0, 1)] = 3 };
                     var spawn = new HashSet<Vector2I> { new Vector2I(1, 0) };
                     var pick = AiTactics.PickBestMoveCell(
                         new Vector2I(0, 0), reachable, null, dist, null, spawn);
@@ -4182,6 +4203,743 @@ public partial class TestRunner : Node
                         new Vector2I(0, 0), reachable, null, dist, null, null);
                     return pick == null;
                 });
+        });
+
+        RunGroup("AI 效用决策", () =>
+        {
+            // 端到端：构造完整地图 + 单位，直调 AiTactics.DecideAction（决策与执行分离的纯逻辑入口）
+
+            // ── 简单：无脑冲，用光行动点（永不跳过）──
+            {
+                var map = MakeAiMap(4, 1);
+                var enemy = MakeEnemy("简单敌", 3, 10);
+                enemy.AttackDistance = 1;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var near = MakeUnit("近玩", 0, 10);
+                OccupyCell(map, near, new Vector2I(1, 0));
+                var far = MakeUnit("远玩", 0, 10);
+                OccupyCell(map, far, new Vector2I(3, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { near, far }, AiLevel.简单));
+                VAssert("简单：能打时攻击最近的玩家",
+                    () => act != null && act.Kind == AiActionKind.Attack && act.Target == near);
+            }
+
+            {
+                // 绕墙：BFS 路径距离最小格被选（曼哈顿会错选 (1,1)）
+                var map = MakeAiMap(5, 3);
+                map[new Vector2I(2, 1)].CanPass = false;   // 竖墙
+                map[new Vector2I(1, 2)].CanPass = false;   // 制造唯一最优格
+                var enemy = MakeEnemy("绕墙敌", 1, 10);
+                enemy.Stamina = 2;
+                OccupyCell(map, enemy, new Vector2I(0, 1));
+                var player = MakeUnit("墙后玩", 0, 10);
+                player.Stamina = 0;
+                OccupyCell(map, player, new Vector2I(4, 1));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }, AiLevel.简单));
+                VAssert("简单：打不到时 BFS 绕墙逼近（不会撞墙卡死）",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(1, 0));
+            }
+
+            {
+                // 全负效用仍移动（永不跳过，用光行动点）
+                var map = MakeAiMap(4, 2);
+                map[new Vector2I(1, 0)].CanPass = false;
+                var enemy = MakeEnemy("无脑敌", 1, 10);
+                enemy.Stamina = 2;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var player = MakeUnit("远玩", 0, 10);
+                player.Stamina = 0;
+                OccupyCell(map, player, new Vector2I(3, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }, AiLevel.简单));
+                VAssert("简单：无有价值移动也照走（全负效用不跳过）",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(1, 1));
+            }
+
+            // ── 标准：攻击门 > 击杀 > 造成伤害；送死剔除；留点 ──
+            {
+                var map = MakeAiMap(3, 1);
+                var enemy = MakeEnemy("标准敌", 3, 10);
+                enemy.AttackDistance = 2;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var door = MakeUnit("门", 0, 20);
+                door.Type = UnitType.门;
+                OccupyCell(map, door, new Vector2I(2, 0));
+                var soldier = MakeUnit("残血兵", 0, 3);   // 一击可杀
+                OccupyCell(map, soldier, new Vector2I(1, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { door, soldier }));
+                VAssert("标准：可打门 vs 可击杀 → 攻击门（门 > 击杀）",
+                    () => act != null && act.Kind == AiActionKind.Attack && act.Target == door);
+            }
+
+            {
+                var map = MakeAiMap(3, 2);
+                var enemy = MakeEnemy("标准敌", 3, 10);
+                enemy.AttackDistance = 2;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var killable = MakeUnit("残血兵", 0, 2);
+                OccupyCell(map, killable, new Vector2I(1, 0));
+                var threat = MakeUnit("高攻兵", 10, 10);
+                OccupyCell(map, threat, new Vector2I(1, 1));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { killable, threat }));
+                VAssert("标准：可击杀 vs 高威胁满血 → 打残血（击杀 > 造成伤害）",
+                    () => act != null && act.Kind == AiActionKind.Attack && act.Target == killable);
+            }
+
+            {
+                // 送死：打不死 + 会被一击反杀 → 不打，留行动点（高级单位惜命；初级/中级炮灰豁免见稀有度用例）
+                var map = MakeAiMap(2, 1);
+                var enemy = MakeEnemy("送死敌", 2, 3);
+                enemy.UnitData.Rarity = Rarity.高级;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var player = MakeUnit("反杀兵", 3, 5);
+                player.AttackDistance = 1;
+                player.Stamina = 0;
+                OccupyCell(map, player, new Vector2I(1, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("高级：送死攻击不做（留行动点）",
+                    () => act != null && act.Kind == AiActionKind.Skip);
+            }
+
+            {
+                // 打门豁免：门在面前照打（胜负关键）
+                var map = MakeAiMap(2, 1);
+                var enemy = MakeEnemy("破门敌", 5, 3);
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var door = MakeUnit("门", 3, 20);
+                door.Type = UnitType.门;
+                OccupyCell(map, door, new Vector2I(1, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { door }));
+                VAssert("标准：打门豁免送死检查（胜负优先）",
+                    () => act != null && act.Kind == AiActionKind.Attack && act.Target == door);
+            }
+
+            {
+                // AP=2 移动进攻击位连招；AP=1 移动即耗光 → 不移动进攻击位（留点）
+                var map = MakeAiMap(3, 1);
+                var enemy = MakeEnemy("连招敌", 3, 10);
+                enemy.AttackDistance = 1;
+                enemy.Stamina = 1;
+                enemy.ActionPoints = 2;
+                enemy.MaxActionPoints = 2;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var player = MakeUnit("靶子", 0, 10);
+                player.AttackDistance = 1;
+                player.Stamina = 0;
+                OccupyCell(map, player, new Vector2I(2, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("标准：AP=2 移动进攻击位（移动+攻击连招）",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(1, 0) && act.AttackValue > 0);
+
+                enemy.ActionPoints = 1;
+                var act1 = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("标准：AP=1 纯接近也走（靠近门权重，无攻击价值）",
+                    () => act1 != null && act1.Kind == AiActionKind.Move && act1.MovePos == new Vector2I(1, 0) && act1.AttackValue == 0);
+            }
+
+            {
+                // 被墙围死无路可走 → 留行动点（无收益不做）
+                var map = MakeAiMap(2, 2);
+                map[new Vector2I(1, 0)].CanPass = false;   // 唯一出路全堵死
+                map[new Vector2I(0, 1)].CanPass = false;
+                var enemy = MakeEnemy("站桩敌", 1, 10);
+                enemy.Stamina = 2;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var player = MakeUnit("对角玩", 0, 10);
+                player.AttackDistance = 0;
+                player.Stamina = 0;
+                OccupyCell(map, player, new Vector2I(1, 1));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("标准：被墙围死无路可走 → 留行动点（Skip）",
+                    () => act != null && act.Kind == AiActionKind.Skip);
+            }
+
+            {
+                // 刷怪红格：唯一候选是红格 → 高级留点；有替代 → 选替代
+                var map = MakeAiMap(4, 1);
+                var enemy = MakeEnemy("红格敌", 1, 10);
+                enemy.UnitData.Rarity = Rarity.高级;   // 炮灰会无视红格罚用光 AP（见"炮灰强制用光 AP"用例）
+                enemy.Stamina = 1;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var player = MakeUnit("玩", 0, 10);
+                player.Stamina = 0;
+                OccupyCell(map, player, new Vector2I(3, 0));
+                var spawn = new HashSet<Vector2I> { new Vector2I(1, 0) };
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }, spawn: spawn));
+                VAssert("高级：刷怪红格唯一候选 → 留行动点（不站红格）",
+                    () => act != null && act.Kind == AiActionKind.Skip);
+
+                enemy.Stamina = 2;
+                player.Stamina = 2;   // 生成卡位区：替代格 (2,0) 有卡位价值
+                var act2 = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }, spawn: spawn));
+                VAssert("标准：有替代格时选替代（红格连卡位一起罚掉）",
+                    () => act2 != null && act2.Kind == AiActionKind.Move && act2.MovePos == new Vector2I(2, 0));
+            }
+
+            {
+                // 火力区回避：射程 2 敌人（高级惜命），安全攻击位 (1,1)（玩家火力区外）vs 火力区攻击位 (1,0) → 选安全格
+                var map = MakeAiMap(4, 3);
+                map[new Vector2I(0, 0)].CanPass = false;   // 堵掉与 (1,1) 对称的 (0,0)，保证唯一最优
+                var enemy = MakeEnemy("躲火敌", 3, 10);
+                enemy.UnitData.Rarity = Rarity.高级;
+                enemy.AttackDistance = 2;
+                enemy.Stamina = 2;
+                enemy.ActionPoints = 2;
+                enemy.MaxActionPoints = 2;
+                OccupyCell(map, enemy, new Vector2I(0, 1));
+                var player = MakeUnit("火力玩", 3, 10);
+                player.AttackDistance = 1;
+                player.Stamina = 2;
+                OccupyCell(map, player, new Vector2I(2, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("高级：不进玩家火力区（选安全攻击位 (1,1)）",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(1, 1));
+            }
+
+            {
+                // 压制走位（2026-08-09 卡位正解，高级+非炮灰专属）：攻击不到 → 站"玩家需先移动才能攻击"的格
+                //（攻击范围边缘外一格：玩家当前打不到，想打必须先移动 → 浪费行动点）
+                var map = MakeAiMap(4, 3);
+                var enemy = MakeEnemy("压制敌", 1, 10);
+                enemy.UnitData.Rarity = Rarity.高级;   // 炮灰（初级/中级）忽略卡位奖励，压制是非炮灰战术
+                enemy.Stamina = 2;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var player = MakeUnit("被压玩", 2, 10);
+                player.AttackDistance = 1;
+                player.Stamina = 1;
+                OccupyCell(map, player, new Vector2I(3, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("高级：压制走位——站玩家攻击范围边缘外一格（需先移动才能打）",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(1, 0)
+                        && AiTactics.ManhattanDist(act.MovePos.Value, player.GridPos) == 2);
+            }
+
+            {
+                // 贴身堵（2026-08-09 卡位正解，高级+非炮灰专属）：逃不掉（当前在玩家火力区、无出口）→ 站玩家身边 4 格，缩玩家移动范围
+                var map = MakeAiMap(3, 3);
+                map[new Vector2I(0, 0)].CanPass = false;   // 出口全堵死 → 逃不掉
+                map[new Vector2I(0, 1)].CanPass = false;
+                map[new Vector2I(0, 2)].CanPass = false;
+                map[new Vector2I(1, 2)].CanPass = false;
+                map[new Vector2I(2, 2)].CanPass = false;
+                var enemy = MakeEnemy("堵位敌", 1, 10);
+                enemy.UnitData.Rarity = Rarity.高级;
+                enemy.Stamina = 2;
+                enemy.AttackDistance = 0;   // 打不到（纯走位场景）
+                OccupyCell(map, enemy, new Vector2I(1, 0));
+                var player = MakeUnit("被堵玩", 3, 10);
+                player.AttackDistance = 2;   // 射程 2：身边对角格 (1,1) 也在火力区 → 无处可逃
+                player.Stamina = 1;
+                OccupyCell(map, player, new Vector2I(2, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("高级：逃不掉 → 贴身堵玩家身边（缩玩家移动范围）",
+                    () => act != null && act.Kind == AiActionKind.Move
+                        && AiTactics.ManhattanDist(act.MovePos.Value, player.GridPos) == 1);
+            }
+
+            {
+                // 逃跑：已贴近玩家、下一步进火力区无价值 → 低血逃跑（高级惜命）；满血同场景 → 留点
+                var map = MakeAiMap(4, 3);
+                map[new Vector2I(1, 2)].CanPass = false;   // 排除并列逃跑格，保证唯一最优
+                var enemy = MakeEnemy("残血敌", 1, 2);
+                enemy.UnitData.Rarity = Rarity.高级;
+                enemy.Stamina = 2;
+                OccupyCell(map, enemy, new Vector2I(1, 0));
+                var player = MakeUnit("追杀玩", 3, 10);
+                player.AttackDistance = 1;
+                player.Stamina = 0;
+                OccupyCell(map, player, new Vector2I(3, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("高级：低血量贴近玩家无路可进 → 逃跑（远离玩家）",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(0, 1) && act.Reason == "逃跑");
+
+                enemy.CurrentHP = 10;
+                enemy.MaxHP = 10;
+                var act2 = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("高级：满血同场景 → 不逃但横移绕路（不站着不动）",
+                    () => act2 != null && act2.Kind == AiActionKind.Move && act2.MovePos == new Vector2I(2, 1) && act2.Reason == "横移绕路");
+            }
+
+            // ── 狡诈：让位 / 两步前瞻 / 预测威胁 / 预测被击杀 / 集火 / 弱侧门 ──
+            {
+                // 让位：站在刷怪红格 → 先移开；本回合能击杀门 → 豁免（胜负优先）
+                var map = MakeAiMap(4, 1);
+                var enemy = MakeEnemy("占格敌", 1, 10);
+                enemy.Stamina = 1;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var player = MakeUnit("玩", 1, 10);
+                player.AttackDistance = 1;
+                player.Stamina = 0;
+                OccupyCell(map, player, new Vector2I(3, 0));
+                var spawn = new HashSet<Vector2I> { new Vector2I(0, 0) };
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }, AiLevel.狡诈, spawn));
+                VAssert("狡诈：站在刷怪红格 → 让位移开",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(1, 0));
+
+                var door = MakeUnit("门", 0, 3);
+                door.Type = UnitType.门;
+                door.GridPos = new Vector2I(1, 0);
+                map[new Vector2I(1, 0)].OccupyingUnit = door;
+                map[new Vector2I(1, 0)].CanPass = false;
+                map[new Vector2I(1, 0)].CanStand = false;
+                enemy.AttackPower = 3;
+                var act2 = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player, door }, AiLevel.狡诈, spawn));
+                VAssert("狡诈：站在红格但本回合能击杀门 → 豁免让位（胜负优先）",
+                    () => act2 != null && act2.Kind == AiActionKind.Attack && act2.Target == door);
+            }
+
+            {
+                // 两步前瞻：狡诈走位选"下回合够得着击杀目标"的格（效用含前瞻加成）；纯函数断言前瞻数值
+                var map = MakeAiMap(5, 1);
+                var enemy = MakeEnemy("前瞻敌", 3, 10);
+                enemy.Stamina = 1;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var weak = MakeUnit("残血玩", 0, 2);   // 可击杀
+                weak.Stamina = 0;
+                OccupyCell(map, weak, new Vector2I(3, 0));
+
+                var data = MakeAiData(map, new[] { weak }, AiLevel.狡诈);
+                VAssert("狡诈：两步前瞻——走位后下回合可击杀（效用含前瞻加成）",
+                    () =>
+                    {
+                        var act = AiTactics.DecideAction(enemy, data);
+                        return act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(1, 0) && act.Utility >= 6000;
+                    });
+                VAssert("NextTurnValue：够得着可击杀目标 +6000",
+                    () => AiTactics.NextTurnValue(enemy, new Vector2I(1, 0), data) == 6000);
+                VAssert("NextTurnValue：够不着返回 0",
+                    () => AiTactics.NextTurnValue(enemy, new Vector2I(0, 0), data) == 0);
+            }
+
+            {
+                // 预测威胁区/预测被击杀：纯函数断言惩罚数值生效（端到端避开见下一条"预测被击杀"）
+                var dist = new System.Collections.Generic.Dictionary<Vector2I, int>
+                {
+                    [new Vector2I(0, 0)] = 3,
+                    [new Vector2I(1, 0)] = 2,
+                };
+                var predicted = new HashSet<Vector2I> { new Vector2I(1, 0) };
+                var lethal = new HashSet<Vector2I> { new Vector2I(1, 0) };
+                int baseScore = AiTactics.ScoreMoveCell(new Vector2I(1, 0), new Vector2I(0, 0), null, dist, null, null, null, null, null, null, null);
+                VAssert("预测威胁区惩罚 -4000 生效",
+                    () => AiTactics.ScoreMoveCell(new Vector2I(1, 0), new Vector2I(0, 0), null, dist, null, null, predicted, null, null, null, null) == baseScore - 4000);
+                VAssert("预测被击杀惩罚 -30000 生效",
+                    () => AiTactics.ScoreMoveCell(new Vector2I(1, 0), new Vector2I(0, 0), null, dist, null, null, null, lethal, null, null, null) == baseScore - 30000);
+            }
+
+            {
+                // 预测被击杀：候选格在玩家移动后可一击覆盖 → 重罚避开，选安全格（高级惜命；炮灰无视见稀有度用例）
+                var map = MakeAiMap(4, 2);
+                var enemy = MakeEnemy("怕死敌", 3, 10);
+                enemy.UnitData.Rarity = Rarity.高级;   // 炮灰（初级/中级）无视预测被击杀惩罚——不怕死
+                enemy.Stamina = 1;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var lethal = MakeUnit("斩杀玩", 10, 10);
+                lethal.AttackDistance = 1;
+                lethal.Stamina = 1;
+                OccupyCell(map, lethal, new Vector2I(3, 0));
+                var weak = MakeUnit("残血玩", 0, 2);
+                weak.Stamina = 0;
+                OccupyCell(map, weak, new Vector2I(1, 1));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { lethal, weak }, AiLevel.狡诈));
+                VAssert("狡诈：预测被击杀格重罚 → 避开 (1,0)，选安全格 (0,1)",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(0, 1));
+            }
+
+            {
+                // 集火：狡诈对集火目标 +4000 → 改变目标选择
+                var map = MakeAiMap(4, 2);
+                var enemy = MakeEnemy("集火敌", 3, 10);
+                enemy.AttackDistance = 2;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var highThreat = MakeUnit("高攻玩", 5, 10);
+                highThreat.Stamina = 0;
+                OccupyCell(map, highThreat, new Vector2I(2, 0));
+                var lowThreat = MakeUnit("低攻玩", 1, 10);
+                lowThreat.Stamina = 0;
+                OccupyCell(map, lowThreat, new Vector2I(1, 1));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { highThreat, lowThreat }, AiLevel.狡诈));
+                VAssert("狡诈：无集火目标时打高威胁",
+                    () => act != null && act.Kind == AiActionKind.Attack && act.Target == highThreat);
+
+                var act2 = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { highThreat, lowThreat }, AiLevel.狡诈, focus: lowThreat));
+                VAssert("狡诈：有集火目标 → 改打集火目标（+4000 加成）",
+                    () => act2 != null && act2.Kind == AiActionKind.Attack && act2.Target == lowThreat);
+            }
+
+            {
+                // 弱侧门：狡诈选防守最薄的门（绕后偷家），标准目标=最近门但无价值走位 → 留点
+                var map = MakeAiMap(5, 4);
+                var enemy = MakeEnemy("偷家敌", 1, 10);
+                enemy.Stamina = 2;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var doorA = MakeUnit("守门A", 0, 20);
+                doorA.Type = UnitType.门;
+                doorA.Stamina = 0;
+                OccupyCell(map, doorA, new Vector2I(2, 0));
+                var doorB = MakeUnit("裸门B", 0, 20);
+                doorB.Type = UnitType.门;
+                doorB.Stamina = 0;
+                OccupyCell(map, doorB, new Vector2I(0, 3));
+                var guard = MakeUnit("守卫", 5, 10);
+                guard.AttackDistance = 1;
+                guard.Stamina = 1;
+                OccupyCell(map, guard, new Vector2I(3, 1));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { doorA, doorB, guard }));
+                VAssert("标准：目标=最近门 → 朝门A方向逼近/压制（不走弱侧门方向）",
+                    () => act != null && act.Kind == AiActionKind.Move
+                        && act.MovePos.Value.X <= 1 && act.MovePos.Value.Y <= 1);
+
+                var act2 = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { doorA, doorB, guard }, AiLevel.狡诈));
+                VAssert("狡诈：目标=弱侧门（防守最薄）→ 两步前瞻绕后逼近 (0,2)",
+                    () => act2 != null && act2.Kind == AiActionKind.Move && act2.MovePos == new Vector2I(0, 2));
+            }
+
+            // ── 靠近门权重与门威胁源（2026-08-09 修复：弱敌人因门有攻击力只会后退）──
+            {
+                // 场上只有带攻击力的门 → 逼近门不后退（门不算威胁源：不进火力区/低血判定/逃跑）
+                var map = MakeAiMap(4, 1);
+                var enemy = MakeEnemy("弱敌", 1, 2);   // 弱血弱攻
+                enemy.Stamina = 1;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var door = MakeUnit("带攻门", 3, 20);
+                door.Type = UnitType.门;
+                door.AttackDistance = 1;
+                door.Stamina = 0;
+                OccupyCell(map, door, new Vector2I(3, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { door }));
+                VAssert("标准：场上只有带攻击力的门 → 逼近门不后退（门不算威胁源）",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(1, 0));
+            }
+
+            {
+                // 靠近门权重：远处（7 格）接近 1 步也是绝对正收益（不会钉死在原地）
+                var map = MakeAiMap(8, 1);
+                var enemy = MakeEnemy("远处敌", 1, 10);
+                enemy.Stamina = 1;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var door = MakeUnit("门", 0, 20);
+                door.Type = UnitType.门;
+                door.Stamina = 0;
+                OccupyCell(map, door, new Vector2I(7, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { door }));
+                VAssert("标准：远处（7 格）也主动接近门（靠近权重 2000/步）",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(1, 0));
+            }
+
+            // ── 稀有度惜命系数（2026-08-09：初级炮灰敢冲，高级+惜命——牺牲是否值得按稀有度分层）──
+            {
+                // 火力区：初级/中级炮灰敢穿火线推进，顶级惜命不白进（无攻击价值的纯走位）
+                var map = MakeAiMap(3, 1);
+                var enemy = MakeEnemy("炮灰", 1, 10);
+                enemy.Stamina = 1;
+                enemy.AttackDistance = 0;   // 打不到（纯走位：穿火线无攻击价值）
+                enemy.UnitData.Rarity = Rarity.初级;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var player = MakeUnit("火力玩", 3, 10);
+                player.AttackDistance = 1;
+                player.Stamina = 0;
+                OccupyCell(map, player, new Vector2I(2, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("初级炮灰：敢穿火力区推进（火力区惩罚 ×0.25）",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(1, 0));
+
+                enemy.UnitData.Rarity = Rarity.顶级;
+                var act2 = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("顶级惜命：不白进火力区（留行动点）",
+                    () => act2 != null && act2.Kind == AiActionKind.Skip);
+            }
+
+            {
+                // 送死检查：初级/中级炮灰豁免（用命换伤害），高级惜命不做（留点）
+                var map = MakeAiMap(2, 1);
+                var enemy = MakeEnemy("送死敌", 2, 3);
+                enemy.UnitData.Rarity = Rarity.初级;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var player = MakeUnit("反杀兵", 3, 5);
+                player.AttackDistance = 1;
+                player.Stamina = 0;
+                OccupyCell(map, player, new Vector2I(1, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("初级炮灰：送死攻击豁免（用命换伤害）",
+                    () => act != null && act.Kind == AiActionKind.Attack && act.Target == player);
+
+                enemy.UnitData.Rarity = Rarity.高级;
+                var act2 = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("高级：送死攻击不做（留行动点）",
+                    () => act2 != null && act2.Kind == AiActionKind.Skip);
+            }
+
+            {
+                // 逃跑：初级炮灰永不逃跑（低血也冲到底），中级低血逃跑
+                var map = MakeAiMap(4, 3);
+                map[new Vector2I(1, 2)].CanPass = false;
+                var enemy = MakeEnemy("残血敌", 1, 2);
+                enemy.Stamina = 2;
+                enemy.UnitData.Rarity = Rarity.初级;
+                OccupyCell(map, enemy, new Vector2I(1, 0));
+                var player = MakeUnit("追杀玩", 3, 10);
+                player.AttackDistance = 1;
+                player.Stamina = 0;
+                OccupyCell(map, player, new Vector2I(3, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("初级炮灰：低血不逃跑，敢穿火力区逼近（牺牲值得）",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(2, 0));
+
+                enemy.UnitData.Rarity = Rarity.高级;
+                var act2 = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("高级：低血同场景 → 逃跑（远离玩家）",
+                    () => act2 != null && act2.Kind == AiActionKind.Move && act2.MovePos == new Vector2I(0, 1) && act2.Reason == "逃跑");
+            }
+
+            {
+                // 惜命系数数值与惩罚缩放（纯函数）
+                VAssert("RarityCareFactor：初级/中级 0.25（炮灰）/ 高级 1.2 / 顶级 1.5",
+                    () => AiTactics.RarityCareFactor(Rarity.初级) == 0.25f
+                        && AiTactics.RarityCareFactor(Rarity.中级) == 0.25f
+                        && AiTactics.RarityCareFactor(Rarity.高级) == 1.2f
+                        && AiTactics.RarityCareFactor(Rarity.顶级) == 1.5f);
+
+                var dist = new System.Collections.Generic.Dictionary<Vector2I, int>
+                {
+                    [new Vector2I(0, 0)] = 2,
+                    [new Vector2I(1, 0)] = 1,
+                };
+                var fire = new HashSet<Vector2I> { new Vector2I(1, 0) };
+                int cannon = AiTactics.ScoreMoveCell(new Vector2I(1, 0), new Vector2I(0, 0), null, dist, fire, null, null, null, null, null, null, careFactor: 0.25f);
+                int elite = AiTactics.ScoreMoveCell(new Vector2I(1, 0), new Vector2I(0, 0), null, dist, fire, null, null, null, null, null, null, careFactor: 1.5f);
+                VAssert("火力区惩罚按惜命系数缩放（初级 1500 / 顶级 9000）",
+                    () => cannon - elite == 9000 - 1500);
+
+                // 逃离火力区奖励 +6000（当前在火力区 → 候选不在；不随稀有度缩放——能跑就跑是基本生存行为）
+                var dodgeDist = new System.Collections.Generic.Dictionary<Vector2I, int>
+                {
+                    [new Vector2I(0, 0)] = 1,
+                    [new Vector2I(1, 0)] = 2,
+                };
+                var underFire = new HashSet<Vector2I> { new Vector2I(0, 0) };   // 当前格在火力区，候选格不在
+                int noEscape = AiTactics.ScoreMoveCell(new Vector2I(1, 0), new Vector2I(0, 0), null, dodgeDist, null, null, null, null, null, null, null, careFactor: 0.25f);
+                int escape = AiTactics.ScoreMoveCell(new Vector2I(1, 0), new Vector2I(0, 0), null, dodgeDist, underFire, null, null, null, null, null, null, careFactor: 0.25f);
+                VAssert("逃离火力区奖励 +6000（当前在火力区 → 候选不在）",
+                    () => escape - noEscape == 6000);
+            }
+
+            {
+                // 站在玩家攻击范围内能跑就跑（2026-08-09 修复：能跑不跑站着挨打）
+                var map = MakeAiMap(4, 3);
+                var enemy = MakeEnemy("挨打敌", 3, 10);
+                enemy.Stamina = 2;
+                enemy.AttackDistance = 0;   // 打不到玩家（测移动）
+                OccupyCell(map, enemy, new Vector2I(1, 0));
+                var player = MakeUnit("火力玩", 3, 10);
+                player.AttackDistance = 1;
+                player.Stamina = 0;
+                OccupyCell(map, player, new Vector2I(2, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("标准：站在火力区能跑就跑（Move 且落点不在玩家攻击范围内）",
+                    () => act != null && act.Kind == AiActionKind.Move
+                        && AiTactics.ManhattanDist(act.MovePos.Value, player.GridPos) > 1);
+            }
+
+            {
+                // 无威胁满行动点也动（2026-08-09 修复）：目标被玩家挡路打不到、无更近格 → 横移绕路而非站着不动
+                var map = MakeAiMap(3, 2);
+                var enemy = MakeEnemy("挡路敌", 1, 10);
+                enemy.UnitData.Rarity = Rarity.高级;   // 炮灰直接走最高分格（负分也走），横移兜底是非炮灰行为
+                enemy.Stamina = 2;
+                enemy.AttackDistance = 0;   // 打不到面前的挡路者（纯移动场景）
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var blocker = MakeUnit("挡路玩", 0, 10);   // 无攻击力（无威胁场景）
+                blocker.AttackDistance = 1;
+                blocker.Stamina = 0;
+                OccupyCell(map, blocker, new Vector2I(1, 0));   // 玩家占据格不可穿越 → 目标不可达
+                var player = MakeUnit("目标玩", 1, 10);
+                player.AttackDistance = 1;
+                player.Stamina = 0;
+                OccupyCell(map, player, new Vector2I(2, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { blocker, player }));
+                VAssert("标准：无更近格（目标被挡）→ 横移绕路探索（不站着不动）",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(1, 1) && act.Reason == "横移绕路");
+            }
+
+            {
+                // 远程单位对峙（2026-08-09 修复）：玩家远程单位攻击范围大时，敌人推进优先于逃离——不后退不对峙
+                var map = MakeAiMap(4, 1);
+                var enemy = MakeEnemy("近战敌", 1, 10);   // 近战：攻击距离 1
+                enemy.Stamina = 2;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var player = MakeUnit("远程玩", 5, 10);
+                player.AttackDistance = 3;   // 远程：火力区大（距 ≤3）
+                player.Stamina = 1;
+                OccupyCell(map, player, new Vector2I(3, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("标准：玩家远程单位攻击范围大 → 敌人推进（不后退不对峙）",
+                    () => act != null && act.Kind == AiActionKind.Move
+                        && AiTactics.ManhattanDist(act.MovePos.Value, player.GridPos) < 3);
+            }
+
+            {
+                // 炮灰无视预测被击杀（2026-08-09）：不怕死，站"玩家移动后可一击反杀"的格；高级重罚避开
+                var map = MakeAiMap(3, 2);
+                var enemy = MakeEnemy("炮灰不怕死", 1, 20);   // 高血：排除低血逃跑路径干扰（测纯预测被击杀）
+                enemy.Stamina = 1;
+                enemy.AttackDistance = 0;
+                enemy.UnitData.Rarity = Rarity.初级;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var player = MakeUnit("斩杀玩", 10, 10);
+                player.AttackDistance = 1;
+                player.Stamina = 1;
+                OccupyCell(map, player, new Vector2I(2, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("炮灰：无视预测被击杀 → 站 (1,0)（火力区+被击杀格也冲）",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(1, 0));
+
+                enemy.UnitData.Rarity = Rarity.高级;
+                var act2 = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("高级：预测被击杀格重罚 → 留行动点",
+                    () => act2 != null && act2.Kind == AiActionKind.Skip);
+            }
+
+            {
+                // 炮灰强制用光 AP（2026-08-09）：全负移动也走（不 Skip），高级惜命留点
+                var map = MakeAiMap(4, 1);
+                var enemy = MakeEnemy("炮灰冲", 1, 10);
+                enemy.Stamina = 1;
+                enemy.AttackDistance = 0;
+                enemy.UnitData.Rarity = Rarity.初级;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var player = MakeUnit("玩", 1, 10);
+                player.AttackDistance = 1;
+                player.Stamina = 0;
+                OccupyCell(map, player, new Vector2I(3, 0));
+                var spawn = new HashSet<Vector2I> { new Vector2I(1, 0) };   // 唯一候选是刷怪格 → 全负
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }, spawn: spawn));
+                VAssert("炮灰：全负移动也走（强制用光 AP，不 Skip）",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(1, 0));
+
+                enemy.UnitData.Rarity = Rarity.高级;
+                var act2 = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }, spawn: spawn));
+                VAssert("高级：同场景全负移动 → 留行动点",
+                    () => act2 != null && act2.Kind == AiActionKind.Skip);
+            }
+
+            {
+                // 炮灰忽略压制位（2026-08-09）：直接深进不停环上；高级（非炮灰）到达压制位停一回合逼玩家移动
+                var map = MakeAiMap(4, 3);
+                var enemy = MakeEnemy("炮灰深进", 1, 10);
+                enemy.Stamina = 2;
+                enemy.AttackDistance = 0;
+                enemy.UnitData.Rarity = Rarity.初级;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var player = MakeUnit("远程玩", 2, 10);
+                player.AttackDistance = 1;
+                player.Stamina = 1;
+                OccupyCell(map, player, new Vector2I(3, 0));
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("炮灰：忽略压制位 → 直接深进 (2,0)",
+                    () => act != null && act.Kind == AiActionKind.Move && act.MovePos == new Vector2I(2, 0));
+
+                enemy.UnitData.Rarity = Rarity.高级;
+                var act2 = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player }));
+                VAssert("高级：到达压制位 (1,0) 停一回合（逼玩家移动）",
+                    () => act2 != null && act2.Kind == AiActionKind.Move && act2.MovePos == new Vector2I(1, 0));
+            }
+
+            {
+                // 火力区形状感知：十字/方形（玩家 AttackShape 非菱形时威胁区正确）
+                var map = MakeAiMap(5, 5);
+                var cross = MakeUnit("十字玩", 3, 10);
+                cross.UnitData.AttackShape = new CrossShape { Length = 2 };   // 主尺寸联动 AttackDistance
+                cross.AttackDistance = 2;
+                cross.Stamina = 0;
+                OccupyCell(map, cross, new Vector2I(2, 2));
+                var threat = AiTactics.ComputeThreatCells(map, new List<Unit> { cross });
+                VAssert("十字火力区：只含十字格 4N=8（菱形会含 (1,1) 斜角）",
+                    () => threat.Count == 8
+                        && threat.Contains(new Vector2I(0, 2)) && threat.Contains(new Vector2I(1, 2))
+                        && threat.Contains(new Vector2I(3, 2)) && threat.Contains(new Vector2I(4, 2))
+                        && threat.Contains(new Vector2I(2, 0)) && threat.Contains(new Vector2I(2, 1))
+                        && threat.Contains(new Vector2I(2, 3)) && threat.Contains(new Vector2I(2, 4))
+                        && !threat.Contains(new Vector2I(1, 1)) && !threat.Contains(new Vector2I(2, 2)));
+
+                var map2 = MakeAiMap(5, 5);
+                var sq = MakeUnit("方玩", 3, 10);
+                sq.UnitData.AttackShape = new SquareShape { AreaRange = 1 };
+                sq.AttackDistance = 1;
+                sq.Stamina = 0;
+                OccupyCell(map2, sq, new Vector2I(2, 2));
+                var threat2 = AiTactics.ComputeThreatCells(map2, new List<Unit> { sq });
+                VAssert("方形火力区：3x3 去中心（菱形会缺四角）",
+                    () => threat2.Count == 8
+                        && threat2.Contains(new Vector2I(1, 1)) && threat2.Contains(new Vector2I(3, 1))
+                        && threat2.Contains(new Vector2I(1, 3)) && threat2.Contains(new Vector2I(3, 3))
+                        && !threat2.Contains(new Vector2I(2, 2)));
+            }
+        });
+
+        RunGroup("AI 行动顺序", () =>
+        {
+            var map = MakeAiMap(6, 2);
+            var weakPlayer = MakeUnit("可杀玩", 1, 4);   // HP4 ≤ 杀手 ATK5
+            weakPlayer.Stamina = 0;
+            OccupyCell(map, weakPlayer, new Vector2I(2, 0));
+
+            var killer = MakeEnemy("杀手", 5, 10);
+            killer.AttackDistance = 2;
+            OccupyCell(map, killer, new Vector2I(0, 0));
+            var highAtk = MakeEnemy("高攻", 5, 10);
+            OccupyCell(map, highAtk, new Vector2I(4, 0));
+            var lowAtk = MakeEnemy("低攻", 1, 10);
+            OccupyCell(map, lowAtk, new Vector2I(4, 1));
+
+            var data = MakeAiData(map, new[] { weakPlayer }, AiLevel.狡诈);
+            VAssert("行动顺序：能当场击杀者先手（+100000）",
+                () => AiTactics.RoughPriority(killer, data) > AiTactics.RoughPriority(highAtk, data));
+            VAssert("行动顺序：同条件下高攻 > 低攻",
+                () => AiTactics.RoughPriority(highAtk, data) > AiTactics.RoughPriority(lowAtk, data));
+
+            // 近门 > 远门（无击杀机会时）
+            var map2 = MakeAiMap(6, 1);
+            var door = MakeUnit("门", 0, 20);
+            door.Type = UnitType.门;
+            door.Stamina = 0;
+            OccupyCell(map2, door, new Vector2I(5, 0));
+            var near = MakeEnemy("近门", 1, 10);
+            OccupyCell(map2, near, new Vector2I(3, 0));
+            var far = MakeEnemy("远门", 1, 10);
+            OccupyCell(map2, far, new Vector2I(0, 0));
+
+            var data2 = MakeAiData(map2, new[] { door }, AiLevel.狡诈);
+            VAssert("行动顺序：无击杀机会时近门 > 远门",
+                () => AiTactics.RoughPriority(near, data2) > AiTactics.RoughPriority(far, data2));
         });
 
         RunGroup("AI 绕障距离", () =>
@@ -4295,6 +5053,52 @@ public partial class TestRunner : Node
             HealthPoints = hp,
         };
         return new Unit(data, Vector2I.Zero, Team.Player);
+    }
+
+    /// <summary>AI 端到端测试：敌方单位（默认 Team=Enemy、稀有度=中级——惜命系数基准；稀有度分层用例显式覆盖）</summary>
+    private static Unit MakeEnemy(string name, int atk, int hp)
+    {
+        var u = MakeUnit(name, atk, hp);
+        u.Team = Team.Enemy;
+        u.UnitData.Rarity = Rarity.中级;
+        return u;
+    }
+
+    /// <summary>AI 端到端测试：矩形全通行地图</summary>
+    private static System.Collections.Generic.Dictionary<Vector2I, Cell> MakeAiMap(int w, int h)
+    {
+        var map = new System.Collections.Generic.Dictionary<Vector2I, Cell>();
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+                map[new Vector2I(x, y)] = MakeCell(new Vector2I(x, y), new BlockData());
+        return map;
+    }
+
+    /// <summary>占据格子（CanPass/CanStand 置 false，同运行时 RefreshCellProperties 的占据语义）</summary>
+    private static void OccupyCell(System.Collections.Generic.Dictionary<Vector2I, Cell> map, Unit u, Vector2I pos)
+    {
+        u.GridPos = pos;
+        var cell = map[pos];
+        cell.OccupyingUnit = u;
+        cell.CanPass = false;
+        cell.CanStand = false;
+    }
+
+    /// <summary>AI 战场快照（AI 效用决策端到端测试用）</summary>
+    private static AiBattleData MakeAiData(System.Collections.Generic.Dictionary<Vector2I, Cell> map, IEnumerable<Unit> players,
+        AiLevel level = AiLevel.标准, HashSet<Vector2I> spawn = null, Unit focus = null, Vector2I? prev = null)
+    {
+        var list = players.Where(p => p != null).ToList();
+        return new AiBattleData
+        {
+            Map = map,
+            PlayerUnits = list,
+            PlayerDoors = list.Where(p => p.Type == UnitType.门).ToList(),
+            SpawnCells = spawn,
+            FocusTarget = focus,
+            PreviousPos = prev,
+            Level = level,
+        };
     }
 
     private static Cell MakeCell(Vector2I pos, BlockData block)
