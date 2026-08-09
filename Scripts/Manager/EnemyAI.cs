@@ -180,6 +180,8 @@ public partial class EnemyAI : Node
         {
             Map = MapManager.Instance.Map,
             PlayerUnits = players,
+            EnemyUnits = UnitManager.Instance.ActiveUnits
+                .Where(u => u.Team == Team.Enemy && u.Type != UnitType.门 && u.IsAlive && !u.IsDead).ToList(),
             PlayerDoors = players.Where(u => u.Type == UnitType.门).ToList(),
             SpawnCells = _aiLevel != AiLevel.简单
                 ? new HashSet<Vector2I>(BattleManager.Instance?.NextWaveSpawnPositions() ?? Enumerable.Empty<Vector2I>())

@@ -182,29 +182,36 @@ public static class AiTactics
         var goal = cunning ? PickWeakestDoor(data, enemy.GridPos) : PickAttackTarget(data.PlayerUnits, enemy);
         if (goal == null) goal = FindNearestPlayer(enemy.GridPos, data);
 
+        // 群体冲锋稀释：威胁区内/能进入的敌人数越多，被大炮秒的风险越低 → 威胁惩罚稀释（人多不怕）
+        float threatDilution = CrowdDilution(data, threatCells);
+        if (threatDilution < 1f)
+            Log($"[AI][战场] 群体冲锋：{data.EnemyUnits.Count} 只敌人中 {Mathf.RoundToInt(1f / threatDilution)} 只可进入威胁区 → 威胁惩罚 ×{threatDilution:0.##}（人多不怕）");
+
         Log($"[AI][决策] {enemy.UnitData?.UnitName}@{enemy.GridPos} AP={enemy.ActionPoints} 攻击={enemy.AttackPower} 射程={enemy.AttackDistance} 体力={enemy.Stamina} HP={enemy.CurrentHP}/{enemy.MaxHP} 稀有度={enemy.UnitData?.Rarity} 难度={(cunning ? "狡诈" : "标准")} 惜命系数={careFactor}");
         Log($"[AI][战场] 玩家{data.PlayerUnits.Count}个(门{data.PlayerDoors.Count}) 目标={goal?.UnitData?.UnitName}@{goal?.GridPos} 火力区={threatCells.Count}格 压制位={pressureCells.Count}格 贴身位={adjacentCells.Count}格 刷怪格={spawnCells?.Count ?? 0}格{(cunning ? $" 预测威胁={predictedThreat.Count}格 预测被击杀={predictedLethal.Count}格" : "")}");
         if (attackableNow.Count > 0)
             Log($"[AI][目标] 当前可攻击: {string.Join(" | ", attackableNow.Select(t => $"{t.UnitData?.UnitName}@{t.GridPos} 分{ScoreTarget(enemy, t)}{(t.Type == UnitType.门 ? "(门)" : t.CurrentHP <= enemy.AttackPower ? "(可杀)" : "")}"))}");
 
-        // 0. 让位优先：站在下回合刷怪格 → 先移开（除非本回合能击杀玩家门——胜负优先）
-        bool killDoorNow = attackableNow.Any(u => u.Type == UnitType.门 && u.CurrentHP <= enemy.AttackPower);
-        if (spawnCells != null && spawnCells.Contains(enemy.GridPos) && !killDoorNow)
+        // 1. 攻击选项（打分 + 送死剔除[初级豁免] + 狡诈集火加成）——攻击优先于让位（2026-08-09：能杀则杀，不能杀再让）
+        var attackOption = PickBestAttack(enemy, attackableNow, data, cunning, careFactor);
+
+        // 1.5 让位：站在下回合刷怪格且本回合**无法攻击**（攻击无效）→ 先移开让位。
+        //    攻击有效则直接打（含击杀门——被攻击优先天然覆盖，旧的 killDoorNow 豁免删除）；
+        //    让位移动含移动+攻击连招价值（AP≥2 移动出红格再打）
+        if ((attackOption == null || attackOption.Utility <= 0)
+            && spawnCells != null && spawnCells.Contains(enemy.GridPos))
         {
             var yieldPlan = BuildMoveOption(enemy, data, goal, threatCells, spawnCells,
                 predictedThreat, predictedLethal, pressureCells, adjacentCells, maxDetour,
-                excludeSpawnCells: true, skipIfNoValue: false, careFactor: careFactor);
+                excludeSpawnCells: true, skipIfNoValue: false, careFactor: careFactor, threatDilution: threatDilution);
             if (yieldPlan != null)
             {
                 yieldPlan.Reason = "让位（刷怪格）";
-                Log($"[AI][决策] 站在刷怪红格 → 让位 {yieldPlan.MovePos}");
+                Log($"[AI][决策] 攻击无效 + 站在刷怪红格 → 让位 {yieldPlan.MovePos}");
                 return yieldPlan;
             }
             // 无可离开的格 → 继续正常决策
         }
-
-        // 1. 攻击选项（打分 + 送死剔除[初级豁免] + 狡诈集火加成）
-        var attackOption = PickBestAttack(enemy, attackableNow, data, cunning, careFactor);
 
         // 2. 移动选项（移动+攻击连招仅 AP≥2；两步前瞻仅狡诈且当前打不到时计入——保证"造成伤害 > 靠近门"）。
         //    炮灰（初级/中级）skipIfNoValue=false：任何候选都走，永不留点——强制用光所有 AP 往前冲
@@ -213,7 +220,7 @@ public static class AiTactics
         var moveOption = BuildMoveOption(enemy, data, goal, threatCells, spawnCells,
             predictedThreat, predictedLethal, pressureCells, adjacentCells, maxDetour,
             excludeSpawnCells: false, skipIfNoValue: !expendable, canLookahead: cunning && attackOption == null,
-            careFactor: careFactor);
+            careFactor: careFactor, threatDilution: threatDilution);
 
         // 3. 效用对比：更好攻击位（移动+攻击连招）> 当前攻击 > 有价值移动 > 逃跑 > 留点。
         //    炮灰（expendable）：负效用移动也执行（强制用光 AP 往前冲，永不 Skip）
@@ -310,7 +317,8 @@ public static class AiTactics
         HashSet<Vector2I> threatCells, HashSet<Vector2I> spawnCells,
         HashSet<Vector2I> predictedThreat, HashSet<Vector2I> predictedLethal,
         HashSet<Vector2I> pressureCells, HashSet<Vector2I> adjacentCells, int maxDetour,
-        bool excludeSpawnCells, bool skipIfNoValue, bool canLookahead = false, float careFactor = 0.75f)
+        bool excludeSpawnCells, bool skipIfNoValue, bool canLookahead = false, float careFactor = 0.75f,
+        float threatDilution = 1f)
     {
         var map = data.Map;
         var reachable = PathFinder.GetReachableCells(enemy.GridPos, enemy.Stamina, map);
@@ -354,7 +362,7 @@ public static class AiTactics
             if (goalReachable && dist > curDist + maxDetour) continue;                   // 防走丢：绕远过猛跳过
             int s = ScoreMoveCell(pos, enemy.GridPos, attackScoreAtCell, distToGoal,
                 threatCells, spawnCells, predictedThreat, predictedLethal, pressureCells, adjacentCells, lookahead,
-                fallbackGoal: goal.GridPos, careFactor: careFactor, canApproach: canApproach);
+                fallbackGoal: goal.GridPos, careFactor: careFactor, canApproach: canApproach, threatDilution: threatDilution);
             if (DebugLog != null)
             {
                 // 评分分解（仅显示非零项；炮灰忽略卡位奖励，分解与实算一致）
@@ -371,10 +379,10 @@ public static class AiTactics
                 if (!isCannon && adjacentCells != null && adjacentCells.Contains(pos) && threatCells != null && threatCells.Contains(enemy.GridPos))
                     parts.Add($"堵+{AdjacentBlockBonus}");
                 if (threatCells != null && threatCells.Contains(pos))
-                    parts.Add($"火力-{(int)(FireZonePenalty * careFactor)}");
+                    parts.Add($"火力-{(int)(FireZonePenalty * careFactor * threatDilution)}");
                 if (spawnCells != null && spawnCells.Contains(pos)) parts.Add($"刷怪-{SpawnCellPenalty}");
                 if (predictedThreat != null && predictedThreat.Contains(pos)) parts.Add($"预测威胁-{(int)(PredictedThreatPenalty * careFactor)}");
-                if (!isCannon && predictedLethal != null && predictedLethal.Contains(pos)) parts.Add($"预测被击杀-{(int)(PredictedLethalPenalty * careFactor)}");
+                if (!isCannon && predictedLethal != null && predictedLethal.Contains(pos)) parts.Add($"预测被击杀-{(int)(PredictedLethalPenalty * careFactor * threatDilution)}");
                 if (lookahead != null && lookahead.TryGetValue(pos, out int lv)) parts.Add($"前瞻+{lv}");
                 Log($"[AI][移动]   {pos}: 总分{s} [{string.Join(" ", parts)}]");
             }
@@ -602,7 +610,8 @@ public static class AiTactics
         IReadOnlyDictionary<Vector2I, int> lookaheadBonus,
         Vector2I? fallbackGoal = null,
         float careFactor = 1f,
-        bool canApproach = false)
+        bool canApproach = false,
+        float threatDilution = 1f)
     {
         int score = 0;
         // 炮灰（初级/中级）：完全忽略卡位奖励（压制/堵）——强制往前冲，不停环上、不堵（2026-08-09）
@@ -638,16 +647,39 @@ public static class AiTactics
         if (!isCannon && inFireNow && adjacentBlock)
             score += AdjacentBlockBonus;
 
+        // 火力区/预测被击杀惩罚按群体稀释（threatDilution = 1/N，人多不怕大炮秒杀）
         if (threatenedCells != null && threatenedCells.Contains(pos) && !(inFireNow && adjacentBlock))
-            score -= (int)(FireZonePenalty * careFactor);
+            score -= (int)(FireZonePenalty * careFactor * threatDilution);
         if (spawnCells != null && spawnCells.Contains(pos))
             score -= SpawnCellPenalty;   // 刷怪惩罚不缩放（战术行为，与保命无关）
         if (predictedThreat != null && predictedThreat.Contains(pos))
             score -= (int)(PredictedThreatPenalty * careFactor);
         // 预测被击杀惩罚：炮灰（初级/中级）无视——不怕死，用命换推进（2026-08-09）
         if (!isCannon && predictedLethal != null && predictedLethal.Contains(pos))
-            score -= (int)(PredictedLethalPenalty * careFactor);
+            score -= (int)(PredictedLethalPenalty * careFactor * threatDilution);
         return score;
+    }
+
+    /// <summary>
+    /// 群体冲锋稀释（2026-08-09）：统计"当前处于或体力内可进入威胁区"的敌方单位数 N。
+    /// 大炮/秒杀类单位一回合只能处理一个目标——人多一起冲，每只的实际死亡风险 ≈ 1/N，
+    /// 威胁惩罚（火力区/预测被击杀）按此稀释。N=0/1 不稀释（单只独自面对大炮 → 该躲就躲）。
+    /// </summary>
+    /// <param name="threatZone">威胁区（火力区并集；调用方也可传预测被击杀区）</param>
+    public static float CrowdDilution(AiBattleData data, IReadOnlySet<Vector2I> threatZone)
+    {
+        if (data?.EnemyUnits == null || threatZone == null || threatZone.Count == 0) return 1f;
+        int count = 0;
+        foreach (var e in data.EnemyUnits)
+        {
+            if (e == null || !e.IsAlive || e.IsDead) continue;
+            if (threatZone.Contains(e.GridPos)) { count++; continue; }   // 已在威胁区内
+            foreach (var pos in PathFinder.GetReachableCells(e.GridPos, e.Stamina, data.Map))
+            {
+                if (threatZone.Contains(pos)) { count++; break; }        // 体力内能走进
+            }
+        }
+        return count >= 2 ? 1f / count : 1f;
     }
 
     // ======================================================================
@@ -711,12 +743,14 @@ public static class AiTactics
     }
 
     /// <summary>
-    /// 两步前瞻（狡诈）：从 pos 出发，下回合（满 AP 再移动一次）能否够到门/可击杀目标
-    /// （够着=曼哈顿距离 ≤ Stamina+AttackDistance）。返回加成值：门 15000 / 击杀 6000，取高。
+    /// 两步前瞻（狡诈）：从 pos 出发，下回合（满 AP 再移动一次）能否够到门/可击杀目标。
+    /// **绕障距离**（GetDistanceFrom BFS，墙/玩家占据格真实挡路；队友格可穿越；自身格忽略）
+    /// 而非曼哈顿——2026-08-09 修复：曼哈顿会穿墙误判"够得到"。
+    /// 够着 = 绕障成本 ≤ Stamina+AttackDistance。返回加成值：门 15000 / 击杀 6000，取高。
     /// </summary>
     public static int NextTurnValue(Unit enemy, Vector2I pos, AiBattleData data)
     {
-        if (enemy == null || data == null) return 0;
+        if (enemy == null || data == null || data.Map == null) return 0;
         int range = enemy.Stamina + enemy.AttackDistance;
 
         int v = 0;
@@ -725,7 +759,8 @@ public static class AiTactics
             foreach (var door in data.PlayerDoors)
             {
                 if (door == null || !door.IsAlive || door.IsDead) continue;
-                if (ManhattanDist(pos, door.GridPos) <= range)
+                var dist = PathFinder.GetDistanceFrom(door.GridPos, data.Map, enemy.GridPos, Team.Enemy);
+                if (dist.TryGetValue(pos, out int d) && d <= range)
                 {
                     v = Mathf.Max(v, DoorLookaheadBonus);
                     break;
@@ -737,8 +772,13 @@ public static class AiTactics
             foreach (var t in data.PlayerUnits)
             {
                 if (t == null || !t.IsAlive || t.IsDead || t.Type == UnitType.门) continue;
-                if (t.CurrentHP <= enemy.AttackPower && ManhattanDist(pos, t.GridPos) <= range)
+                if (t.CurrentHP > enemy.AttackPower) continue;   // 打不死 → 无击杀前瞻
+                var dist = PathFinder.GetDistanceFrom(t.GridPos, data.Map, enemy.GridPos, Team.Enemy);
+                if (dist.TryGetValue(pos, out int d) && d <= range)
+                {
                     v = Mathf.Max(v, KillLookaheadBonus);
+                    break;
+                }
             }
         }
         return v;

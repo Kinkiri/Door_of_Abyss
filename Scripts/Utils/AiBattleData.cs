@@ -13,6 +13,9 @@ public class AiBattleData
     /// <summary>存活玩家单位（含门）</summary>
     public List<Unit> PlayerUnits;
 
+    /// <summary>存活敌方单位（不含门；群体冲锋稀释统计用）</summary>
+    public List<Unit> EnemyUnits;
+
     /// <summary>存活玩家门（PlayerUnits 的子集）</summary>
     public List<Unit> PlayerDoors;
 

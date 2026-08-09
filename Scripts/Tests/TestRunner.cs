@@ -4498,8 +4498,28 @@ public partial class TestRunner : Node
                 map[new Vector2I(1, 0)].CanStand = false;
                 enemy.AttackPower = 3;
                 var act2 = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { player, door }, AiLevel.狡诈, spawn));
-                VAssert("狡诈：站在红格但本回合能击杀门 → 豁免让位（胜负优先）",
+                VAssert("狡诈：站在红格但本回合能击杀门 → 攻击门（攻击优先于让位）",
                     () => act2 != null && act2.Kind == AiActionKind.Attack && act2.Target == door);
+            }
+
+            {
+                // 让位优先级（2026-08-09）：能攻击（哪怕不是门）→ 攻击优先，攻击无效才让位
+                var map = MakeAiMap(4, 1);
+                var enemy = MakeEnemy("红格攻击", 3, 10);
+                enemy.Stamina = 1;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var soldier = MakeUnit("可杀兵", 0, 3);   // 一击可杀
+                soldier.Stamina = 0;
+                OccupyCell(map, soldier, new Vector2I(1, 0));
+                var player = MakeUnit("远玩", 1, 10);
+                player.AttackDistance = 1;
+                player.Stamina = 0;
+                OccupyCell(map, player, new Vector2I(3, 0));
+                var spawn = new HashSet<Vector2I> { new Vector2I(0, 0) };
+
+                var act = AiTactics.DecideAction(enemy, MakeAiData(map, new[] { soldier, player }, AiLevel.狡诈, spawn));
+                VAssert("狡诈：站红格但能击杀士兵 → 先杀（能杀则杀，不能杀再让位）",
+                    () => act != null && act.Kind == AiActionKind.Attack && act.Target == soldier);
             }
 
             {
@@ -4523,6 +4543,29 @@ public partial class TestRunner : Node
                     () => AiTactics.NextTurnValue(enemy, new Vector2I(1, 0), data) == 6000);
                 VAssert("NextTurnValue：够不着返回 0",
                     () => AiTactics.NextTurnValue(enemy, new Vector2I(0, 0), data) == 0);
+            }
+
+            {
+                // 两步前瞻用绕障距离（2026-08-09 修复）：曼哈顿会穿墙误判"够得到"，绕障真实挡路
+                var map = MakeAiMap(3, 3);
+                map[new Vector2I(1, 0)].CanPass = false;
+                map[new Vector2I(1, 1)].CanPass = false;
+                map[new Vector2I(1, 2)].CanPass = false;   // 竖墙完全隔开左右
+                var enemy = MakeEnemy("前瞻绕障", 3, 10);
+                enemy.Stamina = 2;   // range = 2+1 = 3 ≥ 曼哈顿 2 → 曼哈顿会误判够得着
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                var door = MakeUnit("门", 0, 20);
+                door.Type = UnitType.门;
+                door.Stamina = 0;
+                OccupyCell(map, door, new Vector2I(2, 2));
+                var data = MakeAiData(map, new[] { door }, AiLevel.狡诈);
+
+                VAssert("两步前瞻：墙挡路 → 绕障距离够不着（曼哈顿 (0,2)→门=2 会误判）",
+                    () => AiTactics.NextTurnValue(enemy, new Vector2I(0, 2), data) == 0);
+
+                map[new Vector2I(1, 2)].CanPass = true;   // 打通一格
+                VAssert("两步前瞻：打通后绕障可达门 → +15000（门前瞻）",
+                    () => AiTactics.NextTurnValue(enemy, new Vector2I(0, 2), data) == 15000);
             }
 
             {
@@ -4716,11 +4759,11 @@ public partial class TestRunner : Node
 
             {
                 // 惜命系数数值与惩罚缩放（纯函数）
-                VAssert("RarityCareFactor：初级/中级 0.25（炮灰）/ 高级 1.2 / 顶级 1.5",
+                VAssert("RarityCareFactor：初级/中级 0.25（炮灰）/ 高级 0.8 / 顶级 1.0",
                     () => AiTactics.RarityCareFactor(Rarity.初级) == 0.25f
                         && AiTactics.RarityCareFactor(Rarity.中级) == 0.25f
-                        && AiTactics.RarityCareFactor(Rarity.高级) == 1.2f
-                        && AiTactics.RarityCareFactor(Rarity.顶级) == 1.5f);
+                        && AiTactics.RarityCareFactor(Rarity.高级) == 0.8f
+                        && AiTactics.RarityCareFactor(Rarity.顶级) == 1f);
 
                 var dist = new System.Collections.Generic.Dictionary<Vector2I, int>
                 {
@@ -4801,6 +4844,41 @@ public partial class TestRunner : Node
                 VAssert("标准：玩家远程单位攻击范围大 → 敌人推进（不后退不对峙）",
                     () => act != null && act.Kind == AiActionKind.Move
                         && AiTactics.ManhattanDist(act.MovePos.Value, player.GridPos) < 3);
+            }
+
+            {
+                // 群体冲锋（2026-08-09）：大炮类单位——单只不敢进火力区，人多稀释死亡风险一起冲
+                var map = MakeAiMap(5, 2);
+                var cannon = MakeUnit("大炮", 10, 20);
+                cannon.AttackDistance = 3;   // 超大范围单体
+                cannon.Stamina = 0;
+                OccupyCell(map, cannon, new Vector2I(4, 0));
+                var enemy = MakeEnemy("前锋", 1, 20);   // 高血：排除低血逃跑干扰（测纯火力区恐惧）
+                enemy.UnitData.Rarity = Rarity.高级;
+                enemy.Stamina = 1;
+                enemy.AttackDistance = 1;
+                OccupyCell(map, enemy, new Vector2I(0, 0));
+                // 队友：1 只可进入火力区 + 1 只在区内 → 共 3 只 → 稀释 1/3
+                var mate1 = MakeEnemy("队友1", 1, 20);
+                mate1.Stamina = 1;
+                OccupyCell(map, mate1, new Vector2I(1, 1));
+                var mate2 = MakeEnemy("队友2", 1, 20);
+                mate2.Stamina = 1;
+                OccupyCell(map, mate2, new Vector2I(3, 0));
+
+                var dataLone = MakeAiData(map, new[] { cannon });
+                var actLone = AiTactics.DecideAction(enemy, dataLone);
+                VAssert("高级：独自面对大炮 → 不敢进火力区（留点）",
+                    () => actLone != null && actLone.Kind == AiActionKind.Skip);
+
+                var dataCrowd = MakeAiData(map, new[] { cannon }, enemies: new[] { enemy, mate1, mate2 });
+                var actCrowd = AiTactics.DecideAction(enemy, dataCrowd);
+                VAssert("群体冲锋：3 只一起进 → 敢进火力区（人多不怕）",
+                    () => actCrowd != null && actCrowd.Kind == AiActionKind.Move
+                        && AiTactics.ManhattanDist(actCrowd.MovePos.Value, cannon.GridPos) <= 3);
+
+                VAssert("CrowdDilution：3 只可进入 → 稀释 1/3",
+                    () => AiTactics.CrowdDilution(dataCrowd, AiTactics.ComputeThreatCells(map, new List<Unit> { cannon })) == 1f / 3f);
             }
 
             {
@@ -5086,13 +5164,15 @@ public partial class TestRunner : Node
 
     /// <summary>AI 战场快照（AI 效用决策端到端测试用）</summary>
     private static AiBattleData MakeAiData(System.Collections.Generic.Dictionary<Vector2I, Cell> map, IEnumerable<Unit> players,
-        AiLevel level = AiLevel.标准, HashSet<Vector2I> spawn = null, Unit focus = null, Vector2I? prev = null)
+        AiLevel level = AiLevel.标准, HashSet<Vector2I> spawn = null, Unit focus = null, Vector2I? prev = null,
+        IEnumerable<Unit> enemies = null)
     {
         var list = players.Where(p => p != null).ToList();
         return new AiBattleData
         {
             Map = map,
             PlayerUnits = list,
+            EnemyUnits = enemies?.Where(e => e != null).ToList(),
             PlayerDoors = list.Where(p => p.Type == UnitType.门).ToList(),
             SpawnCells = spawn,
             FocusTarget = focus,

@@ -335,6 +335,8 @@ public partial class UnitManager : Node
     /// </summary>
     public bool MoveUnit(Unit unit, Vector2I targetGridPos)
     {
+        if (unit == null || unit.IsDead) return false;
+
         if (!MapManager.Instance.TryGetCell(targetGridPos, out Cell targetCell))
         {
             GD.PrintErr($"UnitManager: 目标格子 {targetGridPos} 不存在");
@@ -357,6 +359,15 @@ public partial class UnitManager : Node
         if (MapManager.Instance.TryGetCell(unit.GridPos, out Cell oldCell))
             ReleaseCell(oldCell, unit, targetCell);
 
+        // 离开被动可能致死亡（环境"离开时"伤害）：死亡则放弃本次移动——否则下方会把尸体
+        // 绑到新格子（格子永久被占/封死，且单位已从 ActiveUnits 移除不会再有 ReleaseCell），
+        // 并让死单位继续触发进入/移动事件，残留场上
+        if (unit.IsDead)
+        {
+            GD.Print($"UnitManager: {unit.UnitData?.UnitName} 移动途中死亡（离开被动），取消移动至 {targetGridPos}");
+            return false;
+        }
+
         // 绑定新格子（占用从空→有，触发环境"进入"被动；SourceCell=旧格，用于同环境移动判断）
         unit.GridPos = targetGridPos;
         targetCell.OccupyingUnit = unit;
@@ -365,6 +376,10 @@ public partial class UnitManager : Node
         EventBus.Instance?.Fire(EventType.OnUnitEnterCell,
             new Context { TargetCell = targetCell, TargetUnit = unit, SourceUnit = unit, SourceTeam = unit.Team, SourceCell = oldCell },
             instigator: unit);
+
+        // 进入被动同样可能致死亡：DestroyUnit 已释放新格并移除单位，放弃收尾（不再触发
+        // OnUnitMoved/移动音效，调用方经 false 跳过扣 AP 与后续事件）
+        if (unit.IsDead) return false;
 
         unit.UpdateUnit();
         OnUnitMoved?.Invoke(unit);
@@ -383,6 +398,13 @@ public partial class UnitManager : Node
         // 清理旧格子（释放占用 + 触发环境"离开"被动；destCell=目标格，用于同环境移动判断）
         if (MapManager.Instance.TryGetCell(unit.GridPos, out Cell oldCell))
             ReleaseCell(oldCell, unit, newCell);
+
+        // 离开被动可能致死亡：死亡则放弃传送（否则尸体绑到新格子永久残留）
+        if (unit.IsDead)
+        {
+            GD.Print($"UnitManager: {unit.UnitData?.UnitName} 传送途中死亡（离开被动），取消传送至 {targetGridPos}");
+            return;
+        }
 
         // 绑定新格子（占用从空→有，触发环境"进入"被动；SourceCell=旧格，用于同环境移动判断）
         if (newCell != null)
