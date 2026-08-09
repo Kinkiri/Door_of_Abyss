@@ -38,7 +38,7 @@ metadata/_custom_type_script = "uid://mdui273vel7y"
 
 [sub_resource type="Resource" id="Resource_1xlik"]
 script = ExtResource("3_232jq")
-Value = 2
+Value = 3
 metadata/_custom_type_script = "uid://bn4m8splfe3lb"
 
 [sub_resource type="Resource" id="Resource_dhd0b"]

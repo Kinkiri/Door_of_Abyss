@@ -223,6 +223,7 @@ text = "退出游戏"
 flat = true
 
 [node name="Version" type="Label" parent="." unique_id=1246043176]
+visible = false
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0

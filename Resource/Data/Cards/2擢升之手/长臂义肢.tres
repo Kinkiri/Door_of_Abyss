@@ -18,7 +18,6 @@ script = ExtResource("3_kr350")
 TargetStat = 4
 Value = 1
 RequiredTags = null
-CurrentAPOnly = true
 metadata/_custom_type_script = "uid://qlng65nfa7th"
 
 [sub_resource type="Resource" id="Resource_c622w"]
@@ -31,7 +30,7 @@ metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
 script = ExtResource("6_0gdwv")
 EquipmentID = "长臂义肢"
 EquipmentName = "长臂义肢"
-Description = "+2义肢，+1当前行动点"
+Description = "+2义肢，+1行动点上限"
 Icon = ExtResource("2_16mgd")
 AttackBonus = 0
 MaxHealthBonus = 0

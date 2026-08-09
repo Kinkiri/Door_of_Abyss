@@ -35,14 +35,14 @@ public static class AiTactics
     // 靠近目标（门）权重 2026-08-09 提高：改为"相对当前格"的接近奖励——每接近 1 步 +3000（绝对正收益），
     // 不再用绝对距离惩罚（远处接近 1 步仍是负分会把前期弱单位钉死在原地/只能后退）。
     // 2026-08-09 再提高 2000→3000：推进/压门更主导（优先级：靠近门 > 躲避伤害 > 卡位）。
-    private const int ApproachPerStep = 3000;        // 靠近目标每步价值（优先级：靠近门 > 躲避伤害）
-    private const int FireZonePenalty = 6000;        // 玩家火力区（躲避伤害）
+    private const int ApproachPerStep = 4000;        // 靠近目标每步价值（优先级：靠近门 > 躲避伤害）
+    private const int FireZonePenalty = 5000;        // 玩家火力区（躲避伤害）
     private const int DodgeBonus = 6000;             // 逃离火力区奖励（当前格在火力区 → 候选格不在 → +6000；**不随稀有度缩放**——
                                                      //   能跑就跑是所有单位的基本生存行为，2026-08-09 修复"站在火力区能跑不跑站着挨打"；
                                                      //   而"进入火力区的代价"才按惜命系数缩放（炮灰敢进，惜命不进））
     private const int SpawnCellPenalty = 6000;       // 刷怪红格（避开援军刷新格）
-    private const int PredictedThreatPenalty = 4000; // 预测威胁区（玩家移动后火力）
-    private const int PredictedLethalPenalty = 30000;// 预测被击杀格（玩家移动后能一击反杀）
+    private const int PredictedThreatPenalty = 2000; // 预测威胁区（玩家移动后火力）
+    private const int PredictedLethalPenalty = 10000;// 预测被击杀格（玩家移动后能一击反杀）
     // 卡位（2026-08-09 按策划语义重做：压制走位 + 贴身堵，替换旧的"站玩家移动可达格"）：
     // 2026-08-09 降权：压制 4000→2000、堵 3000→1500——推进/攻击更主导（卡位只是次要走位）。
     // 炮灰（初级/中级）完全忽略卡位奖励（直接往前冲，不停环上、不堵）。
@@ -50,7 +50,7 @@ public static class AiTactics
                                                      //   ——下回合玩家想打必须先移动，浪费行动点（攻击不到/攻击完后的走位）。
                                                      //   条件式给分：仅在"到达压制位"时（当前不在环上）——环上横移无奖励，
                                                      //   否则敌人会永远卡在环上与远程单位对峙（2026-08-09 修复）
-    private const int AdjacentBlockBonus = 1500;     // 贴身堵：逃不掉（当前在火力区）时站玩家身边 4 格，缩玩家移动范围；
+    private const int AdjacentBlockBonus = 1000;     // 贴身堵：逃不掉（当前在火力区）时站玩家身边 4 格，缩玩家移动范围；
                                                      //   堵格不比原地更危险（都在挨打）→ 豁免火力区惩罚
     private const int DoorLookaheadBonus = 15000;    // 两步前瞻：下回合够得着门
     private const int KillLookaheadBonus = 6000;     // 两步前瞻：下回合可击杀目标
