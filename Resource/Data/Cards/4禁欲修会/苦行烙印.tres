@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://08b1d3f5h7ka"]
+
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_card"]
+[ext_resource type="Script" uid="uid://cw05o0gm3yq73" path="res://Scripts/Data/Actions/TransformUnitAction.cs" id="2_transform"]
+[ext_resource type="Script" uid="uid://s84ks60onupf" path="res://Scripts/Data/ValueSource/UnitStatValue.cs" id="3_8457m"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_shape"]
+[ext_resource type="Script" uid="uid://bn4m8splfe3lb" path="res://Scripts/Data/ValueSource/ConstantValue.cs" id="4_jysal"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="4_team"]
+[ext_resource type="Script" uid="uid://brotjf8m2qpfx" path="res://Scripts/Data/Conditions/CompareCondition.cs" id="5_5lfh3"]
+[ext_resource type="Resource" uid="uid://b5d7gah2j4l6" path="res://Resource/Data/Units/4禁欲修会/苦行者.tres" id="5_unitdata"]
+
+[sub_resource type="Resource" id="Resource_transform"]
+script = ExtResource("2_transform")
+UnitData = ExtResource("5_unitdata")
+metadata/_custom_type_script = "uid://cw05o0gm3yq73"
+
+[sub_resource type="Resource" id="Resource_v5i5f"]
+script = ExtResource("3_8457m")
+Stat = 1
+metadata/_custom_type_script = "uid://s84ks60onupf"
+
+[sub_resource type="Resource" id="Resource_8457m"]
+script = ExtResource("4_jysal")
+Value = 6
+metadata/_custom_type_script = "uid://bn4m8splfe3lb"
+
+[sub_resource type="Resource" id="Resource_gj88s"]
+script = ExtResource("5_5lfh3")
+Left = SubResource("Resource_v5i5f")
+Op = 1
+Right = SubResource("Resource_8457m")
+metadata/_custom_type_script = "uid://brotjf8m2qpfx"
+
+[sub_resource type="Resource" id="Resource_tf_shape"]
+script = ExtResource("3_shape")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_tf_team"]
+script = ExtResource("4_team")
+Team = 2
+
+[resource]
+script = ExtResource("1_card")
+CardID = "苦行烙印"
+CardName = "苦行烙印"
+Description = "令一名血量小于7的敌方单位变身为苦行者（2/1路障，不可移动攻击）"
+Type = 1
+World = 4
+Faction = 5
+Tags = Array[int]([10])
+Rarity = 2
+Cost = 3
+TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_team")])
+Conditions = Array[Object]([SubResource("Resource_gj88s")])
+Actions = Array[Object]([SubResource("Resource_transform")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

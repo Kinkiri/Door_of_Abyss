@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="EnvironmentCardData" format=3 uid="uid://sat1v3x507ba"]
+
+[ext_resource type="Script" uid="uid://b2pjt30c5oyw2" path="res://Scripts/Data/Card/EnvironmentCardData.cs" id="1_card"]
+[ext_resource type="Script" uid="uid://dslk7uvnawnj5" path="res://Scripts/Data/Actions/ApplyEnvironmentAction.cs" id="2_action"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_shape"]
+[ext_resource type="Resource" uid="uid://q4s6u8w1y3a5" path="res://Resource/Data/Environments/凛冬祭坛.tres" id="4_env"]
+
+[sub_resource type="Resource" id="Resource_action"]
+script = ExtResource("2_action")
+EnvironmentData = ExtResource("4_env")
+metadata/_custom_type_script = "uid://dslk7uvnawnj5"
+
+[sub_resource type="Resource" id="Resource_shape"]
+script = ExtResource("3_shape")
+Shape = 3
+Kind = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[resource]
+script = ExtResource("1_card")
+EnvironmentData = ExtResource("4_env")
+CardID = "凛冬祭坛"
+CardName = "凛冬祭坛"
+Description = "菱形1格铺上凛冬祭坛：单位进入时受到2点伤害"
+Type = 2
+World = 4
+Faction = 5
+Tags = Array[int]([10])
+Rarity = 1
+Cost = 3
+TargetFilters = Array[Object]([SubResource("Resource_shape")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_action")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://b2pjt30c5oyw2"

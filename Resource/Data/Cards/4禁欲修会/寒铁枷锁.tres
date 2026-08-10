@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="EquipmentCardData" format=3 uid="uid://c3e5g7jak2m4"]
+
+[ext_resource type="Script" uid="uid://4ksuiqod0x18" path="res://Scripts/Data/Card/EquipmentCardData.cs" id="1_card"]
+[ext_resource type="Script" uid="uid://ci5o1ouk3jcsf" path="res://Scripts/Data/Actions/EquipAction.cs" id="2_equip"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_shape"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="4_team"]
+[ext_resource type="Resource" uid="uid://e7hai2k4m6o8" path="res://Resource/Data/Equipment/寒铁枷锁.tres" id="5_equipdata"]
+
+[sub_resource type="Resource" id="Resource_equip"]
+script = ExtResource("2_equip")
+metadata/_custom_type_script = "uid://ci5o1ouk3jcsf"
+
+[sub_resource type="Resource" id="Resource_tf_shape"]
+script = ExtResource("3_shape")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_tf_team"]
+script = ExtResource("4_team")
+Team = 2
+
+[resource]
+script = ExtResource("1_card")
+EquipmentData = ExtResource("5_equipdata")
+CardID = "寒铁枷锁"
+CardName = "寒铁枷锁"
+Description = "为一名敌方单位戴上枷锁：攻击力-2、体力-1（装备在敌人身上）"
+Type = 3
+World = 4
+Faction = 5
+Tags = Array[int]([10])
+Cost = 2
+TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_team")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_equip")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://4ksuiqod0x18"

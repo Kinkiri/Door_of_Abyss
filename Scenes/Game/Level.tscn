@@ -17,7 +17,6 @@
 [ext_resource type="Script" uid="uid://8mt8agyetpu1" path="res://Scripts/View/MapView.cs" id="16_eklyj"]
 [ext_resource type="Resource" uid="uid://b63yiwk0fnylq" path="res://Resource/Data/Blocks/测试用白块.tres" id="17_3fxlp"]
 [ext_resource type="Resource" uid="uid://bnlkpwal7w4ii" path="res://Resource/Data/Blocks/测试用灰块.tres" id="18_0diw8"]
-[ext_resource type="Texture2D" uid="uid://s311l16ojlgo" path="res://Resource/Art/TestMap.png" id="19_pu45w"]
 [ext_resource type="TileSet" uid="uid://bfmyajhvlc7gk" path="res://Resource/Data/MapSet/UIMapSet.tres" id="20_y0p6s"]
 [ext_resource type="Script" uid="uid://bg5vgujssuhmn" path="res://Scripts/View/HandPanel.cs" id="21_f2v14"]
 [ext_resource type="PackedScene" uid="uid://mwok0rnckmre" path="res://Scenes/Prefabs/卡牌视图.tscn" id="22_w3f5c"]
@@ -39,15 +38,24 @@
 [ext_resource type="Script" uid="uid://c8mc7qbm57bc2" path="res://Scripts/View/HintView.cs" id="39_hintview"]
 [ext_resource type="PackedScene" uid="uid://bf404lw2x420m" path="res://Scenes/Prefabs/提示面板.tscn" id="40_hintpanel"]
 [ext_resource type="Script" uid="uid://djhdjwioujnve" path="res://Scripts/View/PauseButton.cs" id="41_pausebtn"]
+[ext_resource type="Resource" uid="uid://f2b4d6f8h1j3" path="res://Resource/Data/Blocks/霜面.tres" id="42_frost"]
+[ext_resource type="Resource" uid="uid://h4j6l8n1p3r5" path="res://Resource/Data/Blocks/冰墙.tres" id="43_icewall"]
+[ext_resource type="Texture2D" uid="uid://jjlt3c5wep40" path="res://Resource/Art/霜原Map.png" id="44_frostmap"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8od7v"]
-texture = ExtResource("19_pu45w")
+texture = ExtResource("44_frostmap")
 0:0/size_in_atlas = Vector2i(8, 8)
 0:0/0 = 0
 0:0/0/custom_data_0 = ExtResource("17_3fxlp")
 8:0/size_in_atlas = Vector2i(8, 8)
 8:0/0 = 0
 8:0/0/custom_data_0 = ExtResource("18_0diw8")
+16:0/size_in_atlas = Vector2i(8, 8)
+16:0/0 = 0
+16:0/0/custom_data_0 = ExtResource("42_frost")
+24:0/size_in_atlas = Vector2i(8, 8)
+24:0/0 = 0
+24:0/0/custom_data_0 = ExtResource("43_icewall")
 
 [sub_resource type="TileSet" id="TileSet_fw11u"]
 tile_size = Vector2i(128, 128)

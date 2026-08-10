@@ -1,0 +1,87 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://2c4e6g8i1k3"]
+
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_prefab"]
+[ext_resource type="Script" uid="uid://s84ks60onupf" path="res://Scripts/Data/ValueSource/UnitStatValue.cs" id="2_klxfv"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="2_script"]
+[ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="2_vukxu"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_effect"]
+[ext_resource type="Script" uid="uid://bn4m8splfe3lb" path="res://Scripts/Data/ValueSource/ConstantValue.cs" id="3_vukxu"]
+[ext_resource type="Script" uid="uid://brotjf8m2qpfx" path="res://Scripts/Data/Conditions/CompareCondition.cs" id="4_7rueg"]
+[ext_resource type="Script" uid="uid://dvi5cm6ic86ev" path="res://Scripts/Data/Actions/ModifyCostAction.cs" id="4_cost"]
+[ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="6_u3ksu"]
+
+[sub_resource type="Resource" id="Resource_cost"]
+script = ExtResource("4_cost")
+Value = 1
+metadata/_custom_type_script = "uid://dvi5cm6ic86ev"
+
+[sub_resource type="Resource" id="Resource_72y3q"]
+script = ExtResource("2_vukxu")
+Value = -1
+RequiredTags = null
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_c8kwe"]
+script = ExtResource("2_klxfv")
+Unit = 0
+metadata/_custom_type_script = "uid://s84ks60onupf"
+
+[sub_resource type="Resource" id="Resource_x046v"]
+script = ExtResource("3_vukxu")
+metadata/_custom_type_script = "uid://bn4m8splfe3lb"
+
+[sub_resource type="Resource" id="Resource_cljtg"]
+script = ExtResource("4_7rueg")
+Left = SubResource("Resource_c8kwe")
+Right = SubResource("Resource_x046v")
+metadata/_custom_type_script = "uid://brotjf8m2qpfx"
+
+[sub_resource type="Resource" id="Resource_effect"]
+script = ExtResource("3_effect")
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_cost"), SubResource("Resource_72y3q")])
+Conditions = Array[Object]([SubResource("Resource_cljtg")])
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[sub_resource type="Resource" id="Resource_ns5bg"]
+script = ExtResource("6_u3ksu")
+Value = 100000
+metadata/_custom_type_script = "uid://bcjncmte44un1"
+
+[sub_resource type="Resource" id="Resource_du0yc"]
+script = ExtResource("2_klxfv")
+Unit = 0
+metadata/_custom_type_script = "uid://s84ks60onupf"
+
+[sub_resource type="Resource" id="Resource_bogxv"]
+script = ExtResource("3_vukxu")
+metadata/_custom_type_script = "uid://bn4m8splfe3lb"
+
+[sub_resource type="Resource" id="Resource_m4hfk"]
+script = ExtResource("4_7rueg")
+Left = SubResource("Resource_du0yc")
+Op = 0
+Right = SubResource("Resource_bogxv")
+metadata/_custom_type_script = "uid://brotjf8m2qpfx"
+
+[sub_resource type="Resource" id="Resource_wny6c"]
+script = ExtResource("3_effect")
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_ns5bg")])
+Conditions = Array[Object]([SubResource("Resource_m4hfk")])
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("2_script")
+UnitID = "苦行信众"
+UnitName = "苦行信众"
+World = 4
+Faction = 5
+Tags = Array[int]([10])
+Rarity = 1
+AttackPower = 3
+HealthPoints = 4
+Description = "每回合开始：若攻击力不小于0，则永久-1攻击力并获得1点费用，否则自杀"
+UnitPrefab = ExtResource("1_prefab")
+PassiveEffects = Array[Object]([SubResource("Resource_effect"), SubResource("Resource_wny6c")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

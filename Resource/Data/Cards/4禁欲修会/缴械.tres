@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://fag1i3k5m7pa"]
+
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_card"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_buff"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_shape"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="4_team"]
+[ext_resource type="Resource" uid="uid://r5g7j3k8l2m4" path="res://Resource/Data/Buff/缴械.tres" id="5_buffdata"]
+
+[sub_resource type="Resource" id="Resource_buff"]
+script = ExtResource("2_buff")
+BuffData = ExtResource("5_buffdata")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_tf_shape"]
+script = ExtResource("3_shape")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_tf_team"]
+script = ExtResource("4_team")
+Team = 2
+
+[resource]
+script = ExtResource("1_card")
+CardID = "缴械"
+CardName = "缴械"
+Description = "令一名敌方单位本回合攻击力-5"
+Type = 1
+World = 4
+Faction = 5
+Tags = Array[int]([10])
+TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_team")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_buff")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="EnvironmentCardData" format=3 uid="uid://x5z8b2d4f6h8j"]
+
+[ext_resource type="Script" uid="uid://b2pjt30c5oyw2" path="res://Scripts/Data/Card/EnvironmentCardData.cs" id="1_card"]
+[ext_resource type="Script" uid="uid://dslk7uvnawnj5" path="res://Scripts/Data/Actions/ApplyEnvironmentAction.cs" id="2_action"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_shape"]
+[ext_resource type="Script" uid="uid://b30w3vmxtskgt" path="res://Scripts/Data/Shapes/RowShape.cs" id="4_row"]
+[ext_resource type="Resource" uid="uid://m3n7p9r2t4v6b" path="res://Resource/Data/Environments/超频车间.tres" id="5_env"]
+
+[sub_resource type="Resource" id="Resource_row"]
+script = ExtResource("4_row")
+Length = 2
+metadata/_custom_type_script = "uid://b30w3vmxtskgt"
+
+[sub_resource type="Resource" id="Resource_shape"]
+script = ExtResource("3_shape")
+CustomShape = SubResource("Resource_row")
+Kind = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_action"]
+script = ExtResource("2_action")
+EnvironmentData = ExtResource("5_env")
+metadata/_custom_type_script = "uid://dslk7uvnawnj5"
+
+[resource]
+script = ExtResource("1_card")
+EnvironmentData = ExtResource("5_env")
+CardID = "超频车间"
+CardName = "超频车间"
+Description = "放置一个5×1的超频车间。当此范围内的己方单位获得义肢时，令其额外获得义肢1"
+Type = 2
+World = 1
+Faction = 2
+Rarity = 0
+Tags = Array[int]([0])
+Cost = 3
+TargetFilters = Array[Object]([SubResource("Resource_shape")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_action")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://b2pjt30c5oyw2"

@@ -226,7 +226,8 @@ Scripts/                         ~1.7w 行 C#
 ├── Audio/
 │   └── AudioManager.cs          音频管理器（Autoload：总线/BGM/SFX 池/事件驱动响应）
 ├── Tests/
-│   └── TestRunner.cs            全面系统性测试（545 项，场景内集成运行）
+│   ├── TestRunner.cs            全面系统性测试（575 项，场景内集成运行）
+│   └── WeakenDeckTests.cs       凛冬戒律卡组专项测试（170 项，场景内集成运行，2026-08-10）
 ├── Tools/
 │   └── TextToResourceImporter.cs  文本转 .tres 工具（EditorScript）
 └── Utils/
@@ -394,7 +395,7 @@ public class Context {
 
 - **选卡**：左右布局——左侧卡牌库全量滚动列表（程序化生成，**懒加载 CardLibrary**——首次打开才加载全部卡牌），每行 卡名/费用/数量"n/3" + [-] [+]；**点击行选中**（白字高亮）在右侧详情区查看完整卡牌信息（名称/类型·稀有度/费用/描述/目标形状/标签/世界势力 + 单位卡的召唤单位属性·被动数、环境卡的持续与移动消耗修正、装备卡的五项加成），仿战斗内 UnitInfoPanel；**单卡最多 3 张、卡组最多 30 张**，超出对应按钮置灰；底部状态条"卡组 N/30 张"，其下实时显示当前卡组构成（"名字×数量"紧凑列表，仿选关面板 Summarize，数量 1 不加后缀）
 - **持久化**：变更即实时写盘 `user://deck.cfg`（`PlayerDeckSave` 静态类，存 CardID 列表，读取时经 CardLibrary 解析、无效 ID 静默跳过）；关闭面板即完成配置，重开面板读取上次配置
-- **生效优先级**（`BattleManager.FinishGameStart`）：关卡固定卡组 `LevelDeck` > 玩家配置卡组（user 存档）> 编辑器默认卡组 `PlayerData.PlayerDeck` > 默认随机。当前 11 关均配置了 LevelDeck，玩家配置卡组对无固定卡组的关卡生效
+- **生效优先级**（`BattleManager.FinishGameStart`）：关卡固定卡组 `LevelDeck` > 玩家配置卡组（user 存档）> 编辑器默认卡组 `PlayerData.PlayerDeck` > 默认随机。当前 17 关均配置了 LevelDeck（11 关原有 + 2-1~2-6 霜原篇），玩家配置卡组对无固定卡组的关卡生效
 - **架构**：`Scripts/Data/PlayerDeckSave.cs` 纯静态 IO（对齐 LevelSelection/PathFinder 工具类风格），面板只读写存档不碰规则层；战斗侧仅 FinishGameStart 取卡组时多一步查档
 
 ### 波次刷怪预告
@@ -685,7 +686,7 @@ MaxHP 规则：施加时当前 HP 随上限**同步增加相同值**（只增不
 |---|---|---|
 | ApplyBuffAction | BuffData, InitialStacks, ValueSource | 施加 Buff。**遍历 `TargetUnits` 支持多目标**（如 Shape=All）。`ValueSource` 为动态叠层值源（设置后覆盖 `InitialStacks`，如亡语"转移与死者相同的层数"） |
 | ModifyBuffAction | BuffID, TurnsDelta, StacksDelta, WearMode | 修改回合/叠层。**回合/叠层最小减到 0，不能为负**；`RemainingTurns=-1`（永久 Buff）忽略回合修改，其他非法负值警告并按 0 处理；叠层归零移除。**`WearMode=true`（磨损模式）：减层只消耗"行动开始快照（`Buff.StacksAtActionStart`）内的旧层"**——本次行动中新增的层不因本次行动损耗（如"攻击后获得义肢"不被本次攻击磨损） |
-| RemoveBuffAction | BuffID | 无条件整个移除（驱散） |
+| RemoveBuffAction | BuffID | 无条件整个移除（驱散）。**支持多目标**（TargetUnits 优先、TargetUnit 兜底，2026-08-10 与 ModifyStatAction 对齐）——环境被动 filter 路径（EventBus 置 TargetUnit=null）下可批量驱散，禁魔领域即依赖此路径 |
 | **RemoveEquipmentAction** | EquipmentID | 移除目标单位上指定 ID 的装备（驱散）。属性加成还原（可逆）+ 取消被动订阅；单位同一时间只能装备一件，ID 不匹配或未装备时不动作 |
 | **ModifyDamageAction** | Delta, ValueSource | 修改本次伤害事件的伤害量（正=加伤，负=减伤）。配合**攻击前/受击前**事件使用：攻击者挂加伤（`OnBeforeAttack`）、受击者挂减伤（`OnBeforeTakeDamage`），作用于各自 `ctx.DamageModifier`，`DamageAction` 结算时两侧累加，多个修饰被动可叠加。`ValueSource` 动态增量覆盖 `Delta`（如 `FormulaValue(Mul, PendingDamageValue, ConstantValue(-1))` 把伤害清零 → 致命免伤） |
 
@@ -1103,6 +1104,7 @@ OnEnterGameStart
 ## 10. 测试系统
 
 `Scripts/Tests/TestRunner.cs` - 全面系统性单元测试，直接在场景中运行。
+`Scripts/Tests/WeakenDeckTests.cs` - **凛冬戒律卡组专项测试**（2026-08-10，170 项，同 TestRunner 模式挂场景节点运行）：卡组 21 张卡/Buff/环境/装备/单位加载校验、削弱 Buff 机制（苦修/缴械/疲惫/禁足/枷锁/腐朽）、负面装备、变羊、产费单位（苦行信众回合开始 +1 费、冰晶祭坛攻击时 +2 费+抽1）、Boss 四技能、环境被动、单位被动。**已知既有失败**：TestRunner 的 3 个 AI 数值断言（预测威胁 4000/预测被击杀 30000/顶级惜命 1.5）与 AiTactics 当前常量（2000/10000/1.0，2026-08-09 "调整AI参数"提交后未同步）不符。
 
 **用法：** 在场景根节点加 Node，挂载 TestRunner.cs，**默认不运行**（`RunTestsOnReady=false`，防止测试副作用污染战斗全局状态，如修改全局费用）；需要回归时在 Inspector 勾选 `RunTestsOnReady` 后运行。**575 项用例**覆盖：
 - ValueSource 运算（6 种公式 + 嵌套）
@@ -1877,3 +1879,50 @@ Hints = [HintData{TriggerRound=0, Message="在蓝色高亮区域内点击格子�
 **决策日志（调试）**：`EnemyAI` 节点 Inspector 勾选 `DebugDecisions` 后输出 `[AI][决策]` 前缀的完整决策过程日志——单位信息/战场摘要（火力区/压制位/贴身位/刷怪格统计）、攻击候选与分数（含送死剔除/集火加成）、移动候选逐格评分分解（攻击/接近/压制/逃离/堵/火力/刷怪/前瞻各项）、最终决策理由（攻击/移动/让位/逃跑/横移/留点）。通过 `AiTactics.DebugLog` 静态钩子输出（默认 null，测试不订阅 → 纯逻辑可单测）。
 
 **玩家覆盖**：设置面板「游戏」页可全局覆盖（跟随关卡/简单/标准/狡诈，`GameSettings` 读写 `settings.cfg` 的 `game` 段）——跟随关卡=用 `LevelData.AiLevel`，否则玩家选择优先；战斗中修改立即重启当前关卡生效。
+
+---
+
+## 19. 霜原篇战役（禁欲修会，2026-08-10 新增）
+
+### 19.1 新势力
+
+| 项 | 值 |
+|---|---|
+| World | **霜原**（枚举值 4，追加于末尾，不影响存量） |
+| Faction | **禁欲修会**（枚举值 5）：以"克己戒欲"为教义的苦修组织，用冰霜与戒律削弱/限制敌人 |
+| Tag | **冰霜**（枚举值 10） |
+
+### 19.2 关卡（2-1 ~ 2-6，难度渐进）
+
+| 关卡 | AI | 特色 |
+|---|---|---|
+| 2-1 霜原朝圣 | 简单 | 教学入门（削弱机制引导） |
+| 2-2 冰隙防线 | 标准 | 冰墙裂隙地形，堵口战术 |
+| 2-3 凛冬猎场 | 标准 | **小游戏关**：每回合刷怪、三面涌入的猎犬海（49 敌） |
+| 2-4 戒律回廊 | 狡诈 | 增益流敌人（苦行长老全场强壮）→ 驱散成为胜负手 |
+| 2-5 修会前庭 | 狡诈 | 三路轮换 + 全部精英混合 |
+| 2-6 苦行圣殿 | 狡诈 | **Boss 关**：苦行大主教第 2 回合从顶部登场 |
+
+全部关卡固定卡组《凛冬戒律》（21 张）。
+
+### 19.3 敌人专属单位（数值约为玩家 1 倍）
+
+8 个：霜原苦工 / 苦修猎犬 / 执鞭者 / 霜缚祭司 / 苦行长老 / 惩戒骑士 / 凛冬巨人 / **苦行大主教（Boss）**。
+Boss 四技能：**苦行光环**（回合开始全场玩家 ATK-1）、**苦行召唤**（回合结束 50% 召唤苦工）、**苦行反噬**（受击 40% 给攻击者枷锁，永久）、**苦行束缚**（登场自缚束缚 6 层=前 6 回合不移动，每回合自动解 1 层）。敌人被动全部复用玩家 Buff 体系（苦修/强壮/泥泞/枷锁/束缚）。
+
+### 19.4 新地形与产费单位
+
+- **地形**：`BlockData` 霜面（MoveCost 1）/ 冰墙（不可通过）+ `Resource/Art/霜原Map.png`（512×128 扩展纹理）→ Level.tscn TileSet 新增 16:0/24:0 瓦片；6 张不规则手写地图（锯齿轮廓+空洞+触手，仿破碎之地风格）
+- **产费单位**（玩家经济）：**苦行信众**（2 费，回合开始 +1 费）、**冰晶祭坛**（4 费，攻击敌方时 +2 费 + 抽 1）——`ModifyCostAction` 修改玩家全局费用（clamp [0, MaxCost]）
+- **新 Buff**：苦修 / 疲惫 / 缴械 / 禁足（体力-9）/ 枷锁 / 腐朽 / 泥泞 / 束缚（体力-99/层 + 每回合自减 1 层）
+
+### 19.5 代码变动汇总
+
+| 文件 | 变动 |
+|---|---|
+| `Scripts/Enum/World.cs` / `Faction.cs` / `Tag.cs` | 追加霜原(4) / 禁欲修会(5) / 冰霜(10) |
+| `Scripts/Data/Actions/RemoveBuffAction.cs` | 支持 TargetUnits 多目标（与 ModifyStatAction 对齐，EventBus filter 路径可批量驱散） |
+| `Scripts/Tests/WeakenDeckTests.cs` | 新增卡组专项测试（170 项） |
+| `Scenes/Game/Level.tscn` | TileSet 新增霜面/冰墙瓦片（16:0/24:0），纹理替换为霜原Map.png |
+
+设计文档：`docs/卡组设计-凛冬戒律.md`、`docs/关卡设计-霜原篇.md`。

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EquipmentData" format=3 uid="uid://e7hai2k4m6o8"]
+
+[ext_resource type="Script" uid="uid://tmoxnw3avry4" path="res://Scripts/Data/Units/EquipmentData.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+EquipmentID = "寒铁枷锁"
+EquipmentName = "寒铁枷锁"
+Description = "负面装备：攻击力-2、体力-1（装备给敌方单位的枷锁）"
+AttackBonus = -2
+MaxHealthBonus = 0
+AttackDistanceBonus = 0
+StaminaBonus = -1
+ActionPointBonus = 0
+OnApplyActions = null
+PassiveEffects = null
+metadata/_custom_type_script = "uid://tmoxnw3avry4"

@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="EnvironmentData" format=3 uid="uid://m3n7p9r2t4v6b"]
+
+[ext_resource type="Script" uid="uid://lxjpnv33tlmg" path="res://Scripts/Data/EnvironmentData.cs" id="1_script"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_effect"]
+[ext_resource type="Script" uid="uid://bubokmjt34mm" path="res://Scripts/Data/Actions/ModifyBuffAction.cs" id="3_action"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="4_shape"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="5_team"]
+
+[sub_resource type="Resource" id="Resource_buff"]
+script = ExtResource("3_action")
+BuffID = "义肢"
+StacksDelta = 1
+metadata/_custom_type_script = "uid://bubokmjt34mm"
+
+[sub_resource type="Resource" id="Resource_shape"]
+script = ExtResource("4_shape")
+Shape = 3
+AreaRange = 0
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_team"]
+script = ExtResource("5_team")
+Team = 1
+
+[sub_resource type="Resource" id="Resource_effect"]
+script = ExtResource("2_effect")
+TriggerEvent = 6
+TargetFilters = Array[Object]([SubResource("Resource_shape"), SubResource("Resource_team")])
+MaxTriggerCount = 0
+Actions = Array[Object]([SubResource("Resource_buff")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("1_script")
+EnvironmentID = "超频车间"
+EnvironmentName = "超频车间"
+Description = "当此范围内的己方单位获得义肢时，令其额外获得义肢1"
+AtlasCoords = Vector2i(2, 0)
+OnApplyActions = null
+OnExpireActions = null
+OnRoundEndActions = null
+PassiveEffects = Array[Object]([SubResource("Resource_effect")])
+metadata/_custom_type_script = "uid://lxjpnv33tlmg"

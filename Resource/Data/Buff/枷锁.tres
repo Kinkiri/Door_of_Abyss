@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="BuffData" format=3 uid="uid://yac1e3g5h7j2"]
+
+[ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="1_modify"]
+[ext_resource type="Script" uid="uid://b3sdoj1kcep0a" path="res://Scripts/Data/BuffData.cs" id="2_buff"]
+
+[sub_resource type="Resource" id="Resource_atk"]
+script = ExtResource("1_modify")
+Value = -1
+RequiredTags = null
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_sta"]
+script = ExtResource("1_modify")
+TargetStat = 2
+Value = -1
+RequiredTags = null
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[resource]
+script = ExtResource("2_buff")
+BuffID = "枷锁"
+BuffName = "枷锁"
+Description = "每层攻击力-1、体力-1（永久）"
+Duration = -1
+MaxStack = 10
+OnApplyActions = Array[Object]([SubResource("Resource_atk"), SubResource("Resource_sta")])
+OnExpireActions = null
+OnRoundEndActions = null
+PassiveEffects = null
+metadata/_custom_type_script = "uid://b3sdoj1kcep0a"

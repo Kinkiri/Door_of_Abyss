@@ -1,0 +1,119 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://s7uav1x305b8"]
+
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_prefab"]
+[ext_resource type="Resource" uid="uid://yac1e3g5h7j2" path="res://Resource/Data/Buff/枷锁.tres" id="1_vlsm2"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="2_script"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_effect"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="4_buff"]
+[ext_resource type="Script" uid="uid://b7wcd5pcj3rqs" path="res://Scripts/Data/Conditions/RandomCondition.cs" id="5_rand"]
+[ext_resource type="Script" uid="uid://d30a56l3sh3q0" path="res://Scripts/Data/Actions/SummonUnitAction.cs" id="6_summon"]
+[ext_resource type="Script" uid="uid://ds5gtynjc6rie" path="res://Scripts/Data/ValueSource/Cell/RandomCellValue.cs" id="7_randomcell"]
+[ext_resource type="Script" uid="uid://60td6vwf41d0" path="res://Scripts/Data/ValueSource/Cell/UnitCellValue.cs" id="8_unitcell"]
+[ext_resource type="Script" uid="uid://p8qt55fv78fh" path="res://Scripts/Data/Shapes/DiamondShape.cs" id="9_diamond"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="10_shape"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="11_team"]
+[ext_resource type="Resource" uid="uid://c82faen18xrkf" path="res://Resource/Data/Buff/苦修.tres" id="12_buffdata"]
+[ext_resource type="Resource" uid="uid://brywt80ogubcp" path="res://Resource/Data/Buff/束缚.tres" id="13_h854w"]
+[ext_resource type="Resource" uid="uid://d2f4h6j8l1n3" path="res://Resource/Data/Units/4禁欲修会/敌方/霜原苦工.tres" id="13_worker"]
+
+[sub_resource type="Resource" id="Resource_buff"]
+script = ExtResource("4_buff")
+BuffData = ExtResource("12_buffdata")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_shape"]
+script = ExtResource("10_shape")
+Shape = 5
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_team"]
+script = ExtResource("11_team")
+Team = 2
+
+[sub_resource type="Resource" id="Resource_aura"]
+script = ExtResource("3_effect")
+TargetFilters = Array[Object]([SubResource("Resource_shape"), SubResource("Resource_team")])
+Actions = Array[Object]([SubResource("Resource_buff")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[sub_resource type="Resource" id="Resource_unitcell"]
+script = ExtResource("8_unitcell")
+metadata/_custom_type_script = "uid://60td6vwf41d0"
+
+[sub_resource type="Resource" id="Resource_diamond"]
+script = ExtResource("9_diamond")
+AreaRange = 2
+metadata/_custom_type_script = "uid://p8qt55fv78fh"
+
+[sub_resource type="Resource" id="Resource_randcell"]
+script = ExtResource("7_randomcell")
+Base = SubResource("Resource_unitcell")
+Shape = SubResource("Resource_diamond")
+metadata/_custom_type_script = "uid://ds5gtynjc6rie"
+
+[sub_resource type="Resource" id="Resource_summon"]
+script = ExtResource("6_summon")
+UnitData = ExtResource("13_worker")
+SummonPosition = SubResource("Resource_randcell")
+metadata/_custom_type_script = "uid://d30a56l3sh3q0"
+
+[sub_resource type="Resource" id="Resource_cond_rand"]
+script = ExtResource("5_rand")
+
+[sub_resource type="Resource" id="Resource_summon_effect"]
+script = ExtResource("3_effect")
+TriggerEvent = 1
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_summon")])
+Conditions = Array[Object]([SubResource("Resource_cond_rand")])
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[sub_resource type="Resource" id="Resource_opqo1"]
+script = ExtResource("4_buff")
+BuffData = ExtResource("1_vlsm2")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_h854w"]
+script = ExtResource("5_rand")
+Probability = 0.4
+metadata/_custom_type_script = "uid://b7wcd5pcj3rqs"
+
+[sub_resource type="Resource" id="Resource_effect_touch"]
+script = ExtResource("3_effect")
+TriggerEvent = 4
+Target = 1
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_opqo1")])
+Conditions = Array[Object]([SubResource("Resource_h854w")])
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[sub_resource type="Resource" id="Resource_jcinl"]
+script = ExtResource("4_buff")
+BuffData = ExtResource("13_h854w")
+InitialStacks = 6
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_nreak"]
+script = ExtResource("3_effect")
+TriggerEvent = 2
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_jcinl")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("2_script")
+UnitID = "苦行大主教"
+UnitName = "苦行大主教"
+World = 4
+Faction = 5
+Tags = Array[int]([10])
+Rarity = 3
+AttackPower = 9
+HealthPoints = 30
+Stamina = 2
+Description = "修会之主：前6回合不移动；回合开始全场玩家攻击力-1；50%概率召唤小怪；攻击者40%概率攻击力-1、体力-1（永久）"
+UnitPrefab = ExtResource("1_prefab")
+PassiveEffects = Array[Object]([SubResource("Resource_aura"), SubResource("Resource_summon_effect"), SubResource("Resource_effect_touch"), SubResource("Resource_nreak")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

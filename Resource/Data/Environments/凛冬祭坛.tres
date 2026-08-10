@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="EnvironmentData" format=3 uid="uid://q4s6u8w1y3a5"]
+
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="1_effect"]
+[ext_resource type="Script" uid="uid://bcjncmte44un1" path="res://Scripts/Data/Actions/DamageAction.cs" id="2_dmg"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_shape"]
+[ext_resource type="Script" uid="uid://lxjpnv33tlmg" path="res://Scripts/Data/EnvironmentData.cs" id="4_script"]
+
+[sub_resource type="Resource" id="Resource_dmg"]
+script = ExtResource("2_dmg")
+Value = 2
+metadata/_custom_type_script = "uid://bcjncmte44un1"
+
+[sub_resource type="Resource" id="Resource_shape"]
+script = ExtResource("3_shape")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_effect"]
+script = ExtResource("1_effect")
+TriggerEvent = 18
+TargetFilters = Array[Object]([SubResource("Resource_shape")])
+Actions = Array[Object]([SubResource("Resource_dmg")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("4_script")
+EnvironmentID = "凛冬祭坛"
+EnvironmentName = "凛冬祭坛"
+Description = "单位进入时受到2点伤害（陷阱）"
+AtlasCoords = Vector2i(2, 0)
+OnApplyActions = null
+OnExpireActions = null
+OnRoundEndActions = null
+PassiveEffects = Array[Object]([SubResource("Resource_effect")])
+metadata/_custom_type_script = "uid://lxjpnv33tlmg"

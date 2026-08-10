@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="EnvironmentData" format=3 uid="uid://d1f3h5j7man2"]
+
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="1_effect"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_buff"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_shape"]
+[ext_resource type="Script" uid="uid://lxjpnv33tlmg" path="res://Scripts/Data/EnvironmentData.cs" id="4_script"]
+[ext_resource type="Resource" uid="uid://m3k5n7qar2t4" path="res://Resource/Data/Buff/泥泞.tres" id="5_buffdata"]
+
+[sub_resource type="Resource" id="Resource_buff"]
+script = ExtResource("2_buff")
+BuffData = ExtResource("5_buffdata")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_shape"]
+script = ExtResource("3_shape")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_effect"]
+script = ExtResource("1_effect")
+TriggerEvent = 18
+TargetFilters = Array[Object]([SubResource("Resource_shape")])
+Actions = Array[Object]([SubResource("Resource_buff")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("4_script")
+EnvironmentID = "霜沼"
+EnvironmentName = "霜沼"
+Description = "移动消耗+2；进入的单位获得泥泞（本回合体力-1）"
+MoveCostDelta = 2
+AtlasCoords = Vector2i(2, 0)
+OnApplyActions = null
+OnExpireActions = null
+OnRoundEndActions = null
+PassiveEffects = Array[Object]([SubResource("Resource_effect")])
+metadata/_custom_type_script = "uid://lxjpnv33tlmg"

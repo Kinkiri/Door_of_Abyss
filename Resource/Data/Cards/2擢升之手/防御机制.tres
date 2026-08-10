@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://kf8v2xq5z7c9a"]
+
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_card"]
+[ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="2_stat"]
+[ext_resource type="Script" uid="uid://dnlsqjf0bupsk" path="res://Scripts/Data/Actions/DrawCardAction.cs" id="3_draw"]
+[ext_resource type="Script" uid="uid://bk4wgsjs1g26i" path="res://Scripts/Data/Card/Filters/CardFactionFilter.cs" id="4_faction"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="5_shape"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="6_team"]
+
+[sub_resource type="Resource" id="Resource_stat"]
+script = ExtResource("2_stat")
+TargetStat = 1
+Value = 2
+RequiredTags = null
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_faction"]
+script = ExtResource("4_faction")
+Faction = 2
+metadata/_custom_type_script = "uid://bk4wgsjs1g26i"
+
+[sub_resource type="Resource" id="Resource_draw"]
+script = ExtResource("3_draw")
+Value = 1
+Filters = Array[Object]([SubResource("Resource_faction")])
+metadata/_custom_type_script = "uid://dnlsqjf0bupsk"
+
+[sub_resource type="Resource" id="Resource_tf_shape"]
+script = ExtResource("5_shape")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_tf_team"]
+script = ExtResource("6_team")
+Team = 1
+
+[resource]
+script = ExtResource("1_card")
+CardID = "防御机制"
+CardName = "防御机制"
+Description = "令一名己方单位血量上限+2。获得一张「擢升之手」的牌。"
+Type = 1
+World = 1
+Faction = 2
+Rarity = 0
+Tags = Array[int]([0])
+Cost = 2
+TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_team")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_stat"), SubResource("Resource_draw")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

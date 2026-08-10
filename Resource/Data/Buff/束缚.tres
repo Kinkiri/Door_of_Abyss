@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="BuffData" format=3 uid="uid://brywt80ogubcp"]
+
+[ext_resource type="Script" uid="uid://b3sdoj1kcep0a" path="res://Scripts/Data/BuffData.cs" id="1_m3sgd"]
+[ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="1_nreak"]
+[ext_resource type="Script" uid="uid://bubokmjt34mm" path="res://Scripts/Data/Actions/ModifyBuffAction.cs" id="2_nfduc"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_nfduc"]
+
+[sub_resource type="Resource" id="Resource_8fo4x"]
+script = ExtResource("1_nreak")
+TargetStat = 2
+Value = -99
+RequiredTags = null
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_23wg7"]
+script = ExtResource("2_nfduc")
+BuffID = "束缚"
+StacksDelta = -1
+metadata/_custom_type_script = "uid://bubokmjt34mm"
+
+[sub_resource type="Resource" id="Resource_jcinl"]
+script = ExtResource("3_nfduc")
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_23wg7")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("1_m3sgd")
+BuffID = "束缚"
+BuffName = "束缚"
+Description = "无法移动"
+Duration = -1
+MaxStack = -1
+OnApplyActions = Array[Object]([SubResource("Resource_8fo4x")])
+OnExpireActions = null
+OnRoundEndActions = null
+PassiveEffects = Array[Object]([SubResource("Resource_jcinl")])
+metadata/_custom_type_script = "uid://b3sdoj1kcep0a"

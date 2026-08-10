@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://b5d7f9h2j4l6"]
+
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_prefab"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="2_script"]
+
+[resource]
+script = ExtResource("2_script")
+UnitID = "苦行者"
+UnitName = "苦行者"
+World = 4
+Faction = 5
+Tags = null
+Rarity = 0
+AttackPower = 1
+HealthPoints = 2
+Stamina = 0
+AttackDistance = 0
+Type = 2
+ActionPoints = -9
+Description = "被苦行烙印剥夺一切力量的化身：不可移动、不可攻击，仅作路障"
+UnitPrefab = ExtResource("1_prefab")
+PassiveEffects = null
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

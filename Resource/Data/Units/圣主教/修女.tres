@@ -2,8 +2,10 @@
 
 [ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_hm0fj"]
 [ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="1_phy15"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="2_proi2"]
 [ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="2_ptrsw"]
 [ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="2_t24pt"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="3_wjnxm"]
 
 [sub_resource type="Resource" id="Resource_n4hmb"]
 script = ExtResource("1_phy15")
@@ -18,10 +20,20 @@ Value = 1
 RequiredTags = null
 metadata/_custom_type_script = "uid://qlng65nfa7th"
 
+[sub_resource type="Resource" id="Resource_ehcf7"]
+script = ExtResource("2_proi2")
+Shape = 3
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_bg3ps"]
+script = ExtResource("3_wjnxm")
+Team = 1
+metadata/_custom_type_script = "uid://bjnrbd7iwxb5u"
+
 [sub_resource type="Resource" id="Resource_fw11u"]
 script = ExtResource("2_t24pt")
 TriggerEvent = 2
-TargetFilters = null
+TargetFilters = Array[Object]([SubResource("Resource_ehcf7"), SubResource("Resource_bg3ps")])
 Actions = Array[Object]([SubResource("Resource_n4hmb"), SubResource("Resource_dqlwa")])
 Conditions = null
 metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
@@ -33,9 +45,7 @@ UnitName = "修女"
 World = 1
 Faction = 1
 Tags = Array[int]([1])
-AttackPower = 2
-HealthPoints = 3
-Description = "周围四格的单位生命值和攻击力永久+1"
+Description = "自己及周围四格的单位生命值和攻击力永久+1"
 UnitPrefab = ExtResource("1_hm0fj")
 PassiveEffects = Array[Object]([SubResource("Resource_fw11u")])
 metadata/_custom_type_script = "uid://cthrvfilibvfl"

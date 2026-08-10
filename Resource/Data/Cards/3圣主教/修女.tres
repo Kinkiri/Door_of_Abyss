@@ -24,6 +24,7 @@ Type = 0
 World = 1
 Faction = 1
 Tags = Array[int]([1])
+Cost = 2
 TargetFilters = Array[Object]([SubResource("Resource_tf_shape")])
 Conditions = Array[Object]([])
 Actions = Array[Object]([SubResource("Resource_l3b8s")])

@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://g3i5k7nao2q4"]
+
+[ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="1_eo4vn"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="2_hujo8"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="3_3l13m"]
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="4_wuhe4"]
+
+[sub_resource type="Resource" id="Resource_ed1jt"]
+script = ExtResource("1_eo4vn")
+Value = -2
+RequiredTags = null
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_tf_shape"]
+script = ExtResource("2_hujo8")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_tf_team"]
+script = ExtResource("3_3l13m")
+Team = 2
+
+[resource]
+script = ExtResource("4_wuhe4")
+CardID = "禁欲"
+CardName = "禁欲"
+Description = "令一名敌方单位本攻击力永久-2"
+Type = 1
+World = 4
+Faction = 5
+Tags = Array[int]([10])
+Cost = 2
+TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_team")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_ed1jt")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

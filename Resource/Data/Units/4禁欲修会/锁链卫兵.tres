@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://t2v4x608b1d3"]
+
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_prefab"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="2_script"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_effect"]
+[ext_resource type="Script" uid="uid://qlng65nfa7th" path="res://Scripts/Data/Actions/ModifyStatAction.cs" id="4_modify"]
+
+[sub_resource type="Resource" id="Resource_modify"]
+script = ExtResource("4_modify")
+TargetStat = 4
+Value = -1
+RequiredTags = null
+CurrentAPOnly = true
+metadata/_custom_type_script = "uid://qlng65nfa7th"
+
+[sub_resource type="Resource" id="Resource_effect"]
+script = ExtResource("3_effect")
+TriggerEvent = 3
+Target = 1
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_modify")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("2_script")
+UnitID = "锁链卫兵"
+UnitName = "锁链卫兵"
+World = 4
+Faction = 5
+Tags = Array[int]([10])
+Rarity = 2
+AttackPower = 3
+HealthPoints = 5
+AttackDistance = 2
+ActionPoints = 2
+Description = "攻击后目标本回合行动点-1"
+UnitPrefab = ExtResource("1_prefab")
+PassiveEffects = Array[Object]([SubResource("Resource_effect")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

@@ -1,0 +1,85 @@
+[gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://j7man1p3r5t8"]
+
+[ext_resource type="Resource" uid="uid://f5h7kal2n4p6" path="res://Resource/Data/Units/4禁欲修会/戒律殿堂.tres" id="4_t8afa"]
+[ext_resource type="Resource" uid="uid://w1y3a5c7fag1" path="res://Resource/Data/Units/4禁欲修会/缄默圣女.tres" id="9_jjuik"]
+[ext_resource type="Resource" uid="uid://n5p7sat2v4x8" path="res://Resource/Data/Deck/凛冬戒律.tres" id="r_deck"]
+[ext_resource type="Resource" uid="uid://d7gah1j3l5n8" path="res://Resource/Data/Maps/霜原-戒律回廊.tres" id="r_map"]
+[ext_resource type="Resource" uid="uid://k8n2p4r6t8v1" path="res://Resource/Data/Units/4禁欲修会/敌方/惩戒骑士.tres" id="r_惩戒骑士"]
+[ext_resource type="Resource" uid="uid://h4j6l8n2p4r6" path="res://Resource/Data/Units/4禁欲修会/敌方/执鞭者.tres" id="r_执鞭者"]
+[ext_resource type="Resource" uid="uid://o3q5s7vaw1y4" path="res://Resource/Data/Units/4禁欲修会/敌方/苦行长老.tres" id="r_苦行长老"]
+[ext_resource type="Resource" uid="uid://d2f4h6j8l1n3" path="res://Resource/Data/Units/4禁欲修会/敌方/霜原苦工.tres" id="r_霜原苦工"]
+[ext_resource type="Script" uid="uid://cov8agd25nia1" path="res://Scripts/Data/Levels/HintData.cs" id="s_hint"]
+[ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="s_level"]
+[ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="s_wave"]
+
+[sub_resource type="Resource" id="Resource_hint0"]
+script = ExtResource("s_hint")
+Message = "回廊窄道是交火的绝地。苦行长老登场会为全场敌方附加强壮——用戒律裁决/禁魔领域拆掉增益。"
+HoverDuration = 6.0
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
+[sub_resource type="Resource" id="Resource_hint1"]
+script = ExtResource("s_hint")
+TriggerRound = 4
+Message = "狡诈的敌人会绕路：它们会从顶部横穿到任何一条通道。在交叉口布下霜沼减速。"
+HoverDuration = 6.0
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
+[sub_resource type="Resource" id="Resource_hint2"]
+script = ExtResource("s_hint")
+TriggerRound = 8
+Message = "惩戒骑士与祭司的组合攻高血厚——集中火力逐一点杀，别让它们形成包围。"
+HoverDuration = 6.0
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
+[sub_resource type="Resource" id="Resource_wave0"]
+script = ExtResource("s_wave")
+Round = 2
+SpawnAreaMax = Vector2i(12, 0)
+UnitDatas = Array[Object]([ExtResource("4_t8afa"), ExtResource("r_霜原苦工"), ExtResource("r_霜原苦工")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave1"]
+script = ExtResource("s_wave")
+Round = 4
+SpawnAreaMin = Vector2i(10, 0)
+SpawnAreaMax = Vector2i(12, 2)
+UnitDatas = Array[Object]([ExtResource("r_苦行长老"), ExtResource("r_霜原苦工"), ExtResource("r_霜原苦工"), ExtResource("4_t8afa")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave2"]
+script = ExtResource("s_wave")
+Round = 6
+SpawnAreaMax = Vector2i(12, 0)
+UnitDatas = Array[Object]([ExtResource("r_执鞭者"), ExtResource("r_执鞭者"), ExtResource("r_执鞭者"), ExtResource("r_苦行长老"), ExtResource("9_jjuik")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave3"]
+script = ExtResource("s_wave")
+Round = 8
+SpawnAreaMin = Vector2i(10, 0)
+SpawnAreaMax = Vector2i(12, 2)
+UnitDatas = Array[Object]([ExtResource("r_苦行长老"), ExtResource("r_苦行长老"), ExtResource("r_执鞭者"), ExtResource("r_执鞭者"), ExtResource("9_jjuik")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave4"]
+script = ExtResource("s_wave")
+Round = 10
+SpawnAreaMax = Vector2i(12, 0)
+UnitDatas = Array[Object]([ExtResource("r_惩戒骑士"), ExtResource("r_惩戒骑士"), ExtResource("r_苦行长老"), ExtResource("r_苦行长老"), ExtResource("9_jjuik"), ExtResource("4_t8afa")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[resource]
+script = ExtResource("s_level")
+LevelName = "2-4 戒律回廊"
+Description = "修会的戒律回廊，四条窄道通向圣殿深处。苦行长老在此鼓舞同袍——驱散它们，回廊自会安静。"
+Waves = Array[Object]([SubResource("Resource_wave0"), SubResource("Resource_wave1"), SubResource("Resource_wave2"), SubResource("Resource_wave3"), SubResource("Resource_wave4")])
+MapData = ExtResource("r_map")
+DoorPlaceZoneMin = Vector2i(0, 10)
+DoorPlaceZoneMax = Vector2i(2, 11)
+DefaultSpawnAreaMin = Vector2i(10, 0)
+DefaultSpawnAreaMax = Vector2i(12, 2)
+LevelDeck = ExtResource("r_deck")
+Hints = Array[Object]([SubResource("Resource_hint0"), SubResource("Resource_hint1"), SubResource("Resource_hint2")])
+AiLevel = 2
+metadata/_custom_type_script = "uid://wk0covoailum"

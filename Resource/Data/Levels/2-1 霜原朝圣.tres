@@ -1,0 +1,76 @@
+[gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://g1i3k5m7paq2"]
+
+[ext_resource type="Resource" uid="uid://n5p7sat2v4x8" path="res://Resource/Data/Deck/凛冬戒律.tres" id="r_deck"]
+[ext_resource type="Resource" uid="uid://1c3e5g7jak2" path="res://Resource/Data/Maps/霜原-霜原朝圣.tres" id="r_map"]
+[ext_resource type="Resource" uid="uid://h4j6l8n2p4r6" path="res://Resource/Data/Units/4禁欲修会/敌方/执鞭者.tres" id="r_执鞭者"]
+[ext_resource type="Resource" uid="uid://d2f4h6j8l1n3" path="res://Resource/Data/Units/4禁欲修会/敌方/霜原苦工.tres" id="r_霜原苦工"]
+[ext_resource type="Script" uid="uid://cov8agd25nia1" path="res://Scripts/Data/Levels/HintData.cs" id="s_hint"]
+[ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="s_level"]
+[ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="s_wave"]
+
+[sub_resource type="Resource" id="Resource_hint0"]
+script = ExtResource("s_hint")
+Message = "欢迎来到霜原。禁欲修会的信徒会径直扑向你的门——用卡牌削弱它们的攻击力，会让防守轻松得多。"
+HoverDuration = 6.0
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
+[sub_resource type="Resource" id="Resource_hint1"]
+script = ExtResource("s_hint")
+TriggerRound = 2
+Message = "苦工虽然孱弱，数量不容小觑。范围伤害（凛冬祭坛、戒律裁决）能一次清掉一群。"
+HoverDuration = 6.0
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
+[sub_resource type="Resource" id="Resource_hint2"]
+script = ExtResource("s_hint")
+TriggerRound = 6
+Message = "执鞭者的攻击会令你的单位攻击力-1——优先解决它，或先用缴械让它哑火。"
+HoverDuration = 6.0
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
+[sub_resource type="Resource" id="Resource_wave0"]
+script = ExtResource("s_wave")
+Round = 2
+SpawnAreaMin = Vector2i(8, 0)
+SpawnAreaMax = Vector2i(12, 4)
+UnitDatas = Array[Object]([ExtResource("r_霜原苦工"), ExtResource("r_霜原苦工"), ExtResource("r_霜原苦工")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave1"]
+script = ExtResource("s_wave")
+Round = 4
+SpawnAreaMin = Vector2i(5, 0)
+SpawnAreaMax = Vector2i(8, 2)
+UnitDatas = Array[Object]([ExtResource("r_霜原苦工"), ExtResource("r_霜原苦工"), ExtResource("r_霜原苦工")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave2"]
+script = ExtResource("s_wave")
+Round = 6
+SpawnAreaMin = Vector2i(8, 0)
+SpawnAreaMax = Vector2i(12, 4)
+UnitDatas = Array[Object]([ExtResource("r_霜原苦工"), ExtResource("r_霜原苦工"), ExtResource("r_霜原苦工"), ExtResource("r_执鞭者")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave3"]
+script = ExtResource("s_wave")
+Round = 8
+SpawnAreaMin = Vector2i(5, 0)
+SpawnAreaMax = Vector2i(8, 2)
+UnitDatas = Array[Object]([ExtResource("r_霜原苦工"), ExtResource("r_霜原苦工"), ExtResource("r_霜原苦工"), ExtResource("r_霜原苦工"), ExtResource("r_执鞭者"), ExtResource("r_执鞭者")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[resource]
+script = ExtResource("s_level")
+LevelName = "2-1 霜原朝圣"
+Description = "霜原的朝圣之路。禁欲修会的苦工们麻木地走来——用你的削弱与限制，让它们明白何为止步。"
+Waves = Array[Object]([SubResource("Resource_wave0"), SubResource("Resource_wave1"), SubResource("Resource_wave2"), SubResource("Resource_wave3")])
+MapData = ExtResource("r_map")
+DoorPlaceZoneMin = Vector2i(4, 10)
+DoorPlaceZoneMax = Vector2i(8, 11)
+DefaultSpawnAreaMin = Vector2i(8, 0)
+DefaultSpawnAreaMax = Vector2i(12, 4)
+LevelDeck = ExtResource("r_deck")
+Hints = Array[Object]([SubResource("Resource_hint0"), SubResource("Resource_hint1"), SubResource("Resource_hint2")])
+AiLevel = 0
+metadata/_custom_type_script = "uid://wk0covoailum"

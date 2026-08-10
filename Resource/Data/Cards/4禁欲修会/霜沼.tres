@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="EnvironmentCardData" format=3 uid="uid://f6h8j1l3n5p7"]
+
+[ext_resource type="Script" uid="uid://b2pjt30c5oyw2" path="res://Scripts/Data/Card/EnvironmentCardData.cs" id="1_card"]
+[ext_resource type="Script" uid="uid://dslk7uvnawnj5" path="res://Scripts/Data/Actions/ApplyEnvironmentAction.cs" id="2_action"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_shape"]
+[ext_resource type="Resource" uid="uid://d1f3h5j7man2" path="res://Resource/Data/Environments/霜沼.tres" id="4_env"]
+
+[sub_resource type="Resource" id="Resource_action"]
+script = ExtResource("2_action")
+EnvironmentData = ExtResource("4_env")
+metadata/_custom_type_script = "uid://dslk7uvnawnj5"
+
+[sub_resource type="Resource" id="Resource_shape"]
+script = ExtResource("3_shape")
+Shape = 3
+Kind = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[resource]
+script = ExtResource("1_card")
+EnvironmentData = ExtResource("4_env")
+CardID = "霜沼"
+CardName = "霜沼"
+Description = "菱形1格铺上霜沼：移动消耗+2，进入的单位本回合体力-1"
+Type = 2
+World = 4
+Faction = 5
+Tags = Array[int]([10])
+Cost = 2
+TargetFilters = Array[Object]([SubResource("Resource_shape")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_action")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://b2pjt30c5oyw2"

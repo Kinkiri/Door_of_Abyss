@@ -1,0 +1,146 @@
+[gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://i5k7nao1q3s6"]
+
+[ext_resource type="Resource" uid="uid://sat1v3x507ba" path="res://Resource/Data/Cards/4禁欲修会/凛冬祭坛.tres" id="2_u1n3r"]
+[ext_resource type="Resource" uid="uid://w5y7bac2e4g6" path="res://Resource/Data/Cards/4禁欲修会/忏悔.tres" id="4_c8kwe"]
+[ext_resource type="Resource" uid="uid://k2m4o6q8s1u3" path="res://Resource/Data/Cards/4禁欲修会/枷锁术.tres" id="5_x046v"]
+[ext_resource type="Resource" uid="uid://s6u8w1y3a5c7" path="res://Resource/Data/Cards/4禁欲修会/疲惫.tres" id="6_wny6c"]
+[ext_resource type="Resource" uid="uid://b2d4f6h8j1l3" path="res://Resource/Data/Cards/4禁欲修会/禁足.tres" id="7_ns5bg"]
+[ext_resource type="Resource" uid="uid://fag1i3k5m7pa" path="res://Resource/Data/Cards/4禁欲修会/缴械.tres" id="8_m4hfk"]
+[ext_resource type="Resource" uid="uid://g3i5k7nao2q4" path="res://Resource/Data/Cards/4禁欲修会/禁欲.tres" id="9_du0yc"]
+[ext_resource type="Resource" uid="uid://e6g8i2k4m6o8" path="res://Resource/Data/Cards/4禁欲修会/苦行信众.tres" id="10_bogxv"]
+[ext_resource type="Resource" uid="uid://dl8hmrc3mnmtt" path="res://Resource/Data/Cards/测试/天火！.tres" id="10_u1n3r"]
+[ext_resource type="Resource" uid="uid://d3v0wb7qhg0fl" path="res://Resource/Data/Cards/测试/成瘾性空气.tres" id="11_cljtg"]
+[ext_resource type="Resource" uid="uid://b1c22fwu3g480" path="res://Resource/Data/Cards/1门客/燃烧弹.tres" id="12_c8kwe"]
+[ext_resource type="Resource" uid="uid://djiilhm1jyasb" path="res://Resource/Data/Cards/测试/无中生有.tres" id="13_x046v"]
+[ext_resource type="Resource" uid="uid://n5p7sat2v4x6" path="res://Resource/Data/Cards/4禁欲修会/戒律裁决.tres" id="14_cljtg"]
+[ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="14_tcr7y"]
+[ext_resource type="Resource" uid="uid://c5e7hai1k3m6" path="res://Resource/Data/Maps/霜原-凛冬猎场.tres" id="r_map"]
+[ext_resource type="Resource" uid="uid://m1p3r5t7wax2" path="res://Resource/Data/Units/4禁欲修会/敌方/苦修猎犬.tres" id="r_苦修猎犬"]
+[ext_resource type="Resource" uid="uid://d2f4h6j8l1n3" path="res://Resource/Data/Units/4禁欲修会/敌方/霜原苦工.tres" id="r_霜原苦工"]
+[ext_resource type="Script" uid="uid://cov8agd25nia1" path="res://Scripts/Data/Levels/HintData.cs" id="s_hint"]
+[ext_resource type="Script" uid="uid://wk0covoailum" path="res://Scripts/Data/Levels/LevelData.cs" id="s_level"]
+[ext_resource type="Script" uid="uid://hrjjaa0stxx1" path="res://Scripts/Data/Levels/WaveData.cs" id="s_wave"]
+
+[sub_resource type="Resource" id="Resource_hint0"]
+script = ExtResource("s_hint")
+Message = "猎场规则：每回合都有猎犬群刷新！范围伤害（凛冬祭坛/戒律裁决）是清场的命脉。"
+HoverDuration = 6.0
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
+[sub_resource type="Resource" id="Resource_hint1"]
+script = ExtResource("s_hint")
+TriggerRound = 3
+Message = "猎犬从顶、左、右三面涌来。把凛冬祭坛铺在通道上，让它们自己踩上去。"
+HoverDuration = 6.0
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
+[sub_resource type="Resource" id="Resource_hint2"]
+script = ExtResource("s_hint")
+TriggerRound = 6
+Message = "节奏会越来越快——不要在单只猎犬上浪费法术，攒着范围伤害清一波。"
+HoverDuration = 6.0
+metadata/_custom_type_script = "uid://cov8agd25nia1"
+
+[sub_resource type="Resource" id="Resource_nfduc"]
+script = ExtResource("14_tcr7y")
+DeckName = "凛冬猎场"
+Cards = Array[Object]([ExtResource("2_u1n3r"), ExtResource("2_u1n3r"), ExtResource("2_u1n3r"), ExtResource("4_c8kwe"), ExtResource("4_c8kwe"), ExtResource("5_x046v"), ExtResource("6_wny6c"), ExtResource("7_ns5bg"), ExtResource("8_m4hfk"), ExtResource("9_du0yc"), ExtResource("2_u1n3r"), ExtResource("14_cljtg"), ExtResource("14_cljtg"), ExtResource("14_cljtg"), ExtResource("10_u1n3r"), ExtResource("10_u1n3r"), ExtResource("10_u1n3r"), ExtResource("11_cljtg"), ExtResource("11_cljtg"), ExtResource("11_cljtg"), ExtResource("12_c8kwe"), ExtResource("12_c8kwe"), ExtResource("12_c8kwe"), ExtResource("13_x046v"), ExtResource("13_x046v"), ExtResource("10_bogxv"), ExtResource("10_bogxv"), ExtResource("10_bogxv")])
+metadata/_custom_type_script = "uid://b1eamjx1y7exn"
+
+[sub_resource type="Resource" id="Resource_wave0"]
+script = ExtResource("s_wave")
+SpawnAreaMax = Vector2i(12, 1)
+UnitDatas = Array[Object]([ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave1"]
+script = ExtResource("s_wave")
+Round = 2
+SpawnAreaMin = Vector2i(0, 2)
+SpawnAreaMax = Vector2i(1, 9)
+UnitDatas = Array[Object]([ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave2"]
+script = ExtResource("s_wave")
+Round = 3
+SpawnAreaMin = Vector2i(11, 2)
+SpawnAreaMax = Vector2i(12, 9)
+UnitDatas = Array[Object]([ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬"), ExtResource("r_霜原苦工"), ExtResource("r_霜原苦工")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave3"]
+script = ExtResource("s_wave")
+Round = 4
+SpawnAreaMax = Vector2i(12, 1)
+UnitDatas = Array[Object]([ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave4"]
+script = ExtResource("s_wave")
+Round = 5
+SpawnAreaMin = Vector2i(0, 2)
+SpawnAreaMax = Vector2i(1, 9)
+UnitDatas = Array[Object]([ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬"), ExtResource("r_霜原苦工"), ExtResource("r_霜原苦工"), ExtResource("r_霜原苦工")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave5"]
+script = ExtResource("s_wave")
+Round = 6
+SpawnAreaMin = Vector2i(11, 2)
+SpawnAreaMax = Vector2i(12, 9)
+UnitDatas = Array[Object]([ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave6"]
+script = ExtResource("s_wave")
+Round = 7
+SpawnAreaMin = Vector2i(0, 10)
+SpawnAreaMax = Vector2i(5, 12)
+UnitDatas = Array[Object]([ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave7"]
+script = ExtResource("s_wave")
+Round = 8
+SpawnAreaMin = Vector2i(0, 10)
+SpawnAreaMax = Vector2i(5, 12)
+UnitDatas = Array[Object]([ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬"), ExtResource("r_霜原苦工")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave8"]
+script = ExtResource("s_wave")
+Round = 8
+SpawnAreaMin = Vector2i(9, 10)
+SpawnAreaMax = Vector2i(12, 12)
+UnitDatas = Array[Object]([ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave9"]
+script = ExtResource("s_wave")
+Round = 9
+SpawnAreaMax = Vector2i(12, 1)
+UnitDatas = Array[Object]([ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[sub_resource type="Resource" id="Resource_wave10"]
+script = ExtResource("s_wave")
+Round = 9
+SpawnAreaMin = Vector2i(11, 2)
+SpawnAreaMax = Vector2i(12, 9)
+UnitDatas = Array[Object]([ExtResource("r_苦修猎犬"), ExtResource("r_苦修猎犬")])
+metadata/_custom_type_script = "uid://hrjjaa0stxx1"
+
+[resource]
+script = ExtResource("s_level")
+LevelName = "2-3 凛冬猎场"
+Description = "修会的试炼猎场。每一回合，成群的苦修猎犬都会从四面八方涌入——这是属于清场者的舞台。（超级大堵车）"
+Waves = Array[Object]([SubResource("Resource_wave0"), SubResource("Resource_wave1"), SubResource("Resource_wave2"), SubResource("Resource_wave3"), SubResource("Resource_wave4"), SubResource("Resource_wave5"), SubResource("Resource_wave6"), SubResource("Resource_wave7"), SubResource("Resource_wave8"), SubResource("Resource_wave9"), SubResource("Resource_wave10")])
+MapData = ExtResource("r_map")
+DoorPlaceZoneMin = Vector2i(5, 9)
+DoorPlaceZoneMax = Vector2i(7, 11)
+DefaultSpawnAreaMin = Vector2i(5, 0)
+DefaultSpawnAreaMax = Vector2i(7, 1)
+LevelDeck = SubResource("Resource_nfduc")
+Hints = Array[Object]([SubResource("Resource_hint0"), SubResource("Resource_hint1"), SubResource("Resource_hint2")])
+metadata/_custom_type_script = "uid://wk0covoailum"

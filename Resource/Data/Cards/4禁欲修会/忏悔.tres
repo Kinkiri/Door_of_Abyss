@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="SpellCardData" format=3 uid="uid://w5y7bac2e4g6"]
+
+[ext_resource type="Script" uid="uid://dm4jsgv06hcws" path="res://Scripts/Data/Card/SpellCardData.cs" id="1_card"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_buff"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_shape"]
+[ext_resource type="Script" uid="uid://bjnrbd7iwxb5u" path="res://Scripts/Data/Targeting/TeamTargetFilter.cs" id="4_team"]
+[ext_resource type="Resource" uid="uid://06a8b4d2gah1" path="res://Resource/Data/Buff/腐朽.tres" id="5_buffdata"]
+
+[sub_resource type="Resource" id="Resource_buff"]
+script = ExtResource("2_buff")
+BuffData = ExtResource("5_buffdata")
+InitialStacks = 5
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_tf_shape"]
+script = ExtResource("3_shape")
+Shape = 1
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_tf_team"]
+script = ExtResource("4_team")
+Team = 2
+
+[resource]
+script = ExtResource("1_card")
+CardID = "忏悔"
+CardName = "忏悔"
+Description = "令一名敌方单位生命上限-5（当前生命同步减少，移除不恢复）"
+Type = 1
+World = 4
+Faction = 5
+Tags = Array[int]([10])
+Rarity = 2
+Cost = 3
+TargetFilters = Array[Object]([SubResource("Resource_tf_shape"), SubResource("Resource_tf_team")])
+Conditions = null
+Actions = Array[Object]([SubResource("Resource_buff")])
+PassiveEffects = null
+metadata/_custom_type_script = "uid://dm4jsgv06hcws"

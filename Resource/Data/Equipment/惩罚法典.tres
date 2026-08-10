@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="EquipmentData" format=3 uid="uid://c2f4h6j8l1n3"]
+
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="1_effect"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_buff"]
+[ext_resource type="Script" uid="uid://tmoxnw3avry4" path="res://Scripts/Data/Units/EquipmentData.cs" id="3_script"]
+[ext_resource type="Resource" uid="uid://yac1e3g5h7j2" path="res://Resource/Data/Buff/枷锁.tres" id="4_buffdata"]
+
+[sub_resource type="Resource" id="Resource_buff"]
+script = ExtResource("2_buff")
+BuffData = ExtResource("4_buffdata")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_effect"]
+script = ExtResource("1_effect")
+TriggerEvent = 3
+Target = 1
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_buff")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("3_script")
+EquipmentID = "惩罚法典"
+EquipmentName = "惩罚法典"
+Description = "装备者每次造成伤害，目标获得1层枷锁（攻击力-1、体力-1）"
+AttackBonus = 0
+MaxHealthBonus = 0
+PassiveEffects = Array[Object]([SubResource("Resource_effect")])
+OnApplyActions = null
+metadata/_custom_type_script = "uid://tmoxnw3avry4"

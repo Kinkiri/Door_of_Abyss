@@ -10,6 +10,7 @@
 script = ExtResource("2_r7qo1")
 CardData = ExtResource("1_3smf4")
 Count = 2
+Filters = null
 AnimationDuration = 0.1
 metadata/_custom_type_script = "uid://osx8pac8nfq5"
 

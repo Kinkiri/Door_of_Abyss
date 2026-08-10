@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://j6l8n2p4r6t8"]
+
+[ext_resource type="Resource" uid="uid://c0oiwjebt5ssb" path="res://Resource/Data/Buff/充能.tres" id="1_7aay4"]
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_prefab"]
+[ext_resource type="Script" uid="uid://2cwwhh1c8v4c" path="res://Scripts/Data/Actions/ApplyBuffAction.cs" id="2_fp68g"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="2_script"]
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="3_effect"]
+
+[sub_resource type="Resource" id="Resource_qjgxv"]
+script = ExtResource("2_fp68g")
+BuffData = ExtResource("1_7aay4")
+metadata/_custom_type_script = "uid://2cwwhh1c8v4c"
+
+[sub_resource type="Resource" id="Resource_effect"]
+script = ExtResource("3_effect")
+TriggerEvent = 3
+Target = 1
+TargetFilters = null
+Actions = Array[Object]([SubResource("Resource_qjgxv")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("2_script")
+UnitID = "霜缚祭司"
+UnitName = "霜缚祭司"
+World = 4
+Faction = 5
+Tags = Array[int]([10])
+Rarity = 1
+AttackPower = 3
+HealthPoints = 6
+Stamina = 2
+AttackDistance = 3
+Description = "以寒霜封印行动：攻击后目标下回合行动点-1"
+UnitPrefab = ExtResource("1_prefab")
+PassiveEffects = Array[Object]([SubResource("Resource_effect")])
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

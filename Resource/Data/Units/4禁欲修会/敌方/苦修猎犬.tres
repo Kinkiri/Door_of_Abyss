@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://m1p3r5t7wax2"]
+
+[ext_resource type="PackedScene" uid="uid://j7avdpvfsp32" path="res://Scenes/Prefabs/Units/单位视图.tscn" id="1_prefab"]
+[ext_resource type="Script" uid="uid://cthrvfilibvfl" path="res://Scripts/Data/Units/UnitData.cs" id="2_script"]
+
+[resource]
+script = ExtResource("2_script")
+UnitID = "苦修猎犬"
+UnitName = "苦修猎犬"
+World = 4
+Faction = 5
+Tags = Array[int]([10])
+AttackPower = 2
+HealthPoints = 3
+Stamina = 3
+ActionPoints = 2
+Description = "修会驯养的冰原猎犬，高速成群，扑向一切活物"
+UnitPrefab = ExtResource("1_prefab")
+PassiveEffects = null
+metadata/_custom_type_script = "uid://cthrvfilibvfl"

@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="DeckData" format=3 uid="uid://n5p7sat2v4x8"]
+
+[ext_resource type="Resource" uid="uid://g3i5k7nao2q4" path="res://Resource/Data/Cards/4禁欲修会/禁欲.tres" id="1_sq4ld"]
+[ext_resource type="Resource" uid="uid://s6u8w1y3a5c7" path="res://Resource/Data/Cards/4禁欲修会/疲惫.tres" id="2_c"]
+[ext_resource type="Resource" uid="uid://fag1i3k5m7pa" path="res://Resource/Data/Cards/4禁欲修会/缴械.tres" id="3_c"]
+[ext_resource type="Resource" uid="uid://b2d4f6h8j1l3" path="res://Resource/Data/Cards/4禁欲修会/禁足.tres" id="4_c"]
+[ext_resource type="Resource" uid="uid://n5p7sat2v4x6" path="res://Resource/Data/Cards/4禁欲修会/戒律裁决.tres" id="5_c"]
+[ext_resource type="Resource" uid="uid://08b1d3f5h7ka" path="res://Resource/Data/Cards/4禁欲修会/苦行烙印.tres" id="6_c"]
+[ext_resource type="Resource" uid="uid://k2m4o6q8s1u3" path="res://Resource/Data/Cards/4禁欲修会/枷锁术.tres" id="7_c"]
+[ext_resource type="Resource" uid="uid://w5y7bac2e4g6" path="res://Resource/Data/Cards/4禁欲修会/忏悔.tres" id="8_c"]
+[ext_resource type="Resource" uid="uid://t3v5x71ab2d4" path="res://Resource/Data/Cards/4禁欲修会/禁魔领域.tres" id="9_c"]
+[ext_resource type="Resource" uid="uid://f6h8j1l3n5p7" path="res://Resource/Data/Cards/4禁欲修会/霜沼.tres" id="10_c"]
+[ext_resource type="Resource" uid="uid://sat1v3x507ba" path="res://Resource/Data/Cards/4禁欲修会/凛冬祭坛.tres" id="11_c"]
+[ext_resource type="Resource" uid="uid://c3e5g7jak2m4" path="res://Resource/Data/Cards/4禁欲修会/寒铁枷锁.tres" id="12_c"]
+[ext_resource type="Resource" uid="uid://o6q8s1u3w5y7" path="res://Resource/Data/Cards/4禁欲修会/惩罚法典.tres" id="13_c"]
+[ext_resource type="Resource" uid="uid://bac2e4g6i8k1" path="res://Resource/Data/Cards/4禁欲修会/苦行僧.tres" id="14_c"]
+[ext_resource type="Resource" uid="uid://m4o6q8s2t4v6" path="res://Resource/Data/Cards/4禁欲修会/忏悔者.tres" id="15_c"]
+[ext_resource type="Resource" uid="uid://x71ab2d4f6h8" path="res://Resource/Data/Cards/4禁欲修会/裁判官.tres" id="16_c"]
+[ext_resource type="Resource" uid="uid://j1l3n5p7sat2" path="res://Resource/Data/Cards/4禁欲修会/缄默圣女.tres" id="17_c"]
+[ext_resource type="Resource" uid="uid://v4x608b1d3f5" path="res://Resource/Data/Cards/4禁欲修会/锁链卫兵.tres" id="18_c"]
+[ext_resource type="Resource" uid="uid://h7kal2n4p6r8" path="res://Resource/Data/Cards/4禁欲修会/戒律殿堂.tres" id="19_c"]
+[ext_resource type="Resource" uid="uid://e6g8i2k4m6o8" path="res://Resource/Data/Cards/4禁欲修会/苦行信众.tres" id="20_c"]
+[ext_resource type="Resource" uid="uid://imt0c6m6v8hi" path="res://Resource/Data/Cards/3圣主教/癫狂教徒.tres" id="20_l257h"]
+[ext_resource type="Resource" uid="uid://g8i2k4m6o8q1" path="res://Resource/Data/Cards/4禁欲修会/冰晶祭坛.tres" id="21_c"]
+[ext_resource type="Resource" uid="uid://cjeadas7onjex" path="res://Resource/Data/Cards/3圣主教/修女.tres" id="21_xhuxg"]
+[ext_resource type="Script" uid="uid://b1eamjx1y7exn" path="res://Scripts/Data/Card/DeckData.cs" id="99_deck"]
+
+[resource]
+script = ExtResource("99_deck")
+DeckName = "凛冬戒律"
+Cards = Array[Object]([ExtResource("1_sq4ld"), ExtResource("2_c"), ExtResource("3_c"), ExtResource("4_c"), ExtResource("5_c"), ExtResource("6_c"), ExtResource("7_c"), ExtResource("8_c"), ExtResource("9_c"), ExtResource("10_c"), ExtResource("11_c"), ExtResource("12_c"), ExtResource("13_c"), ExtResource("14_c"), ExtResource("15_c"), ExtResource("16_c"), ExtResource("17_c"), ExtResource("18_c"), ExtResource("19_c"), ExtResource("20_c"), ExtResource("21_c"), ExtResource("21_c"), ExtResource("15_c"), ExtResource("17_c"), ExtResource("20_c"), ExtResource("14_c"), ExtResource("16_c"), ExtResource("18_c"), ExtResource("19_c"), ExtResource("21_xhuxg"), ExtResource("21_xhuxg"), ExtResource("20_l257h"), ExtResource("20_l257h")])
+metadata/_custom_type_script = "uid://b1eamjx1y7exn"

@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="EnvironmentData" format=3 uid="uid://v6x8y204b7da"]
+
+[ext_resource type="Script" uid="uid://5fvxtm1dtsgk" path="res://Scripts/Data/EffectData.cs" id="1_effect"]
+[ext_resource type="Script" uid="uid://cq8v06lvy3mmc" path="res://Scripts/Data/Actions/RemoveBuffAction.cs" id="2_remove"]
+[ext_resource type="Script" uid="uid://bh835k2ig4ik" path="res://Scripts/Data/Targeting/ShapeTargetFilter.cs" id="3_shape"]
+[ext_resource type="Script" uid="uid://lxjpnv33tlmg" path="res://Scripts/Data/EnvironmentData.cs" id="4_script"]
+
+[sub_resource type="Resource" id="Resource_remove_prosthesis"]
+script = ExtResource("2_remove")
+BuffID = "义肢"
+metadata/_custom_type_script = "uid://cq8v06lvy3mmc"
+
+[sub_resource type="Resource" id="Resource_remove_strong"]
+script = ExtResource("2_remove")
+BuffID = "强壮"
+metadata/_custom_type_script = "uid://cq8v06lvy3mmc"
+
+[sub_resource type="Resource" id="Resource_remove_charge"]
+script = ExtResource("2_remove")
+BuffID = "充能"
+metadata/_custom_type_script = "uid://cq8v06lvy3mmc"
+
+[sub_resource type="Resource" id="Resource_remove_cmdr"]
+script = ExtResource("2_remove")
+BuffID = "指挥官"
+metadata/_custom_type_script = "uid://cq8v06lvy3mmc"
+
+[sub_resource type="Resource" id="Resource_shape"]
+script = ExtResource("3_shape")
+Shape = 3
+AreaRange = 0
+metadata/_custom_type_script = "uid://bh835k2ig4ik"
+
+[sub_resource type="Resource" id="Resource_effect"]
+script = ExtResource("1_effect")
+TriggerEvent = 6
+TargetFilters = Array[Object]([SubResource("Resource_shape")])
+Actions = Array[Object]([SubResource("Resource_remove_prosthesis"), SubResource("Resource_remove_strong"), SubResource("Resource_remove_charge"), SubResource("Resource_remove_cmdr")])
+Conditions = null
+metadata/_custom_type_script = "uid://5fvxtm1dtsgk"
+
+[resource]
+script = ExtResource("4_script")
+EnvironmentID = "禁魔领域"
+EnvironmentName = "禁魔领域"
+Description = "范围内单位获得增益（义肢/强壮/充能/指挥官）时立即被驱散（敌我不分）"
+Duration = 1
+AtlasCoords = Vector2i(2, 0)
+OnApplyActions = null
+OnExpireActions = null
+OnRoundEndActions = null
+PassiveEffects = Array[Object]([SubResource("Resource_effect")])
+metadata/_custom_type_script = "uid://lxjpnv33tlmg"

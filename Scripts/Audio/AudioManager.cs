@@ -559,12 +559,16 @@ public partial class AudioManager : Node
     private void OnCardDrawn(Card card) => PlaySfx("draw");
     private void OnCardPlayRequest(Card card, Context ctx) => PlaySfx("card_play");
 
-    /// <summary>阶段切换：进入 GameStart（战斗场景初始化）即播放战斗 BGM</summary>
+    /// <summary>阶段切换：进入 GameStart（战斗场景初始化）即播放关卡配置的 BGM</summary>
     private void OnPhaseChanged(BattlePhase phase, Team team, int round)
     {
-        // 一进战斗场景（BattleManager 初始进入 GameStart 阶段）即播放战斗 BGM
+        // 一进战斗场景（BattleManager 初始进入 GameStart 阶段）即播放关卡配置的 BGM；
+        // 关卡未配置（BgmKey 为空）时回退战斗曲
         if (phase == BattlePhase.GameStart)
-            PlayBgm("battle");
+        {
+            string key = _battleManager?.LevelData?.BgmKey;
+            PlayBgm(string.IsNullOrEmpty(key) ? "battle" : key);
+        }
     }
 
     private void OnGameEnded(Team winner, int round)
