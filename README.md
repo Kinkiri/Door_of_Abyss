@@ -49,7 +49,7 @@
 ## 项目结构（程序员）
 
 ```
-Scripts/                         ~1.7w 行 C#
+Scripts/                         ~2.4w 行 C#
 ├── Data/                        数据模板层（Resource，编辑期零依赖）
 │   ├── Actions/                 效果系统（多态子类，运行期经服务定位器访问 Manager）
 │   │   ├── GameAction.cs        抽象基类：Execute(模板) + Revert(虚) + AnimationDuration
